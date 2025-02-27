@@ -76,8 +76,8 @@ MonoBehaviour:
   PlayerTurnForLight: 0
   actionSoundManager: {fileID: 7169345411123810404, guid: e1fb5d737406de34fbbbeba5ae5ec946, type: 3}
   TilePrefabArray:
-  - {fileID: 3917995763717513675, guid: 8fc9217a95a49d54fae76cb865940a29, type: 3}
-  - {fileID: 3917995763717513675, guid: c363269e24026b94d86335a6f336d47d, type: 3}
+  - {fileID: 5931231939925851443, guid: 0cd43262e4cb245aa8774f2d0c3f4b22, type: 3}
+  - {fileID: 6128817936848682481, guid: 8f9e082f42eb84c3cbe999d4ef44fa7a, type: 3}
   - {fileID: 3917995763717513675, guid: 4f5378e4d515f044b91ae1e652080938, type: 3}
   - {fileID: 3917995763717513675, guid: 6049b3e9e401ef34ca544ddb84fd521d, type: 3}
   - {fileID: 3917995763717513675, guid: 578e05f388c2ff14aa346fd38901d9d1, type: 3}
