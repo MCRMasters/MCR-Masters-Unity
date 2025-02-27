@@ -66,7 +66,7 @@ public class CustomNetworkRoomManager : NetworkRoomManager
         }
         else // 클라이언트 실행
         {
-            networkAddress = "";
+            networkAddress = "localhost";
             Debug.Log("Client mode. Use the HUD to enter IP and connect.");
         }
     }

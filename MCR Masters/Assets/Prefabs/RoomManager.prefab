@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 6996135421176964798}
   - component: {fileID: 1463190417251752636}
   - component: {fileID: 6743783811212822614}
-  - component: {fileID: 3667840098146443676}
+  - component: {fileID: 3147089045471869963}
   m_Layer: 0
   m_Name: RoomManager
   m_TagString: Untagged
@@ -55,7 +55,7 @@ MonoBehaviour:
   offlineScene: 
   onlineScene: Assets/Scenes/RoomScene.unity
   offlineSceneLoadDelay: 0
-  transport: {fileID: 3667840098146443676}
+  transport: {fileID: 3147089045471869963}
   networkAddress: localhost
   maxConnections: 100
   disconnectInactiveConnections: 0
@@ -66,15 +66,15 @@ MonoBehaviour:
   playerSpawnMethod: 0
   spawnPrefabs:
   - {fileID: 3917995763717513675, guid: 6ef086d42267c3042b00bbe62acd493e, type: 3}
-  - {fileID: 3917995763717513675, guid: 8fc9217a95a49d54fae76cb865940a29, type: 3}
+  - {fileID: 5931231939925851443, guid: 1a5f9594fd8404a488501faff1f4ac1a, type: 3}
   - {fileID: 3917995763717513675, guid: fc49008273350b04b9b1fce92dedebd1, type: 3}
   - {fileID: 3917995763717513675, guid: b49d4591287fa5047ab7e5db4ef0eb38, type: 3}
   - {fileID: 3917995763717513675, guid: f69dd5c8d30f9c2449e57ccfff8858d6, type: 3}
-  - {fileID: 3917995763717513675, guid: c363269e24026b94d86335a6f336d47d, type: 3}
+  - {fileID: 6128817936848682481, guid: 2fcb97eb58d9640bb9b0ba26e1df0489, type: 3}
   - {fileID: 3917995763717513675, guid: f58e192e01231f5408eebb8216231a4e, type: 3}
   - {fileID: 3917995763717513675, guid: 5fff1541366cd4a4ba7a8ed8d2220036, type: 3}
   - {fileID: 3917995763717513675, guid: 7bc77613ce51ace498c028dfe19b006d, type: 3}
-  - {fileID: 3917995763717513675, guid: 4f5378e4d515f044b91ae1e652080938, type: 3}
+  - {fileID: 2489448130851472199, guid: 041d019fae1aa4f7fa70c1c19b476c6c, type: 3}
   - {fileID: 3917995763717513675, guid: fcea28fa52413114d9df964757ed4541, type: 3}
   - {fileID: 3917995763717513675, guid: 3cee77d17ea60fb4cb24dc104bfb780d, type: 3}
   - {fileID: 3917995763717513675, guid: da7e994775a3b1e4893cfcff3fdb339e, type: 3}
@@ -182,7 +182,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   targetAspect: 1.7777778
   stableTime: 0.5
---- !u!114 &3667840098146443676
+--- !u!114 &3147089045471869963
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -191,24 +191,23 @@ MonoBehaviour:
   m_GameObject: {fileID: 7148554449997493305}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0110f245bfcfc7d459681f7bd9ebc590, type: 3}
+  m_Script: {fileID: 11500000, guid: 6b0fecffa3f624585964b0d0eb21b18e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxMessageSize: 16384
-  maxHandshakeSize: 16384
-  serverMaxMsgsPerTick: 10000
-  clientMaxMsgsPerTick: 1000
-  sendTimeout: 5000
-  receiveTimeout: 20000
-  noDelay: 1
-  sslEnabled: 0
-  sslProtocols: 3072
-  sslCertJson: ./cert.json
   port: 9000
-  batchSend: 1
-  waitBeforeSend: 1
-  clientUseWss: 1
-  clientWebsocketSettings:
-    ClientPortOption: 1
-    CustomClientPort: 7777
-  minimumLogLevel: 3
+  DualMode: 1
+  NoDelay: 1
+  Interval: 10
+  Timeout: 10000
+  RecvBufferSize: 7361536
+  SendBufferSize: 7361536
+  FastResend: 2
+  ReceiveWindowSize: 4096
+  SendWindowSize: 4096
+  MaxRetransmit: 40
+  MaximizeSocketBuffers: 1
+  ReliableMaxMessageSize: 297433
+  UnreliableMaxMessageSize: 1194
+  debugLog: 0
+  statisticsGUI: 0
+  statisticsLog: 0
