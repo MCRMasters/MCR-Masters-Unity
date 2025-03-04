@@ -1,0 +1,9 @@
+{
+    "name": "My Custom Template",
+    "description": "A responsive WebGL template with custom index.html and style.css",
+    "fullscreen": true,
+    "backgroundColor": "#000000",
+    "defaultScreenWidth": 1920,
+    "defaultScreenHeight": 1080,
+    "enableWebXR": false
+}

@@ -1,0 +1,4 @@
+*.dll filter=lfs diff=lfs merge=lfs -text
+*.lib filter=lfs diff=lfs merge=lfs -text
+Assets/Fonts/Pretendard-Medium[[:space:]]SDF.asset filter=lfs diff=lfs merge=lfs -text
+Assets/Fonts/KakaoBigSans-Regular[[:space:]]SDF.asset filter=lfs diff=lfs merge=lfs -text
