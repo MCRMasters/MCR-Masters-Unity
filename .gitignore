@@ -797,6 +797,11 @@ sysinfo.txt
 /[Aa]ssets/[Ss]treamingAssets/aa.meta
 /[Aa]ssets/[Ss]treamingAssets/aa/*
 
+# Mirror and ParrelSync
+/[Aa]ssets/Mirror/*
+/[Aa]ssets/ParrelSync/*
+
+
 ### VisualStudioCode ###
 !.vscode/*.code-snippets
 
