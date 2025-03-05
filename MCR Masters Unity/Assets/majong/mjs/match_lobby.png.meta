@@ -1,0 +1,1157 @@
+fileFormatVersion: 2
+guid: 49468c318b54b5a40b980d2466c6d0aa
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -6254845489599413436
+    second: match_lobby_0
+  - first:
+      213: -3527023791988188221
+    second: match_lobby_1
+  - first:
+      213: 81386878271185098
+    second: match_lobby_2
+  - first:
+      213: -3123703961310327526
+    second: match_lobby_3
+  - first:
+      213: -6812478063221895449
+    second: match_lobby_4
+  - first:
+      213: -2833676452616723739
+    second: match_lobby_5
+  - first:
+      213: -5215996004447649359
+    second: match_lobby_6
+  - first:
+      213: -3337748279642445520
+    second: match_lobby_7
+  - first:
+      213: 8791457017486180662
+    second: match_lobby_8
+  - first:
+      213: -39370824772172610
+    second: match_lobby_9
+  - first:
+      213: 7575868435269199501
+    second: match_lobby_10
+  - first:
+      213: -3433308174276260447
+    second: match_lobby_11
+  - first:
+      213: -6084139979172876818
+    second: match_lobby_12
+  - first:
+      213: -1446204874847363064
+    second: match_lobby_13
+  - first:
+      213: 7930970069587684190
+    second: match_lobby_14
+  - first:
+      213: 7516105816374006422
+    second: match_lobby_15
+  - first:
+      213: 498823374840098198
+    second: match_lobby_16
+  - first:
+      213: 8209257615155170316
+    second: match_lobby_17
+  - first:
+      213: 1858132887663550011
+    second: match_lobby_18
+  - first:
+      213: 6519860814357519912
+    second: match_lobby_19
+  - first:
+      213: -2654524962910659676
+    second: match_lobby_20
+  - first:
+      213: -5157473053664076514
+    second: match_lobby_21
+  - first:
+      213: -844946807821674230
+    second: match_lobby_22
+  - first:
+      213: 8239927450544315903
+    second: match_lobby_23
+  - first:
+      213: 2753094395814564400
+    second: match_lobby_24
+  - first:
+      213: -4396808866556659662
+    second: match_lobby_25
+  - first:
+      213: -9131929582999309400
+    second: match_lobby_26
+  - first:
+      213: -804329965166442451
+    second: match_lobby_27
+  - first:
+      213: -617336532288727979
+    second: match_lobby_28
+  - first:
+      213: 1728987358275966639
+    second: match_lobby_29
+  - first:
+      213: -3487039596134589922
+    second: match_lobby_30
+  - first:
+      213: -8112525900006832520
+    second: match_lobby_31
+  - first:
+      213: -4869580864992114362
+    second: match_lobby_32
+  - first:
+      213: 3052228473780874439
+    second: match_lobby_33
+  - first:
+      213: -4969169715577857555
+    second: match_lobby_34
+  - first:
+      213: -3025186886415206131
+    second: match_lobby_35
+  - first:
+      213: 7564664940291040563
+    second: match_lobby_36
+  - first:
+      213: 6302405539493544385
+    second: match_lobby_37
+  - first:
+      213: -5994582903726746778
+    second: match_lobby_38
+  - first:
+      213: 3075332323218804320
+    second: match_lobby_39
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 1
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: match_lobby_0
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 732
+        width: 1024
+        height: 100
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4430973ba235239a0800000000000000
+      internalID: -6254845489599413436
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: match_lobby_1
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 629
+        width: 770
+        height: 104
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3cb51345c8e7d0fc0800000000000000
+      internalID: -3527023791988188221
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: match_lobby_2
+      rect:
+        serializedVersion: 2
+        x: 769
+        y: 599
+        width: 148
+        height: 134
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ac06bb04fe4212100800000000000000
+      internalID: 81386878271185098
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: match_lobby_3
+      rect:
+        serializedVersion: 2
+        x: 916
+        y: 622
+        width: 107
+        height: 111
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a1d0e9a1ccf56a4d0800000000000000
+      internalID: -3123703961310327526
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: match_lobby_4
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 526
+        width: 770
+        height: 104
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7ee8489ab473571a0800000000000000
+      internalID: -6812478063221895449
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: match_lobby_5
+      rect:
+        serializedVersion: 2
+        x: 916
+        y: 601
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5e22461a742cca8d0800000000000000
+      internalID: -2833676452616723739
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: match_lobby_6
+      rect:
+        serializedVersion: 2
+        x: 937
+        y: 549
+        width: 80
+        height: 74
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1b18a0df44f0d97b0800000000000000
+      internalID: -5215996004447649359
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: match_lobby_7
+      rect:
+        serializedVersion: 2
+        x: 1012
+        y: 615
+        width: 12
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 039ad32bf9feda1d0800000000000000
+      internalID: -3337748279642445520
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: match_lobby_8
+      rect:
+        serializedVersion: 2
+        x: 769
+        y: 533
+        width: 169
+        height: 67
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 63101690497810a70800000000000000
+      internalID: 8791457017486180662
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: match_lobby_9
+      rect:
+        serializedVersion: 2
+        x: 937
+        y: 528
+        width: 32
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: eb4c0f68170247ff0800000000000000
+      internalID: -39370824772172610
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: match_lobby_10
+      rect:
+        serializedVersion: 2
+        x: 968
+        y: 530
+        width: 20
+        height: 20
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d86a0550434e22960800000000000000
+      internalID: 7575868435269199501
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: match_lobby_11
+      rect:
+        serializedVersion: 2
+        x: 987
+        y: 530
+        width: 20
+        height: 20
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1ad81dbe7607a50d0800000000000000
+      internalID: -3433308174276260447
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: match_lobby_12
+      rect:
+        serializedVersion: 2
+        x: 1006
+        y: 532
+        width: 18
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: eede5a19ceac09ba0800000000000000
+      internalID: -6084139979172876818
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: match_lobby_13
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 466
+        width: 1024
+        height: 61
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 800e842245c0eebe0800000000000000
+      internalID: -1446204874847363064
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: match_lobby_14
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 156
+        width: 182
+        height: 311
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e5b670a1247701e60800000000000000
+      internalID: 7930970069587684190
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: match_lobby_15
+      rect:
+        serializedVersion: 2
+        x: 181
+        y: 156
+        width: 183
+        height: 311
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 692583ffa629e4860800000000000000
+      internalID: 7516105816374006422
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: match_lobby_16
+      rect:
+        serializedVersion: 2
+        x: 363
+        y: 363
+        width: 535
+        height: 104
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 69d610f673d2ce600800000000000000
+      internalID: 498823374840098198
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: match_lobby_17
+      rect:
+        serializedVersion: 2
+        x: 897
+        y: 332
+        width: 107
+        height: 135
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c0c8ef47e442de170800000000000000
+      internalID: 8209257615155170316
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: match_lobby_18
+      rect:
+        serializedVersion: 2
+        x: 1003
+        y: 449
+        width: 18
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b3e18aa340a69c910800000000000000
+      internalID: 1858132887663550011
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: match_lobby_19
+      rect:
+        serializedVersion: 2
+        x: 1003
+        y: 434
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 82ed4c0fdd23b7a50800000000000000
+      internalID: 6519860814357519912
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: match_lobby_20
+      rect:
+        serializedVersion: 2
+        x: 363
+        y: 152
+        width: 152
+        height: 212
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4ab9d4a4c9b392bd0800000000000000
+      internalID: -2654524962910659676
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: match_lobby_21
+      rect:
+        serializedVersion: 2
+        x: 514
+        y: 152
+        width: 152
+        height: 212
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e1d14b94599fc68b0800000000000000
+      internalID: -5157473053664076514
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: match_lobby_22
+      rect:
+        serializedVersion: 2
+        x: 665
+        y: 230
+        width: 147
+        height: 134
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a0950b1ea552644f0800000000000000
+      internalID: -844946807821674230
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: match_lobby_23
+      rect:
+        serializedVersion: 2
+        x: 811
+        y: 337
+        width: 27
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ffd1fa8fb5a1a5270800000000000000
+      internalID: 8239927450544315903
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: match_lobby_24
+      rect:
+        serializedVersion: 2
+        x: 837
+        y: 337
+        width: 27
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 03255a734c4f43620800000000000000
+      internalID: 2753094395814564400
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: match_lobby_25
+      rect:
+        serializedVersion: 2
+        x: 863
+        y: 337
+        width: 27
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2383a9391a56bf2c0800000000000000
+      internalID: -4396808866556659662
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: match_lobby_26
+      rect:
+        serializedVersion: 2
+        x: 811
+        y: 217
+        width: 111
+        height: 116
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8a3f1736d6ed44180800000000000000
+      internalID: -9131929582999309400
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: match_lobby_27
+      rect:
+        serializedVersion: 2
+        x: 921
+        y: 284
+        width: 64
+        height: 49
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d284d00882276d4f0800000000000000
+      internalID: -804329965166442451
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: match_lobby_28
+      rect:
+        serializedVersion: 2
+        x: 984
+        y: 296
+        width: 37
+        height: 37
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5541f06d1b7ce67f0800000000000000
+      internalID: -617336532288727979
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: match_lobby_29
+      rect:
+        serializedVersion: 2
+        x: 984
+        y: 288
+        width: 24
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fa61e2f77d89ef710800000000000000
+      internalID: 1728987358275966639
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: match_lobby_30
+      rect:
+        serializedVersion: 2
+        x: 921
+        y: 229
+        width: 56
+        height: 56
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e1a1da266fb8b9fc0800000000000000
+      internalID: -3487039596134589922
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: match_lobby_31
+      rect:
+        serializedVersion: 2
+        x: 976
+        y: 243
+        width: 42
+        height: 42
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 876cfea0da48a6f80800000000000000
+      internalID: -8112525900006832520
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: match_lobby_32
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 78
+        width: 364
+        height: 79
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6490b11e006cb6cb0800000000000000
+      internalID: -4869580864992114362
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: match_lobby_33
+      rect:
+        serializedVersion: 2
+        x: 363
+        y: 74
+        width: 365
+        height: 79
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7ccaa0120a1bb5a20800000000000000
+      internalID: 3052228473780874439
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: match_lobby_34
+      rect:
+        serializedVersion: 2
+        x: 727
+        y: 126
+        width: 152
+        height: 92
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: de95a52b876f90bb0800000000000000
+      internalID: -4969169715577857555
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: match_lobby_35
+      rect:
+        serializedVersion: 2
+        x: 878
+        y: 138
+        width: 137
+        height: 80
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d093d001e806406d0800000000000000
+      internalID: -3025186886415206131
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: match_lobby_36
+      rect:
+        serializedVersion: 2
+        x: 895
+        y: 101
+        width: 123
+        height: 38
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 33526e21fa61bf860800000000000000
+      internalID: 7564664940291040563
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: match_lobby_37
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 136
+        height: 79
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1c187f35274a67750800000000000000
+      internalID: 6302405539493544385
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: match_lobby_38
+      rect:
+        serializedVersion: 2
+        x: 135
+        y: 21
+        width: 136
+        height: 58
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 663dcb61c96fecca0800000000000000
+      internalID: -5994582903726746778
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: match_lobby_39
+      rect:
+        serializedVersion: 2
+        x: 727
+        y: 60
+        width: 169
+        height: 67
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 06ecbb34476cdaa20800000000000000
+      internalID: 3075332323218804320
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      match_lobby_0: -6254845489599413436
+      match_lobby_1: -3527023791988188221
+      match_lobby_10: 7575868435269199501
+      match_lobby_11: -3433308174276260447
+      match_lobby_12: -6084139979172876818
+      match_lobby_13: -1446204874847363064
+      match_lobby_14: 7930970069587684190
+      match_lobby_15: 7516105816374006422
+      match_lobby_16: 498823374840098198
+      match_lobby_17: 8209257615155170316
+      match_lobby_18: 1858132887663550011
+      match_lobby_19: 6519860814357519912
+      match_lobby_2: 81386878271185098
+      match_lobby_20: -2654524962910659676
+      match_lobby_21: -5157473053664076514
+      match_lobby_22: -844946807821674230
+      match_lobby_23: 8239927450544315903
+      match_lobby_24: 2753094395814564400
+      match_lobby_25: -4396808866556659662
+      match_lobby_26: -9131929582999309400
+      match_lobby_27: -804329965166442451
+      match_lobby_28: -617336532288727979
+      match_lobby_29: 1728987358275966639
+      match_lobby_3: -3123703961310327526
+      match_lobby_30: -3487039596134589922
+      match_lobby_31: -8112525900006832520
+      match_lobby_32: -4869580864992114362
+      match_lobby_33: 3052228473780874439
+      match_lobby_34: -4969169715577857555
+      match_lobby_35: -3025186886415206131
+      match_lobby_36: 7564664940291040563
+      match_lobby_37: 6302405539493544385
+      match_lobby_38: -5994582903726746778
+      match_lobby_39: 3075332323218804320
+      match_lobby_4: -6812478063221895449
+      match_lobby_5: -2833676452616723739
+      match_lobby_6: -5215996004447649359
+      match_lobby_7: -3337748279642445520
+      match_lobby_8: 8791457017486180662
+      match_lobby_9: -39370824772172610
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
