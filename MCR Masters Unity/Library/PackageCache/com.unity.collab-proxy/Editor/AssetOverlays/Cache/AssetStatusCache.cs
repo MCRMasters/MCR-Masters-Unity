@@ -8,6 +8,7 @@ namespace Unity.PlasticSCM.Editor.AssetsOverlays.Cache
         AssetStatus GetStatus(string fullPath);
         LockStatusData GetLockStatusData(string fullPath);
         void Clear();
+        void ClearLocks();
     }
 
     internal class AssetStatusCache : IAssetStatusCache
@@ -53,6 +54,11 @@ namespace Unity.PlasticSCM.Editor.AssetsOverlays.Cache
         {
             mLocalStatusCache.Clear();
             mRemoteStatusCache.Clear();
+            mLockStatusCache.Clear();
+        }
+
+        void IAssetStatusCache.ClearLocks()
+        {
             mLockStatusCache.Clear();
         }
 

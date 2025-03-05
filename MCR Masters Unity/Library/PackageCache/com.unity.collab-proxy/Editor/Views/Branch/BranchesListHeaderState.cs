@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 using UnityEditor.IMGUI.Controls;
@@ -16,9 +16,7 @@ namespace Unity.PlasticSCM.Editor.Views.Branches
         Repository,
         CreatedBy,
         CreationDate,
-        Comment,
-        Branch,
-        Guid
+        Comment
     }
 
     [Serializable]
@@ -64,8 +62,8 @@ namespace Unity.PlasticSCM.Editor.Views.Branches
             if (mHeaderTitles != null)
                 TreeHeaderColumns.SetTitles(columns, mHeaderTitles);
 
-            if (mColumsAllowedToggleVisibility != null)
-                TreeHeaderColumns.SetVisibilities(columns, mColumsAllowedToggleVisibility);
+            if (mColumnsAllowedToggleVisibility != null)
+                TreeHeaderColumns.SetVisibilities(columns, mColumnsAllowedToggleVisibility);
         }
 
         void ISerializationCallbackReceiver.OnBeforeSerialize()
@@ -91,7 +89,6 @@ namespace Unity.PlasticSCM.Editor.Views.Branches
                     minWidth = UnityConstants.BranchesColumns.REPOSITORY_MIN_WIDTH,
                     headerContent = new GUIContent(
                         GetColumnName(BranchesListColumn.Repository)),
-                    allowToggleVisibility = true,
                     sortingArrowAlignment = TextAlignment.Right
                 },
                 new Column()
@@ -127,14 +124,14 @@ namespace Unity.PlasticSCM.Editor.Views.Branches
             if (mHeaderTitles == null)
                 mHeaderTitles = TreeHeaderColumns.GetTitles(columns);
 
-            if (mColumsAllowedToggleVisibility == null)
-                mColumsAllowedToggleVisibility = TreeHeaderColumns.GetVisibilities(columns);
+            if (mColumnsAllowedToggleVisibility == null)
+                mColumnsAllowedToggleVisibility = TreeHeaderColumns.GetVisibilities(columns);
         }
 
         [SerializeField]
         string[] mHeaderTitles;
 
         [SerializeField]
-        bool[] mColumsAllowedToggleVisibility;
+        bool[] mColumnsAllowedToggleVisibility;
     }
 }

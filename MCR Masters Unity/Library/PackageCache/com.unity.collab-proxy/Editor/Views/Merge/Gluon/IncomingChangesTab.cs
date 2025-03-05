@@ -1,29 +1,26 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 
 using UnityEditor;
 using UnityEngine;
 
 using Codice.Client.BaseCommands;
 using Codice.Client.Commands;
-using Codice.Client.Common;
 using Codice.Client.Common.FsNodeReaders;
 using Codice.CM.Common;
 using GluonGui;
 using PlasticGui;
-using PlasticGui.Gluon.WorkspaceWindow;
 using PlasticGui.Gluon.WorkspaceWindow.Views.IncomingChanges;
 using PlasticGui.WorkspaceWindow;
 using PlasticGui.WorkspaceWindow.Diff;
 using PlasticGui.WorkspaceWindow.Merge;
 using Unity.PlasticSCM.Editor.AssetUtils;
+using Unity.PlasticSCM.Editor.Gluon.Errors;
 using Unity.PlasticSCM.Editor.Tool;
 using Unity.PlasticSCM.Editor.UI;
 using Unity.PlasticSCM.Editor.UI.Progress;
 using Unity.PlasticSCM.Editor.UI.StatusBar;
 using Unity.PlasticSCM.Editor.UI.Tree;
-using Unity.PlasticSCM.Editor.Views.IncomingChanges.Gluon.Errors;
 using Unity.PlasticSCM.Editor.Views.Merge;
 using UnityEditor.IMGUI.Controls;
 using CheckIncomingChanges = PlasticGui.Gluon.WorkspaceWindow.CheckIncomingChanges;
@@ -68,12 +65,6 @@ namespace Unity.PlasticSCM.Editor.Views.IncomingChanges.Gluon
                 new int[] { 100000, 100000 }
             );
 
-            mErrorDetailsSplitterState = PlasticSplitterGUILayout.InitSplitterState(
-                new float[] { 0.60f, 0.40f },
-                new int[] { 100, 100 },
-                new int[] { 100000, 100000 }
-            );
-
             mIncomingChangesViewLogic = new IncomingChangesViewLogic(
                 wkInfo, viewHost, this, new UnityPlasticGuiMessage(),
                 mProgressControls, updateIncomingChanges,
@@ -110,9 +101,7 @@ namespace Unity.PlasticSCM.Editor.Views.IncomingChanges.Gluon
                 mIncomingChangesTreeView.multiColumnHeader.state,
                 UnityConstants.GLUON_INCOMING_CHANGES_TABLE_SETTINGS_NAME);
 
-            TreeHeaderSettings.Save(
-                mErrorsListView.multiColumnHeader.state,
-                UnityConstants.GLUON_INCOMING_ERRORS_TABLE_SETTINGS_NAME);
+            mErrorsPanel.OnDisable();
         }
 
         void IIncomingChangesTab.Update()
@@ -122,24 +111,21 @@ namespace Unity.PlasticSCM.Editor.Views.IncomingChanges.Gluon
 
         void IIncomingChangesTab.OnGUI()
         {
-            bool splitterNeeded = mIsErrorsListVisible;
-
-            if (splitterNeeded)
+            if (mErrorsPanel.IsVisible)
                 PlasticSplitterGUILayout.BeginVerticalSplit(mErrorsSplitterState);
 
             DoIncomingChangesArea(
                 mIncomingChangesTreeView,
+                mEmptyStateContent,
                 mProgressControls.IsOperationRunning(),
                 mHasNothingToDownload,
                 mIsUpdateSuccessful);
 
-            DoErrorsArea(
-                mErrorsListView,
-                mErrorDetailsSplitterState,
-                mIsErrorsListVisible);
-
-            if (splitterNeeded)
+            if (mErrorsPanel.IsVisible)
+            {
+                mErrorsPanel.OnGUI();
                 PlasticSplitterGUILayout.EndVerticalSplit();
+            }
 
             DrawActionToolbar.Begin(mParentWindow);
 
@@ -201,6 +187,9 @@ namespace Unity.PlasticSCM.Editor.Views.IncomingChanges.Gluon
                 mIncomingChangesTreeView,
                 UnityConstants.SEARCH_FIELD_WIDTH);
             */
+
+            // TODO remove once the proper filtering is implemented
+            DrawStaticElement.Empty();
         }
 
         void IIncomingChangesTab.AutoRefresh()
@@ -230,9 +219,7 @@ namespace Unity.PlasticSCM.Editor.Views.IncomingChanges.Gluon
 
             UpdateIncomingChangesTree(mIncomingChangesTreeView, tree);
 
-            UpdateErrorsList(mErrorsListView, errorMessages);
-
-            mIsErrorsListVisible = errorMessages.Count > 0;
+            mErrorsPanel.UpdateErrorsList(errorMessages);
 
             UpdateOverview(tree, conflictsLabelData);
         }
@@ -443,15 +430,6 @@ namespace Unity.PlasticSCM.Editor.Views.IncomingChanges.Gluon
                 imageDiffLauncher: null);
         }
 
-        static void UpdateErrorsList(
-            ErrorsListView errorsListView,
-            List<ErrorMessage> errorMessages)
-        {
-            errorsListView.BuildModel(errorMessages);
-
-            errorsListView.Reload();
-        }
-
         void UpdateProcessMergesButtonText()
         {
             mProcessMergesButtonText =
@@ -521,6 +499,7 @@ namespace Unity.PlasticSCM.Editor.Views.IncomingChanges.Gluon
 
         static void DoIncomingChangesArea(
             IncomingChangesTreeView incomingChangesTreeView,
+            GUIContent emptyStateContent,
             bool isOperationRunning,
             bool hasNothingToDownload,
             bool isUpdateSuccessful)
@@ -529,6 +508,7 @@ namespace Unity.PlasticSCM.Editor.Views.IncomingChanges.Gluon
 
             DoIncomingChangesTreeViewArea(
                 incomingChangesTreeView,
+                emptyStateContent,
                 isOperationRunning,
                 hasNothingToDownload,
                 isUpdateSuccessful);
@@ -544,7 +524,7 @@ namespace Unity.PlasticSCM.Editor.Views.IncomingChanges.Gluon
             IncomingChangesTreeView incomingChangesTreeView,
             WorkspaceInfo wkInfo,
             Action beforeProcessMergesAction,
-            EndOperationDelegateForUpdatedItems afterProcessMergesAction)
+            EndOperationDelegateForUpdateProgress afterProcessMergesAction)
         {
             GUI.enabled = isEnabled;
 
@@ -589,22 +569,6 @@ namespace Unity.PlasticSCM.Editor.Views.IncomingChanges.Gluon
             return shouldCancelMergesButtonEnabled;
         }
 
-        void DoErrorsArea(
-            ErrorsListView errorsListView,
-            object splitterState,
-            bool isErrorsListVisible)
-        {
-            EditorGUILayout.BeginVertical();
-
-            if (isErrorsListVisible)
-            {
-                DrawSplitter.ForHorizontalIndicator();
-                DoErrorsListArea(errorsListView, splitterState);
-            }
-
-            EditorGUILayout.EndVertical();
-        }
-
         static void UpdateIncomingChangesTree(
             IncomingChangesTreeView incomingChangesTreeView,
             IncomingChangesTree tree)
@@ -618,6 +582,7 @@ namespace Unity.PlasticSCM.Editor.Views.IncomingChanges.Gluon
 
         static void DoIncomingChangesTreeViewArea(
             IncomingChangesTreeView incomingChangesTreeView,
+            GUIContent emptyStateContent,
             bool isOperationRunning,
             bool hasNothingToDownload,
             bool isUpdateSuccessful)
@@ -629,91 +594,31 @@ namespace Unity.PlasticSCM.Editor.Views.IncomingChanges.Gluon
             incomingChangesTreeView.OnGUI(rect);
 
             if (hasNothingToDownload)
-                DrawEmptyState(rect, isUpdateSuccessful);
+                DrawEmptyState(rect, emptyStateContent, isUpdateSuccessful);
 
             GUI.enabled = true;
         }
 
         static void DrawEmptyState(
             Rect rect,
+            GUIContent emptyStateContent,
             bool isUpdateSuccessful)
         {
             if (isUpdateSuccessful)
             {
-                DrawTreeViewEmptyState.For(
-                    rect,
-                    PlasticLocalization.GetString(PlasticLocalization.Name.WorkspaceUpdateCompleted),
-                    Images.GetStepOkIcon());
-
+                emptyStateContent.text = PlasticLocalization.Name.WorkspaceUpdateCompleted.GetString();
+                DrawTreeViewEmptyState.For(rect, emptyStateContent, Images.GetStepOkIcon());
                 return;
             }
 
-            DrawTreeViewEmptyState.For(
-                rect,
-                PlasticLocalization.GetString(PlasticLocalization.Name.NoIncomingChanges));
+            emptyStateContent.text = PlasticLocalization.Name.NoIncomingChanges.GetString();
+            DrawTreeViewEmptyState.For(rect, emptyStateContent);
         }
 
-        void DoErrorsListArea(
-            ErrorsListView errorsListView,
-            object splitterState)
-        {
-            EditorGUILayout.BeginVertical();
-
-            GUILayout.Label(
-                PlasticLocalization.GetString(
-                    PlasticLocalization.Name.IncomingChangesCannotBeApplied),
-                EditorStyles.boldLabel);
-
-            DoErrorsListSplitViewArea(
-                errorsListView, splitterState);
-
-            EditorGUILayout.EndVertical();
-        }
-
-        void DoErrorsListSplitViewArea(
-            ErrorsListView errorsListView,
-            object splitterState)
-        {
-            EditorGUILayout.BeginHorizontal();
-
-            PlasticSplitterGUILayout.BeginHorizontalSplit(splitterState);
-
-            DoErrorsListViewArea(errorsListView);
-
-            DoErrorDetailsTextArea(errorsListView.GetSelectedError());
-
-            PlasticSplitterGUILayout.EndHorizontalSplit();
-
-            EditorGUILayout.EndHorizontal();
-        }
-
-        static void DoErrorsListViewArea(
-            ErrorsListView errorsListView)
-        {
-            Rect treeRect = GUILayoutUtility.GetRect(0, 100000, 0, 100000);
-
-            errorsListView.OnGUI(treeRect);
-        }
-
-        void DoErrorDetailsTextArea(ErrorMessage selectedErrorMessage)
-        {
-            string errorDetailsText = selectedErrorMessage == null ?
-                string.Empty : selectedErrorMessage.Error;
-
-            mErrorDetailsScrollPosition = GUILayout.BeginScrollView(
-                mErrorDetailsScrollPosition);
-
-            GUILayout.TextArea(
-                errorDetailsText, UnityStyles.TextFieldWithWrapping,
-                GUILayout.ExpandHeight(true));
-
-            GUILayout.EndScrollView();
-        }
-
-        void AfterProcessMerges(List<string> changes)
+        void AfterProcessMerges(UpdateProgress progress)
         {
             RefreshAsset.AfterLongAssetOperation(
-                ProjectPackages.ShouldBeResolved(changes, mWkInfo, true));
+                ProjectPackages.ShouldBeResolvedFromUpdateProgress(mWkInfo, progress));
 
             bool isTreeViewEmpty = mIncomingChangesTreeView.GetCheckedItemCount() ==
                 mIncomingChangesTreeView.GetTotalItemCount();
@@ -765,14 +670,9 @@ namespace Unity.PlasticSCM.Editor.Views.IncomingChanges.Gluon
                 UpdateProcessMergesButtonText);
             mIncomingChangesTreeView.Reload();
 
-            ErrorsListHeaderState errorsListHeaderState =
-                ErrorsListHeaderState.GetDefault();
-            TreeHeaderSettings.Load(errorsListHeaderState,
-                UnityConstants.GLUON_INCOMING_ERRORS_TABLE_SETTINGS_NAME,
-                UnityConstants.UNSORT_COLUMN_ID);
-
-            mErrorsListView = new ErrorsListView(errorsListHeaderState);
-            mErrorsListView.Reload();
+            mErrorsPanel = new ErrorsPanel(
+                PlasticLocalization.Name.IncomingChangesCannotBeApplied.GetString(),
+                UnityConstants.GLUON_INCOMING_ERRORS_TABLE_SETTINGS_NAME);
         }
 
         bool mIsVisible;
@@ -780,7 +680,6 @@ namespace Unity.PlasticSCM.Editor.Views.IncomingChanges.Gluon
         bool mIsCancelMergesButtonVisible;
         bool mIsMessageLabelVisible;
         bool mIsErrorMessageLabelVisible;
-        bool mIsErrorsListVisible;
 
         bool mIsProcessMergesButtonEnabled;
         bool mIsCancelMergesButtonEnabled;
@@ -794,17 +693,17 @@ namespace Unity.PlasticSCM.Editor.Views.IncomingChanges.Gluon
         SearchField mSearchField;
 
         IncomingChangesTreeView mIncomingChangesTreeView;
-        ErrorsListView mErrorsListView;
+        ErrorsPanel mErrorsPanel;
 
         int mFileConflictCount;
         MergeViewTexts.ChangesToApplySummary mChangesSummary;
 
         object mErrorsSplitterState;
-        object mErrorDetailsSplitterState;
 
         readonly ProgressControlsForViews mProgressControls;
+
+        readonly GUIContent mEmptyStateContent = new GUIContent(string.Empty);
         readonly CooldownWindowDelayer mCooldownClearUpdateSuccessAction;
-        Vector2 mErrorDetailsScrollPosition;
 
         readonly IncomingChangesViewLogic mIncomingChangesViewLogic;
         readonly EditorWindow mParentWindow;

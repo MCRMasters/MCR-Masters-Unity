@@ -61,8 +61,8 @@ namespace Unity.PlasticSCM.Editor.Views.IncomingChanges.Gluon
             if (mHeaderTitles != null)
                 TreeHeaderColumns.SetTitles(columns, mHeaderTitles);
 
-            if (mColumsAllowedToggleVisibility != null)
-                TreeHeaderColumns.SetVisibilities(columns, mColumsAllowedToggleVisibility);
+            if (mColumnsAllowedToggleVisibility != null)
+                TreeHeaderColumns.SetVisibilities(columns, mColumnsAllowedToggleVisibility);
         }
 
         void ISerializationCallbackReceiver.OnBeforeSerialize()
@@ -123,14 +123,14 @@ namespace Unity.PlasticSCM.Editor.Views.IncomingChanges.Gluon
             if (mHeaderTitles == null)
                 mHeaderTitles = TreeHeaderColumns.GetTitles(columns);
 
-            if (mColumsAllowedToggleVisibility == null)
-                mColumsAllowedToggleVisibility = TreeHeaderColumns.GetVisibilities(columns);
+            if (mColumnsAllowedToggleVisibility == null)
+                mColumnsAllowedToggleVisibility = TreeHeaderColumns.GetVisibilities(columns);
         }
 
         [SerializeField]
         string[] mHeaderTitles;
 
         [SerializeField]
-        bool[] mColumsAllowedToggleVisibility;
+        bool[] mColumnsAllowedToggleVisibility;
     }
 }

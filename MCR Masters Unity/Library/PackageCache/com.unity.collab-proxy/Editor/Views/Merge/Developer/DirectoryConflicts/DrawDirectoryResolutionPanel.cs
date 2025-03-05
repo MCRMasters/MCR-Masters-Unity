@@ -20,6 +20,7 @@ namespace Unity.PlasticSCM.Editor.Views.Merge.Developer.DirectoryConflicts
             DirectoryConflictAction[] actions,
             Action<MergeChangeInfo> resolveConflictAction,
             GUIContent validationLabel,
+            bool isPanelEnabled,
             ref ConflictResolutionState state)
         {
             bool isResolveButtonEnabled;
@@ -37,6 +38,7 @@ namespace Unity.PlasticSCM.Editor.Views.Merge.Developer.DirectoryConflicts
                 conflict,
                 resolveConflictAction,
                 isResolveButtonEnabled,
+                isPanelEnabled,
                 ref state);
             DoConflictExplanation(conflictUserInfo.ConflictExplanation);
             DoSourceAndDestinationLabels(
@@ -46,8 +48,9 @@ namespace Unity.PlasticSCM.Editor.Views.Merge.Developer.DirectoryConflicts
                 actions,
                 validationLabel,
                 validationMessage,
+                isPanelEnabled,
                 ref state);
-            DoApplyActionsForNextConflictsCheck(pendingConflictsCount, ref state);
+            DoApplyActionsForNextConflictsCheck(pendingConflictsCount, isPanelEnabled, ref state);
             GUILayout.Space(10);
         }
 
@@ -56,6 +59,7 @@ namespace Unity.PlasticSCM.Editor.Views.Merge.Developer.DirectoryConflicts
             MergeChangeInfo conflict,
             Action<MergeChangeInfo> resolveConflictAction,
             bool isResolveButtonEnabled,
+            bool isPanelEnabled,
             ref ConflictResolutionState state)
         {
             EditorGUILayout.BeginHorizontal();
@@ -63,7 +67,7 @@ namespace Unity.PlasticSCM.Editor.Views.Merge.Developer.DirectoryConflicts
             GUILayout.Label(conflictName,
                 UnityStyles.DirectoryConflicts.TitleLabel);
 
-            GUI.enabled = isResolveButtonEnabled;
+            GUI.enabled = isResolveButtonEnabled && isPanelEnabled;
 
             GUILayout.Space(5);
 
@@ -122,11 +126,14 @@ namespace Unity.PlasticSCM.Editor.Views.Merge.Developer.DirectoryConflicts
             DirectoryConflictAction[] actions,
             GUIContent validationLabel,
             string validationMessage,
+            bool isPanelEnabled,
             ref ConflictResolutionState state)
         {
             GUILayout.Space(10);
             GUILayout.Label(PlasticLocalization.GetString(
                 PlasticLocalization.Name.ResolveDirectoryConflictChooseOption));
+
+            GUI.enabled = isPanelEnabled;
 
             foreach (DirectoryConflictAction action in actions)
             {
@@ -142,12 +149,12 @@ namespace Unity.PlasticSCM.Editor.Views.Merge.Developer.DirectoryConflicts
 
                 if (action.ActionKind == DirectoryConflictResolveActions.Rename)
                 {
-                    GUI.enabled = state.ResolveAction == DirectoryConflictResolveActions.Rename;
+                    GUI.enabled = isPanelEnabled && state.ResolveAction == DirectoryConflictResolveActions.Rename;
                     state.RenameValue = GUILayout.TextField(
                         state.RenameValue,
                         UnityStyles.DirectoryConflicts.FileNameTextField,
                         GUILayout.Width(250));
-                    GUI.enabled = true;
+                    GUI.enabled = isPanelEnabled;
 
                     if (!string.IsNullOrEmpty(validationMessage))
                     {
@@ -163,10 +170,13 @@ namespace Unity.PlasticSCM.Editor.Views.Merge.Developer.DirectoryConflicts
                 GUILayout.FlexibleSpace();
                 EditorGUILayout.EndHorizontal();
             }
+
+            GUI.enabled = true;
         }
 
         static void DoApplyActionsForNextConflictsCheck(
             int pendingConflictsCount,
+            bool isPanelEnabled,
             ref ConflictResolutionState state)
         {
             if (pendingConflictsCount == 0)
@@ -177,15 +187,12 @@ namespace Unity.PlasticSCM.Editor.Views.Merge.Developer.DirectoryConflicts
             bool isCheckEnabled = state.ResolveAction != DirectoryConflictResolveActions.Rename;
             bool isChecked = state.IsApplyActionsForNextConflictsChecked & isCheckEnabled;
 
-            GUI.enabled = isCheckEnabled;
+            GUI.enabled = isCheckEnabled && isPanelEnabled;
             EditorGUILayout.BeginHorizontal();
 
-            state.IsApplyActionsForNextConflictsChecked = !GUILayout.Toggle(
+            state.IsApplyActionsForNextConflictsChecked = GUILayout.Toggle(
                 isChecked,
                 GetApplyActionCheckButtonText(pendingConflictsCount));
-
-            if (!isCheckEnabled)
-                state.IsApplyActionsForNextConflictsChecked = false;
 
             GUILayout.FlexibleSpace();
             EditorGUILayout.EndHorizontal();
@@ -249,12 +256,11 @@ namespace Unity.PlasticSCM.Editor.Views.Merge.Developer.DirectoryConflicts
         {
             if (pendingConflictsCount > 1)
                 return PlasticLocalization.GetString(
-                    PlasticLocalization.Name.ApplyActionForNextConflictsCheckButtonSingular,
+                    PlasticLocalization.Name.ApplyActionForNextConflictsCheckButtonPlural,
                     pendingConflictsCount);
 
             return PlasticLocalization.GetString(
-                PlasticLocalization.Name.ApplyActionForNextConflictsCheckButtonPlural,
-                pendingConflictsCount);
+                PlasticLocalization.Name.ApplyActionForNextConflictsCheckButtonSingular);
         }
     }
 }

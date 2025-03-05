@@ -22,12 +22,14 @@ namespace Unity.PlasticSCM.Editor.Views.Merge.Developer
             IMergeViewMenuOperations mergeViewMenuOperations,
             MergeViewFileConflictMenu.IMetaMenuOperations mergeMetaMenuOperations,
             bool isIncomingMerge,
-            bool isMergeTo)
+            bool isMergeTo,
+            bool isShelvesetMerge = false)
         {
             mMergeViewMenuOperations = mergeViewMenuOperations;
             mMergeMetaMenuOperations = mergeMetaMenuOperations;
             mIsIncomingMerge = isIncomingMerge;
             mIsMergeTo = isMergeTo;
+            mIsShelvesetMerge = isShelvesetMerge;
         }
 
         internal void Popup()
@@ -73,7 +75,8 @@ namespace Unity.PlasticSCM.Editor.Views.Merge.Developer
                         mMergeViewMenuOperations,
                         mMergeMetaMenuOperations,
                         mIsIncomingMerge,
-                        mIsMergeTo);
+                        mIsMergeTo,
+                        mIsShelvesetMerge);
             }
 
             return mMergeViewFileConflictMenu;
@@ -97,5 +100,6 @@ namespace Unity.PlasticSCM.Editor.Views.Merge.Developer
         readonly MergeViewFileConflictMenu.IMetaMenuOperations mMergeMetaMenuOperations;
         readonly bool mIsIncomingMerge;
         readonly bool mIsMergeTo;
+        readonly bool mIsShelvesetMerge;
     }
 }

@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 
 using UnityEditor;
 using UnityEngine;
@@ -24,7 +24,7 @@ namespace Unity.PlasticSCM.Editor.Views.PendingChanges.Dialogs
 
         internal static bool IncludeDependencies(
             WorkspaceInfo wkInfo,
-            IList<ChangeDependencies<ChangeInfo>> changesDependencies,
+            IList<ChangeDependencies> changesDependencies,
             string operation,
             EditorWindow parentWindow)
         {
@@ -137,7 +137,7 @@ namespace Unity.PlasticSCM.Editor.Views.PendingChanges.Dialogs
 
         static DependenciesDialog Create(
             WorkspaceInfo wkInfo,
-            IList<ChangeDependencies<ChangeInfo>> changesDependencies,
+            IList<ChangeDependencies> changesDependencies,
             string operation)
         {
             var instance = CreateInstance<DependenciesDialog>();
@@ -159,7 +159,7 @@ namespace Unity.PlasticSCM.Editor.Views.PendingChanges.Dialogs
         Vector2 mScrollPosition;
 
         string mOperation;
-        IList<ChangeDependencies<ChangeInfo>> mChangesDependencies;
+        IList<ChangeDependencies> mChangesDependencies;
         WorkspaceInfo mWkInfo;
     }
 }

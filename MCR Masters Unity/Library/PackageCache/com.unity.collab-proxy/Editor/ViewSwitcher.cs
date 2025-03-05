@@ -1,8 +1,6 @@
 using System;
-using System.Collections.Generic;
 
 using UnityEditor;
-using UnityEngine;
 
 using Codice.Client.Common.EventTracking;
 using Codice.Client.Common.Threading;
@@ -26,6 +24,7 @@ using Unity.PlasticSCM.Editor.Views.Locks;
 using Unity.PlasticSCM.Editor.Views.Merge.Developer;
 using Unity.PlasticSCM.Editor.Views.Merge;
 using Unity.PlasticSCM.Editor.Views.PendingChanges;
+using Unity.PlasticSCM.Editor.Views.Shelves;
 
 using GluonNewIncomingChangesUpdater = PlasticGui.Gluon.WorkspaceWindow.NewIncomingChangesUpdater;
 using ObjectInfo = Codice.CM.Common.ObjectInfo;
@@ -33,6 +32,13 @@ using ObjectInfo = Codice.CM.Common.ObjectInfo;
 namespace Unity.PlasticSCM.Editor
 {
     [Serializable]
+    internal class ViewSwitcherState
+    {
+        internal ViewSwitcher.SelectedTab SelectedTab;
+        internal ViewSwitcher.SelectedTab PreviousSelectedTab;
+        internal BuildMergeTabParameters MergeTabParameters;
+    }
+
     internal class ViewSwitcher :
         IViewSwitcher,
         IMergeViewLauncher,
@@ -46,21 +52,22 @@ namespace Unity.PlasticSCM.Editor
             PendingChanges = 1,
             IncomingChanges = 2,
             Changesets = 3,
-            Branches = 4,
-            Locks = 5,
-            Merge = 6,
-            History = 7
+            Shelves = 4,
+            Branches = 5,
+            Locks = 6,
+            Merge = 7,
+            History = 8,
         }
 
         internal PendingChangesTab PendingChangesTab { get; private set; }
         internal IIncomingChangesTab IncomingChangesTab { get; private set; }
         internal ChangesetsTab ChangesetsTab { get; private set; }
+        internal ShelvesTab ShelvesTab { get; private set; }
         internal BranchesTab BranchesTab { get; private set; }
         internal LocksTab LocksTab { get; private set; }
         internal MergeTab MergeTab { get; private set; }
         internal HistoryTab HistoryTab { get; private set; }
-
-        internal SelectedTab SelectedView { get { return mSelectedTab; } }
+        internal ViewSwitcherState State { get { return mState; } }
 
         internal ViewSwitcher(
             RepositorySpec repSpec,
@@ -88,6 +95,7 @@ namespace Unity.PlasticSCM.Editor
             mPendingChangesTabButton = new TabButton();
             mIncomingChangesTabButton = new TabButton();
             mChangesetsTabButton = new TabButton();
+            mShelvesTabButton = new TabButton();
             mBranchesTabButton = new TabButton();
             mLocksTabButton = new TabButton();
             mMergeTabButton = new TabButton();
@@ -96,17 +104,25 @@ namespace Unity.PlasticSCM.Editor
 
         internal bool IsViewSelected(SelectedTab tab)
         {
-            return mSelectedTab == tab;
+            return mState.SelectedTab == tab;
         }
 
         internal void SetNewIncomingChanges(
             NewIncomingChangesUpdater developerNewIncomingChangesUpdater,
             GluonNewIncomingChangesUpdater gluonNewIncomingChangesUpdater,
-            IIncomingChangesNotifier incomingChangesNotifier)
+            StatusBar.IIncomingChangesNotification incomingChangesNotification)
         {
             mDeveloperNewIncomingChangesUpdater = developerNewIncomingChangesUpdater;
             mGluonNewIncomingChangesUpdater = gluonNewIncomingChangesUpdater;
-            mIncomingChangesNotifier = incomingChangesNotifier;
+            mIncomingChangesNotification = incomingChangesNotification;
+        }
+
+        internal void SetShelvedChanges(
+            ShelvedChangesUpdater shelvedChangesUpdater,
+            CheckShelvedChanges.IUpdateShelvedChangesNotification updateShelvedChanges)
+        {
+            mShelvedChangesUpdater = shelvedChangesUpdater;
+            mUpdateShelvedChanges = updateShelvedChanges;
         }
 
         internal void SetWorkspaceWindow(WorkspaceWindow workspaceWindow)
@@ -114,14 +130,15 @@ namespace Unity.PlasticSCM.Editor
             mWorkspaceWindow = workspaceWindow;
         }
 
-        internal void ShowInitialView(SelectedTab viewToShow)
+        internal void InitializeFromState(ViewSwitcherState state)
         {
-            ShowView(viewToShow);
+            mState = state;
 
-            if (mSelectedTab != SelectedTab.None)
-                return;
+            if (mState.MergeTabParameters != null &&
+                mState.MergeTabParameters.IsInitialized)
+                BuildMergeViewFromParameters(mState.MergeTabParameters);
 
-            ShowPendingChangesView();
+            ShowInitialView(mState.SelectedTab);
         }
 
         internal void AutoRefreshPendingChangesView()
@@ -134,19 +151,35 @@ namespace Unity.PlasticSCM.Editor
             AutoRefresh.IncomingChangesView(IncomingChangesTab);
         }
 
+        internal void AutoRefreshMergeView()
+        {
+            if (mIsGluonMode)
+                return;
+
+            AutoRefresh.IncomingChangesView(MergeTab);
+        }
+
         internal void RefreshView(ViewType viewType)
         {
             IRefreshableView view = GetRefreshableView(viewType);
 
             if (view == null)
+            {
+                if (viewType.Equals(ViewType.PendingChangesView))
+                    PlasticPlugin.AssetStatusCache.Clear();
+
+                if (viewType.Equals(ViewType.LocksView))
+                    PlasticPlugin.AssetStatusCache.ClearLocks();
+
                 return;
+            }
 
             view.Refresh();
         }
 
         internal void RefreshSelectedView()
         {
-            IRefreshableView view = GetRefreshableViewBasedOnSelectedTab(mSelectedTab);
+            IRefreshableView view = GetRefreshableViewBasedOnSelectedTab(mState.SelectedTab);
 
             if (view == null)
                 return;
@@ -187,6 +220,9 @@ namespace Unity.PlasticSCM.Editor
             if (ChangesetsTab != null)
                 ChangesetsTab.OnEnable();
 
+            if (ShelvesTab != null)
+                ShelvesTab.OnEnable();
+
             if (BranchesTab != null)
                 BranchesTab.OnEnable();
 
@@ -213,6 +249,9 @@ namespace Unity.PlasticSCM.Editor
             if (ChangesetsTab != null)
                 ChangesetsTab.OnDisable();
 
+            if (ShelvesTab != null)
+                ShelvesTab.OnDisable();
+
             if (BranchesTab != null)
                 BranchesTab.OnDisable();
 
@@ -224,7 +263,6 @@ namespace Unity.PlasticSCM.Editor
 
             if (HistoryTab != null)
                 HistoryTab.OnDisable();
-
         }
 
         internal void Update()
@@ -244,6 +282,12 @@ namespace Unity.PlasticSCM.Editor
             if (IsViewSelected(SelectedTab.Changesets))
             {
                 ChangesetsTab.Update();
+                return;
+            }
+
+            if (IsViewSelected(SelectedTab.Shelves))
+            {
+                ShelvesTab.Update();
                 return;
             }
 
@@ -282,6 +326,8 @@ namespace Unity.PlasticSCM.Editor
 
             ChangesetsTabButtonGUI();
 
+            ShelvesTabButtonGUI();
+
             BranchesTabButtonGUI();
 
             LocksTabButtonGUI();
@@ -308,6 +354,12 @@ namespace Unity.PlasticSCM.Editor
             if (IsViewSelected(SelectedTab.Changesets))
             {
                 ChangesetsTab.OnGUI();
+                return;
+            }
+
+            if (IsViewSelected(SelectedTab.Shelves))
+            {
+                ShelvesTab.OnGUI();
                 return;
             }
 
@@ -367,9 +419,12 @@ namespace Unity.PlasticSCM.Editor
                     mWorkspaceWindow,
                     mWorkspaceWindow,
                     mDeveloperNewIncomingChangesUpdater,
+                    mGluonNewIncomingChangesUpdater,
+                    mShelvedChangesUpdater,
                     PendingChangesTab,
                     mShowDownloadPlasticExeWindow,
                     mProcessExecutor,
+                    mWorkspaceOperationsMonitor,
                     mParentWindow,
                     mIsGluonMode);
 
@@ -385,6 +440,37 @@ namespace Unity.PlasticSCM.Editor
                 ((IRefreshableView)ChangesetsTab).Refresh();
 
             SetSelectedView(SelectedTab.Changesets);
+        }
+
+        internal void ShowShelvesViewIfNeeded()
+        {
+            if (!BoolSetting.Load(UnityConstants.SHOW_SHELVES_VIEW_KEY_NAME, false))
+                return;
+
+            OpenShelvesTab();
+        }
+
+        internal void ShowShelvesView(ChangesetInfo shelveToSelect = null)
+        {
+            bool wasShelvesOpen = ShelvesTab != null;
+
+            OpenShelvesTab(shelveToSelect);
+
+            bool wasShelvesSelected =
+                IsViewSelected(SelectedTab.Shelves);
+
+            if (!wasShelvesOpen && (shelveToSelect != null || !wasShelvesSelected))
+                ShelvesTab.RefreshAndSelect(shelveToSelect);
+
+            SetSelectedView(SelectedTab.Shelves);
+        }
+
+        internal void ShowLocksViewIfNeeded()
+        {
+            if (!BoolSetting.Load(UnityConstants.SHOW_LOCKS_VIEW_KEY_NAME, false))
+                return;
+
+            OpenLocksTab();
         }
 
         internal void ShowBranchesViewIfNeeded()
@@ -430,14 +516,6 @@ namespace Unity.PlasticSCM.Editor
                 ((IRefreshableView)BranchesTab).Refresh();
 
             SetSelectedView(SelectedTab.Branches);
-        }
-
-        internal void ShowLocksViewIfNeeded()
-        {
-            if (!BoolSetting.Load(UnityConstants.SHOW_LOCKS_VIEW_KEY_NAME, false))
-                return;
-
-            OpenLocksTab();
         }
 
         internal void ShowLocksView()
@@ -498,6 +576,13 @@ namespace Unity.PlasticSCM.Editor
             ShowMergeView();
         }
 
+        internal void ShowShelvesViewForTesting(ShelvesTab shelvesTab)
+        {
+            ShelvesTab = shelvesTab;
+
+            ShowShelvesView();
+        }
+
         void IViewSwitcher.ShowView(ViewType viewType)
         {
         }
@@ -506,6 +591,11 @@ namespace Unity.PlasticSCM.Editor
         {
             ShowPendingChangesView();
             mParentWindow.Repaint();
+        }
+
+        void IViewSwitcher.ShowShelvesView()
+        {
+            ShowShelvesView();
         }
 
         void IViewSwitcher.ShowSyncView(string syncViewToSelect)
@@ -521,6 +611,12 @@ namespace Unity.PlasticSCM.Editor
 
         void IViewSwitcher.DisableMergeView()
         {
+            DisableMergeTab();
+        }
+
+        IMergeView IViewSwitcher.GetMergeView()
+        {
+            return MergeTab;
         }
 
         bool IViewSwitcher.IsIncomingChangesView()
@@ -528,19 +624,19 @@ namespace Unity.PlasticSCM.Editor
             return IsViewSelected(SelectedTab.IncomingChanges);
         }
 
-        void IViewSwitcher.CloseIncomingChangesView()
+        void IViewSwitcher.CloseMergeView()
         {
-            ((IViewSwitcher)this).DisableMergeView();
+            CloseMergeTab();
         }
 
         IMergeView IMergeViewLauncher.MergeFrom(
             RepositorySpec repSpec,
             ObjectInfo objectInfo,
             EnumMergeType mergeType,
-            List<MergeViewAction> actions)
+            bool showDiscardChangesButton)
         {
             return ((IMergeViewLauncher)this).MergeFromInterval(
-                repSpec, objectInfo, null, mergeType, actions);
+                repSpec, objectInfo, null, mergeType, showDiscardChangesButton);
         }
 
         IMergeView IMergeViewLauncher.MergeFrom(
@@ -548,9 +644,9 @@ namespace Unity.PlasticSCM.Editor
             ObjectInfo objectInfo,
             EnumMergeType mergeType,
             ShowIncomingChangesFrom from,
-            List<MergeViewAction> actions)
+            bool showDiscardChangesButton)
         {
-            return MergeFromInterval(repSpec, objectInfo, null, mergeType, from, actions);
+            return MergeFromInterval(repSpec, objectInfo, null, mergeType, from, showDiscardChangesButton);
         }
 
         IMergeView IMergeViewLauncher.MergeFromInterval(
@@ -558,10 +654,10 @@ namespace Unity.PlasticSCM.Editor
             ObjectInfo objectInfo,
             ObjectInfo ancestorChangesetInfo,
             EnumMergeType mergeType,
-            List<MergeViewAction> actions)
+            bool showDiscardChangesButton)
         {
             return MergeFromInterval(
-                repSpec, objectInfo, null, mergeType, ShowIncomingChangesFrom.NotificationBar, actions);
+                repSpec, objectInfo, null, mergeType, ShowIncomingChangesFrom.NotificationBar, showDiscardChangesButton);
         }
 
         IMergeView IMergeViewLauncher.FromCalculatedMerge(
@@ -569,10 +665,10 @@ namespace Unity.PlasticSCM.Editor
             ObjectInfo objectInfo,
             EnumMergeType mergeType,
             CalculatedMergeResult calculatedMergeResult,
-            List<MergeViewAction> actions)
+            bool showDiscardChangesButton)
         {
-            return ((IMergeViewLauncher)this).MergeFromInterval(
-                repSpec, objectInfo, null, mergeType, actions);
+            return ShowMergeViewFromCalculatedMerge(
+                repSpec, objectInfo, mergeType, calculatedMergeResult, showDiscardChangesButton);
         }
 
         void IGluonViewSwitcher.ShowIncomingChangesView()
@@ -616,32 +712,35 @@ namespace Unity.PlasticSCM.Editor
                 mergeType,
                 ShowIncomingChangesFrom.None,
                 MergeTypeClassifier.IsIncomingMerge(mergeType),
-                null);
+                false);
 
             mViewHost.AddRefreshableView(ViewType.MergeView, MergeTab);
 
             ShowMergeView();
         }
 
-        IMergeView MergeFromInterval(
-            RepositorySpec repSpec,
-            ObjectInfo objectInfo,
-            ObjectInfo ancestorChangesetInfo,
-            EnumMergeType mergeType,
-            ShowIncomingChangesFrom from,
-            List<MergeViewAction> actions)
+        void ShowInitialView(SelectedTab viewToShow)
         {
-            if (MergeTypeClassifier.IsIncomingMerge(mergeType))
-            {
-                ShowIncomingChangesView();
-                mParentWindow.Repaint();
-                return IncomingChangesTab as IMergeView;
-            }
+            ShowView(viewToShow);
 
-            ShowMergeViewFromInterval(
-                repSpec, objectInfo, ancestorChangesetInfo, mergeType, from, actions);
-            mParentWindow.Repaint();
-            return MergeTab;
+            if (mState.SelectedTab != SelectedTab.None)
+                return;
+
+            ShowPendingChangesView();
+        }
+
+        void BuildMergeViewFromParameters(BuildMergeTabParameters parameters)
+        {
+            MergeTab = BuildMergeTab(
+                parameters.RepSpec,
+                parameters.GetObjectInfo(),
+                parameters.GetAncestorObjectInfo(),
+                parameters.MergeType,
+                parameters.From,
+                parameters.IsIncomingMerge,
+                false);
+
+            mViewHost.AddRefreshableView(ViewType.MergeView, MergeTab);
         }
 
         void OpenPendingChangesTab()
@@ -651,6 +750,7 @@ namespace Unity.PlasticSCM.Editor
 
             PendingChangesTab = new PendingChangesTab(
                 mWkInfo,
+                mRepSpec,
                 mViewHost,
                 mIsGluonMode,
                 mWorkspaceWindow,
@@ -673,6 +773,61 @@ namespace Unity.PlasticSCM.Editor
                 PendingChangesTab);
         }
 
+        IMergeView MergeFromInterval(
+            RepositorySpec repSpec,
+            ObjectInfo objectInfo,
+            ObjectInfo ancestorChangesetInfo,
+            EnumMergeType mergeType,
+            ShowIncomingChangesFrom from,
+            bool showDiscardChangesButton)
+        {
+            if (MergeTypeClassifier.IsIncomingMerge(mergeType))
+            {
+                ShowIncomingChangesView();
+                mParentWindow.Repaint();
+                return IncomingChangesTab as IMergeView;
+            }
+
+            ShowMergeViewFromInterval(
+                repSpec, objectInfo, ancestorChangesetInfo, mergeType, from, showDiscardChangesButton);
+            mParentWindow.Repaint();
+            return MergeTab;
+        }
+
+        void OpenShelvesTab(ChangesetInfo shelveToSelect = null)
+        {
+            if (ShelvesTab == null)
+            {
+                OpenPendingChangesTab();
+
+                ShelvesTab = new ShelvesTab(
+                     mWkInfo,
+                     mRepSpec,
+                     mWorkspaceWindow,
+                     shelveToSelect,
+                     this,
+                     this,
+                     PendingChangesTab,
+                     mIsGluonMode ?
+                         mWorkspaceWindow.GluonProgressOperationHandler :
+                         mWorkspaceWindow.DeveloperProgressOperationHandler,
+                     mWorkspaceWindow.GluonProgressOperationHandler,
+                     this,
+                     mShelvedChangesUpdater,
+                     mShowDownloadPlasticExeWindow,
+                     mProcessExecutor,
+                     mParentWindow,
+                     mIsGluonMode);
+
+                mViewHost.AddRefreshableView(ViewType.ShelvesView, ShelvesTab);
+
+                TrackFeatureUseEvent.For(
+                    mRepSpec, TrackFeatureUseEvent.Features.OpenShelvesView);
+            }
+
+            BoolSetting.Save(true, UnityConstants.SHOW_SHELVES_VIEW_KEY_NAME);
+        }
+
         void OpenBranchesTab()
         {
             if (BranchesTab == null)
@@ -687,11 +842,18 @@ namespace Unity.PlasticSCM.Editor
                      mWorkspaceWindow,
                      mDeveloperNewIncomingChangesUpdater,
                      mGluonNewIncomingChangesUpdater,
+                     mShelvedChangesUpdater,
+                     mShowDownloadPlasticExeWindow,
+                     mProcessExecutor,
+                     mWorkspaceOperationsMonitor,
                      mParentWindow,
                      mIsGluonMode);
 
                 mViewHost.AddRefreshableView(
                     ViewType.BranchesView, BranchesTab);
+
+                TrackFeatureUseEvent.For(
+                   mRepSpec, TrackFeatureUseEvent.Features.OpenBranchesView);
             }
 
             BoolSetting.Save(true, UnityConstants.SHOW_BRANCHES_VIEW_KEY_NAME);
@@ -701,15 +863,29 @@ namespace Unity.PlasticSCM.Editor
         {
             if (LocksTab == null)
             {
-                LocksTab = new LocksTab(mRepSpec, mWorkspaceWindow, mParentWindow);
+                LocksTab = new LocksTab(
+                    mRepSpec,
+                    mWorkspaceWindow,
+                    mAssetStatusCache,
+                    mParentWindow);
 
                 mViewHost.AddRefreshableView(ViewType.LocksView, LocksTab);
 
-                TrackFeatureUseEvent.For(mRepSpec,
-                    TrackFeatureUseEvent.Features.OpenLocksView);
+                TrackFeatureUseEvent.For(
+                    mRepSpec, TrackFeatureUseEvent.Features.OpenLocksView);
             }
 
             BoolSetting.Save(true, UnityConstants.SHOW_LOCKS_VIEW_KEY_NAME);
+        }
+
+        void ShowHistoryView()
+        {
+            if (HistoryTab == null)
+                return;
+
+            ((IRefreshableView)HistoryTab).Refresh();
+
+            SetSelectedView(SelectedTab.History);
         }
 
         void ShowIncomingChangesView()
@@ -741,7 +917,7 @@ namespace Unity.PlasticSCM.Editor
             ObjectInfo ancestorChangesetInfo,
             EnumMergeType mergeType,
             ShowIncomingChangesFrom from,
-            List<MergeViewAction> extraActions)
+            bool showDiscardChangesButton)
         {
             if (MergeTab != null && MergeTab.IsProcessingMerge)
             {
@@ -756,11 +932,41 @@ namespace Unity.PlasticSCM.Editor
             }
 
             MergeTab = BuildMergeTab(
-                repSpec, objectInfo, ancestorChangesetInfo, mergeType, from, false, extraActions);
+                repSpec, objectInfo, ancestorChangesetInfo, mergeType, from, false, showDiscardChangesButton);
 
             mViewHost.AddRefreshableView(ViewType.MergeView, MergeTab);
 
             ShowMergeView();
+        }
+
+        IMergeView ShowMergeViewFromCalculatedMerge(
+            RepositorySpec repSpec,
+            ObjectInfo objectInfo,
+            EnumMergeType mergeType,
+            CalculatedMergeResult calculatedMergeResult,
+            bool showDiscardChangesButton)
+        {
+            if (MergeTab != null && MergeTab.IsProcessingMerge)
+            {
+                ShowMergeView();
+                mParentWindow.Repaint();
+                return MergeTab;
+            }
+
+            if (MergeTab != null)
+            {
+                mViewHost.RemoveRefreshableView(ViewType.MergeView, MergeTab);
+                MergeTab.OnDisable();
+            }
+
+            MergeTab = BuildMergeTabFromCalculatedMerge(
+                repSpec, objectInfo, mergeType, calculatedMergeResult, showDiscardChangesButton);
+
+            mViewHost.AddRefreshableView(ViewType.MergeView, MergeTab);
+
+            ShowMergeView();
+            mParentWindow.Repaint();
+            return MergeTab;
         }
 
         void ShowMergeView()
@@ -777,14 +983,36 @@ namespace Unity.PlasticSCM.Editor
             SetSelectedView(SelectedTab.Merge);
         }
 
-        void ShowHistoryView()
+        void DisableMergeTab()
         {
-            if (HistoryTab == null)
+            if (MergeTab == null)
                 return;
 
-            ((IRefreshableView)HistoryTab).Refresh();
+            mViewHost.RemoveRefreshableView(
+                ViewType.MergeView, MergeTab);
 
-            SetSelectedView(SelectedTab.History);
+            MergeTab.OnDisable();
+            MergeTab = null;
+
+            mState.MergeTabParameters = null;
+        }
+
+        void CloseShelvesTab()
+        {
+            BoolSetting.Save(false, UnityConstants.SHOW_SHELVES_VIEW_KEY_NAME);
+
+            TrackFeatureUseEvent.For(
+                mRepSpec, TrackFeatureUseEvent.Features.CloseShelvesView);
+
+            mViewHost.RemoveRefreshableView(
+                ViewType.ShelvesView, ShelvesTab);
+
+            ShelvesTab.OnDisable();
+            ShelvesTab = null;
+
+            ShowPreviousViewFrom(SelectedTab.Shelves);
+
+            mParentWindow.Repaint();
         }
 
         void CloseBranchesTab()
@@ -806,8 +1034,8 @@ namespace Unity.PlasticSCM.Editor
         {
             BoolSetting.Save(false, UnityConstants.SHOW_LOCKS_VIEW_KEY_NAME);
 
-            TrackFeatureUseEvent.For(mRepSpec,
-                TrackFeatureUseEvent.Features.CloseLocksView);
+            TrackFeatureUseEvent.For(
+                mRepSpec, TrackFeatureUseEvent.Features.CloseLocksView);
 
             mViewHost.RemoveRefreshableView(ViewType.LocksView, LocksTab);
 
@@ -821,11 +1049,7 @@ namespace Unity.PlasticSCM.Editor
 
         void CloseMergeTab()
         {
-            mViewHost.RemoveRefreshableView(
-                ViewType.MergeView, MergeTab);
-
-            MergeTab.OnDisable();
-            MergeTab = null;
+            DisableMergeTab();
 
             ShowPreviousViewFrom(SelectedTab.Merge);
 
@@ -854,10 +1078,11 @@ namespace Unity.PlasticSCM.Editor
                 UnityStyles.PlasticWindow.TabButton,
                 PlasticLocalization.GetString(PlasticLocalization.Name.PendingChangesViewTitle),
                 PlasticLocalization.GetString(PlasticLocalization.Name.IncomingChangesViewTitle),
-                PlasticLocalization.GetString(PlasticLocalization.Name.BranchesViewTitle),
                 PlasticLocalization.GetString(PlasticLocalization.Name.ChangesetsViewTitle),
-                PlasticLocalization.GetString(PlasticLocalization.Name.FileHistory),
-                PlasticLocalization.GetString(PlasticLocalization.Name.LocksViewTitle));
+                PlasticLocalization.GetString(PlasticLocalization.Name.BranchesViewTitle),
+                PlasticLocalization.GetString(PlasticLocalization.Name.ShelvesViewTitle),
+                PlasticLocalization.GetString(PlasticLocalization.Name.LocksViewTitle),
+                PlasticLocalization.GetString(PlasticLocalization.Name.FileHistory));
         }
 
         IIncomingChangesTab BuildIncomingChangesTab(bool isGluonMode)
@@ -870,7 +1095,7 @@ namespace Unity.PlasticSCM.Editor
                     mWorkspaceWindow,
                     mShowDownloadPlasticExeWindow,
                     mGluonNewIncomingChangesUpdater,
-                    (Gluon.IncomingChangesNotifier)mIncomingChangesNotifier,
+                    (Gluon.IncomingChangesNotification)mIncomingChangesNotification,
                     mStatusBar,
                     mParentWindow);
             }
@@ -886,7 +1111,7 @@ namespace Unity.PlasticSCM.Editor
                 true,
                 plasticNotifier);
 
-            return new MergeTab(
+            return MergeTab.Build(
                 mWkInfo,
                 mRepSpec,
                 mWorkspaceWindow,
@@ -902,8 +1127,29 @@ namespace Unity.PlasticSCM.Editor
                 plasticNotifier,
                 mergeController,
                 new MergeViewLogic.GetWorkingBranch(),
+                mUpdateShelvedChanges,
+                mShelvedChangesUpdater,
+                mWorkspaceWindow,
                 true,
-                new List<MergeViewAction>());
+                false);
+        }
+
+        MergeTab BuildMergeTabFromCalculatedMerge(
+            RepositorySpec repSpec,
+            ObjectInfo objectInfo,
+            EnumMergeType mergeType,
+            CalculatedMergeResult calculatedMergeResult,
+            bool showDiscardChangesButton)
+        {
+            return BuildMergeTab(
+                repSpec,
+                objectInfo,
+                null,
+                mergeType,
+                ShowIncomingChangesFrom.None,
+                false,
+                showDiscardChangesButton,
+                calculatedMergeResult);
         }
 
         MergeTab BuildMergeTab(
@@ -913,8 +1159,12 @@ namespace Unity.PlasticSCM.Editor
             EnumMergeType mergeType,
             ShowIncomingChangesFrom from,
             bool isIncomingMerge,
-            List<MergeViewAction> extraActions)
+            bool showDiscardChangesButton,
+            CalculatedMergeResult calculatedMergeResult = null)
         {
+            mState.MergeTabParameters = new BuildMergeTabParameters(
+                repSpec, objectInfo, ancestorObjectInfo, mergeType, from, isIncomingMerge);
+
             PlasticNotifier plasticNotifier = new PlasticNotifier();
 
             MergeViewLogic.IMergeController mergeController = new MergeController(
@@ -926,7 +1176,33 @@ namespace Unity.PlasticSCM.Editor
                 false,
                 plasticNotifier);
 
-            return new MergeTab(
+            if (calculatedMergeResult != null)
+            {
+                return MergeTab.BuildFromCalculatedMerge(
+                    mWkInfo,
+                    repSpec,
+                    mWorkspaceWindow,
+                    this,
+                    mShowDownloadPlasticExeWindow,
+                    this,
+                    mDeveloperNewIncomingChangesUpdater,
+                    mParentWindow,
+                    objectInfo,
+                    ancestorObjectInfo,
+                    mergeType,
+                    from,
+                    plasticNotifier,
+                    mergeController,
+                    new MergeViewLogic.GetWorkingBranch(),
+                    mUpdateShelvedChanges,
+                    mShelvedChangesUpdater,
+                    mWorkspaceWindow,
+                    isIncomingMerge,
+                    calculatedMergeResult,
+                    showDiscardChangesButton);
+            }
+
+            return MergeTab.Build(
                 mWkInfo,
                 repSpec,
                 mWorkspaceWindow,
@@ -942,8 +1218,11 @@ namespace Unity.PlasticSCM.Editor
                 plasticNotifier,
                 mergeController,
                 new MergeViewLogic.GetWorkingBranch(),
+                mUpdateShelvedChanges,
+                mShelvedChangesUpdater,
+                mWorkspaceWindow,
                 isIncomingMerge,
-                extraActions);
+                showDiscardChangesButton);
         }
 
         void ShowView(SelectedTab viewToShow)
@@ -966,6 +1245,10 @@ namespace Unity.PlasticSCM.Editor
                     ShowBranchesView();
                     break;
 
+                case SelectedTab.Shelves:
+                    ShowShelvesView();
+                    break;
+
                 case SelectedTab.Locks:
                     ShowLocksView();
                     break;
@@ -985,24 +1268,10 @@ namespace Unity.PlasticSCM.Editor
             if (!IsViewSelected(tabToClose))
                 return;
 
-            if (GetRefreshableViewBasedOnSelectedTab(mPreviousSelectedTab) == null)
-                mPreviousSelectedTab = SelectedTab.PendingChanges;
+            if (GetRefreshableViewBasedOnSelectedTab(mState.PreviousSelectedTab) == null)
+                mState.PreviousSelectedTab = SelectedTab.PendingChanges;
 
-            ShowView(mPreviousSelectedTab);
-        }
-
-        void SetSelectedView(SelectedTab tab)
-        {
-            if (mSelectedTab != tab)
-                mPreviousSelectedTab = mSelectedTab;
-
-            mSelectedTab = tab;
-
-            if (IncomingChangesTab == null)
-                return;
-
-            IncomingChangesTab.IsVisible =
-                tab == SelectedTab.IncomingChanges;
+            ShowView(mState.PreviousSelectedTab);
         }
 
         IRefreshableView GetRefreshableViewBasedOnSelectedTab(SelectedTab selectedTab)
@@ -1017,6 +1286,9 @@ namespace Unity.PlasticSCM.Editor
 
                 case SelectedTab.Changesets:
                     return ChangesetsTab;
+
+                case SelectedTab.Shelves:
+                    return ShelvesTab;
 
                 case SelectedTab.Branches:
                     return BranchesTab;
@@ -1048,6 +1320,9 @@ namespace Unity.PlasticSCM.Editor
                 case ViewType.ChangesetsView:
                     return ChangesetsTab;
 
+                case ViewType.ShelvesView:
+                    return ShelvesTab;
+
                 case ViewType.BranchesView:
                     return BranchesTab;
 
@@ -1063,6 +1338,20 @@ namespace Unity.PlasticSCM.Editor
                 default:
                     return null;
             }
+        }
+
+        void SetSelectedView(SelectedTab tab)
+        {
+            if (mState.SelectedTab != tab)
+                mState.PreviousSelectedTab = mState.SelectedTab;
+
+            mState.SelectedTab = tab;
+
+            if (IncomingChangesTab == null)
+                return;
+
+            IncomingChangesTab.IsVisible =
+                tab == SelectedTab.IncomingChanges;
         }
 
         void PendingChangesTabButtonGUI()
@@ -1110,10 +1399,45 @@ namespace Unity.PlasticSCM.Editor
                 ShowChangesetsView();
         }
 
+        void ShelvesTabButtonGUI()
+        {
+            if (ShelvesTab == null)
+            {
+                DrawStaticElement.Empty();
+                return;
+            }
+
+            bool wasShelvesSelected =
+                 IsViewSelected(SelectedTab.Shelves);
+
+            bool isCloseButtonClicked;
+
+            bool isShelvesSelected = mShelvesTabButton.
+                DrawClosableTabButton(PlasticLocalization.GetString(
+                    PlasticLocalization.Name.ShelvesViewTitle),
+                    wasShelvesSelected,
+                    true,
+                    mTabButtonWidth,
+                    mParentWindow.Repaint,
+                    out isCloseButtonClicked);
+
+            if (isCloseButtonClicked)
+            {
+                CloseShelvesTab();
+                return;
+            }
+
+            if (isShelvesSelected)
+                SetSelectedView(SelectedTab.Shelves);
+        }
+
         void BranchesTabButtonGUI()
         {
             if (BranchesTab == null)
+            {
+                DrawStaticElement.Empty();
                 return;
+            }
 
             bool wasBranchesSelected =
                  IsViewSelected(SelectedTab.Branches);
@@ -1143,6 +1467,7 @@ namespace Unity.PlasticSCM.Editor
         {
             if (LocksTab == null)
             {
+                DrawStaticElement.Empty();
                 return;
             }
 
@@ -1173,7 +1498,10 @@ namespace Unity.PlasticSCM.Editor
         void MergeTabButtonGUI()
         {
             if (MergeTab == null)
+            {
+                DrawStaticElement.Empty();
                 return;
+            }
 
             bool wasMergeSelected =
                 IsViewSelected(SelectedTab.Merge);
@@ -1192,6 +1520,7 @@ namespace Unity.PlasticSCM.Editor
             if (isCloseButtonClicked)
             {
                 CloseMergeTab();
+                ShowPendingChangesView();
                 return;
             }
 
@@ -1202,7 +1531,10 @@ namespace Unity.PlasticSCM.Editor
         void HistoryTabButtonGUI()
         {
             if (HistoryTab == null)
+            {
+                DrawStaticElement.Empty();
                 return;
+            }
 
             bool wasHistorySelected =
                 IsViewSelected(SelectedTab.History);
@@ -1230,21 +1562,22 @@ namespace Unity.PlasticSCM.Editor
 
         float mTabButtonWidth = -1;
 
-        [SerializeField]
-        SelectedTab mSelectedTab;
-        SelectedTab mPreviousSelectedTab;
+        ViewSwitcherState mState;
 
         TabButton mPendingChangesTabButton;
         TabButton mIncomingChangesTabButton;
-        TabButton mBranchesTabButton;
         TabButton mChangesetsTabButton;
+        TabButton mShelvesTabButton;
+        TabButton mBranchesTabButton;
         TabButton mLocksTabButton;
         TabButton mMergeTabButton;
         TabButton mHistoryTabButton;
 
-        IIncomingChangesNotifier mIncomingChangesNotifier;
+        StatusBar.IIncomingChangesNotification mIncomingChangesNotification;
         GluonNewIncomingChangesUpdater mGluonNewIncomingChangesUpdater;
         NewIncomingChangesUpdater mDeveloperNewIncomingChangesUpdater;
+        CheckShelvedChanges.IUpdateShelvedChangesNotification mUpdateShelvedChanges;
+        ShelvedChangesUpdater mShelvedChangesUpdater;
         WorkspaceWindow mWorkspaceWindow;
 
         readonly EditorWindow mParentWindow;

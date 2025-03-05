@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.IO;
 
 using UnityEditor;
@@ -226,7 +226,7 @@ namespace Unity.PlasticSCM.Editor.AssetMenu.Dialogs
         {
             bool isCancelled;
             SaveAssets.ForPathsWithConfirmation(
-                mPaths, mWorkspaceOperationsMonitor,
+                mWkInfo.ClientPath, mPaths, mWorkspaceOperationsMonitor,
                 out isCancelled);
 
             if (isCancelled)

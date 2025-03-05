@@ -1,4 +1,4 @@
-﻿using System.Reflection;
+using System.Reflection;
 
 using UnityEditor;
 using UnityEngine;
@@ -25,19 +25,19 @@ namespace Unity.PlasticSCM.Editor.Views.PendingChanges
 
                 EditorGUI.BeginChangeCheck();
 
-                pendingChangesTab.CommentText = DoTextArea(
-                    pendingChangesTab.CommentText ?? string.Empty,
-                    pendingChangesTab.ForceToShowComment,
-                    textAreaRect);
-
-                pendingChangesTab.ForceToShowComment = false;
+                pendingChangesTab.UpdateComment(
+                    DoTextArea(
+                        pendingChangesTab.CommentText ?? string.Empty,
+                        pendingChangesTab.ForceToShowComment,
+                        textAreaRect));
 
                 if (EditorGUI.EndChangeCheck())
                     OnTextAreaChanged(pendingChangesTab);
 
                 if (string.IsNullOrEmpty(pendingChangesTab.CommentText))
                 {
-                    DoPlaceholderIfNeeded(PlasticLocalization.GetString(PlasticLocalization.Name.CheckinOnlyComment),
+                    DoPlaceholderIfNeeded(
+                        PlasticLocalization.Name.CheckinComment.GetString(),
                         textAreaRect);
                 }
 
@@ -55,8 +55,8 @@ namespace Unity.PlasticSCM.Editor.Views.PendingChanges
             bool forceToShowText,
             Rect textAreaRect)
         {
-            // while the text area has the focus, the changes to 
-            // the source string will not be picked up by the text editor. 
+            // while the text area has the focus, the changes to
+            // the source string will not be picked up by the text editor.
             // so, when we want to change the text programmatically
             // we have to remove the focus, set the text and then reset the focus.
 
@@ -101,15 +101,11 @@ namespace Unity.PlasticSCM.Editor.Views.PendingChanges
             GUIStyle commentTextAreaStyle = UnityStyles.PendingChangesTab.CommentTextArea;
             commentTextAreaStyle.stretchWidth = false;
 
-            // The number here (230) controls how much the right side buttons are pushed off the
-            // screen when window is at min width
-            float contentWidth = width - 230f;
-
             Rect result = GUILayoutUtility.GetRect(
-                contentWidth,
+                width,
                 UnityConstants.PLASTIC_WINDOW_COMMENT_SECTION_HEIGHT);
 
-            result.width = contentWidth;
+            result.width = width;
             result.height = UnityConstants.PLASTIC_WINDOW_COMMENT_SECTION_HEIGHT;
             result.xMin = 50f;
 

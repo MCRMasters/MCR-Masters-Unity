@@ -1,11 +1,9 @@
-using System;
 using System.Collections.Generic;
 
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
 
-using Codice.Client.Commands;
 using Codice.Client.Common;
 using Codice.Client.Common.EventTracking;
 using Codice.Client.Common.Threading;
@@ -17,22 +15,25 @@ using PlasticGui.WorkspaceWindow.Update;
 using PlasticGui.WorkspaceWindow.QueryViews;
 using PlasticGui.WorkspaceWindow.QueryViews.Changesets;
 using GluonGui;
+using PlasticGui.WorkspaceWindow.CodeReview;
 using Unity.PlasticSCM.Editor.AssetUtils;
+using Unity.PlasticSCM.Editor.AssetUtils.Processor;
 using Unity.PlasticSCM.Editor.UI;
 using Unity.PlasticSCM.Editor.UI.Progress;
 using Unity.PlasticSCM.Editor.UI.Tree;
 using Unity.PlasticSCM.Editor.Tool;
 using Unity.PlasticSCM.Editor.Views.Diff;
 
+using GluonNewIncomingChangesUpdater = PlasticGui.Gluon.WorkspaceWindow.NewIncomingChangesUpdater;
 using IGluonUpdateReport = PlasticGui.Gluon.IUpdateReport;
 
 namespace Unity.PlasticSCM.Editor.Views.Changesets
 {
     internal partial class ChangesetsTab :
         IRefreshableView,
-        IQueryRefreshableView,
         IChangesetMenuOperations,
-        ChangesetsViewMenu.IMenuOperations
+        ChangesetsViewMenu.IMenuOperations,
+        ILaunchCodeReviewWindow
     {
         internal ChangesetsListView Table { get { return mChangesetsListView; } }
         internal IChangesetMenuOperations Operations { get { return this; } }
@@ -51,10 +52,13 @@ namespace Unity.PlasticSCM.Editor.Views.Changesets
             ViewHost viewHost,
             IUpdateReport updateReport,
             IGluonUpdateReport gluonUpdateReport,
-            NewIncomingChangesUpdater newIncomingChangesUpdater,
+            NewIncomingChangesUpdater developerNewIncomingChangesUpdater,
+            GluonNewIncomingChangesUpdater gluonNewIncomingChangesUpdater,
+            IShelvedChangesUpdater shelvedChangesUpdater,
             IRevertToChangesetListener revertToChangesetListener,
             LaunchTool.IShowDownloadPlasticExeWindow showDownloadPlasticExeWindow,
             LaunchTool.IProcessExecutor processExecutor,
+            WorkspaceOperationsMonitor workspaceOperationsMonitor,
             EditorWindow parentWindow,
             bool isGluonMode)
         {
@@ -65,9 +69,17 @@ namespace Unity.PlasticSCM.Editor.Views.Changesets
             mRevertToChangesetListener = revertToChangesetListener;
             mShowDownloadPlasticExeWindow = showDownloadPlasticExeWindow;
             mProcessExecutor = processExecutor;
+            mWorkspaceOperationsMonitor = workspaceOperationsMonitor;
             mParentWindow = parentWindow;
             mIsGluonMode = isGluonMode;
             mGluonUpdateReport = gluonUpdateReport;
+
+            mGluonNewIncomingChangesUpdater = gluonNewIncomingChangesUpdater;
+            mShelvePendingChangesQuestionerBuilder = new ShelvePendingChangesQuestionerBuilder(parentWindow);
+            mShelvedChangesUpdater = shelvedChangesUpdater;
+            mEnableSwitchAndShelveFeatureDialog = new EnableSwitchAndShelveFeature(
+                PlasticGui.Plastic.API.GetRepositorySpec(mWkInfo),
+                mParentWindow);
 
             BuildComponents(
                 wkInfo,
@@ -85,29 +97,22 @@ namespace Unity.PlasticSCM.Editor.Views.Changesets
                 new int[] { 100000, 100000 }
             );
 
-            mBorderColor = EditorGUIUtility.isProSkin
-                ? (Color)new Color32(35, 35, 35, 255)
-                : (Color)new Color32(153, 153, 153, 255);
-
             mChangesetOperations = new ChangesetOperations(
                 wkInfo,
                 workspaceWindow,
-                null,
                 viewSwitcher,
                 mergeViewLauncher,
-                this,
                 ViewType.ChangesetsView,
                 mProgressControls,
                 updateReport,
                 new ContinueWithPendingChangesQuestionerBuilder(viewSwitcher, parentWindow),
+                mShelvePendingChangesQuestionerBuilder,
+                new ApplyShelveWithConflictsQuestionerBuilder(),
+                developerNewIncomingChangesUpdater,
+                shelvedChangesUpdater,
                 null,
                 null,
-                newIncomingChangesUpdater,
-                null,
-                null,
-                null,
-                null,
-                null);
+                mEnableSwitchAndShelveFeatureDialog);
 
             ((IRefreshableView)this).Refresh();
         }
@@ -141,8 +146,6 @@ namespace Unity.PlasticSCM.Editor.Views.Changesets
 
         internal void OnGUI()
         {
-            InitializeShowChangesButtonWidth();
-
             DoActionsToolbar(mProgressControls);
 
             PlasticSplitterGUILayout.BeginHorizontalSplit(mSplitterState);
@@ -154,7 +157,7 @@ namespace Unity.PlasticSCM.Editor.Views.Changesets
             EditorGUILayout.BeginHorizontal();
 
             Rect border = GUILayoutUtility.GetRect(1, 0, 1, 100000);
-            EditorGUI.DrawRect(border, mBorderColor);
+            EditorGUI.DrawRect(border, UnityStyles.Colors.BarBorder);
 
             DoChangesArea(mDiffPanel);
 
@@ -170,8 +173,6 @@ namespace Unity.PlasticSCM.Editor.Views.Changesets
                 mSearchField,
                 mChangesetsListView,
                 UnityConstants.SEARCH_FIELD_WIDTH);
-
-            VerifyIfSearchFieldIsRecentlyFocused(mSearchField);
         }
 
         internal void DrawDateFilter()
@@ -240,16 +241,6 @@ namespace Unity.PlasticSCM.Editor.Views.Changesets
                 ChangesetsSelection.GetSelectedRepObjectInfos(mChangesetsListView));
         }
 
-        void IQueryRefreshableView.RefreshAndSelect(RepObjectInfo repObj)
-        {
-            string query = GetChangesetsQuery(mDateFilter);
-
-            FillChangesets(
-                mWkInfo,
-                query,
-                new List<RepObjectInfo> { repObj });
-        }
-
         int IChangesetMenuOperations.GetSelectedChangesetsCount()
         {
             return ChangesetsSelection.GetSelectedChangesetsCount(mChangesetsListView);
@@ -316,7 +307,41 @@ namespace Unity.PlasticSCM.Editor.Views.Changesets
 
         void IChangesetMenuOperations.BrowseRepositoryOnChangeset() { }
 
-        void IChangesetMenuOperations.CreateCodeReview() { }
+        void IChangesetMenuOperations.CreateCodeReview()
+        {
+            RepositorySpec repSpec = ChangesetsSelection.GetSelectedRepository(mChangesetsListView);
+            ChangesetInfo changesetInfo = ChangesetsSelection.GetSelectedChangeset(mChangesetsListView);
+
+            NewCodeReviewBehavior choice = SelectNewCodeReviewBehavior.For(repSpec.Server);
+
+            switch (choice)
+            {
+                case NewCodeReviewBehavior.CreateAndOpenInDesktop:
+                    mChangesetOperations.CreateCodeReview(repSpec, changesetInfo, this);
+                    break;
+                case NewCodeReviewBehavior.RequestFromUnityCloud:
+                    OpenRequestReviewPage.ForChangeset(repSpec, changesetInfo.ChangesetId);
+                    break;
+                case NewCodeReviewBehavior.Ask:
+                default:
+                    break;
+            }
+        }
+
+        void ILaunchCodeReviewWindow.Show(
+            WorkspaceInfo wkInfo,
+            RepositorySpec repSpec,
+            ReviewInfo reviewInfo,
+            RepObjectInfo repObjectInfo,
+            bool bShowReviewChangesTab)
+        {
+            LaunchTool.OpenCodeReview(
+                mShowDownloadPlasticExeWindow,
+                mProcessExecutor,
+                repSpec,
+                reviewInfo.Id,
+                mIsGluonMode);
+        }
 
         void IChangesetMenuOperations.RevertToChangeset()
         {
@@ -455,32 +480,6 @@ namespace Unity.PlasticSCM.Editor.Views.Changesets
                         mIsRefreshing = false;
                     }
                 });
-        }
-
-        void InitializeShowChangesButtonWidth()
-        {
-            if (mShowChangesButtonWidth != -1)
-                return;
-
-            mShowChangesButtonWidth = MeasureMaxWidth.ForTexts(
-                EditorStyles.toolbarButton,
-                PlasticLocalization.GetString(PlasticLocalization.Name.HideChanges),
-                PlasticLocalization.GetString(PlasticLocalization.Name.ShowChanges));
-        }
-
-        void VerifyIfSearchFieldIsRecentlyFocused(SearchField searchField)
-        {
-            if (searchField.HasFocus() != mIsSearchFieldFocused)
-            {
-                mIsSearchFieldFocused = !mIsSearchFieldFocused;
-
-                if (mIsSearchFieldFocused)
-                {
-                    TrackFeatureUseEvent.For(
-                        PlasticGui.Plastic.API.GetRepositorySpec(mWkInfo),
-                        TrackFeatureUseEvent.Features.ChangesetsViewChangesetsSearchBox);
-                }
-            }
         }
 
         static void UpdateChangesetsList(
@@ -632,23 +631,18 @@ namespace Unity.PlasticSCM.Editor.Views.Changesets
         }
 
         bool mIsRefreshing;
-
         bool mShouldScrollToSelection;
 
-        float mShowChangesButtonWidth = -1;
+        long mLoadedChangesetId = -1;
 
         object mSplitterState;
-        Color mBorderColor;
+        object mLock = new object();
 
         DateFilter mDateFilter;
-
         SearchField mSearchField;
-        bool mIsSearchFieldFocused = false;
-
         ChangesetsListView mChangesetsListView;
-        ChangesetOperations mChangesetOperations;
-        DiffPanel mDiffPanel;
         ChangesetsViewMenu mChangesetsViewMenu;
+        DiffPanel mDiffPanel;
 
         RevertToChangesetOperation.IGetStatusForWorkspace mGetStatusForWorkspace =
             new RevertToChangesetOperation.GetStatusFromWorkspace();
@@ -657,12 +651,11 @@ namespace Unity.PlasticSCM.Editor.Views.Changesets
         RevertToChangesetOperation.IRevertToChangesetMergeController mRevertToChangesetMergeController =
             new RevertToChangesetOperation.RevertToChangesetMergeController();
 
-        long mLoadedChangesetId = -1;
-        object mLock = new object();
-
+        ChangesetOperations mChangesetOperations;
         LaunchTool.IProcessExecutor mProcessExecutor;
         LaunchTool.IShowDownloadPlasticExeWindow mShowDownloadPlasticExeWindow;
 
+        readonly WorkspaceOperationsMonitor mWorkspaceOperationsMonitor;
         readonly bool mIsGluonMode;
         readonly ViewHost mViewHost;
         readonly IGluonUpdateReport mGluonUpdateReport;
@@ -672,5 +665,9 @@ namespace Unity.PlasticSCM.Editor.Views.Changesets
         readonly IRevertToChangesetListener mRevertToChangesetListener;
         readonly EditorWindow mParentWindow;
         readonly WorkspaceInfo mWkInfo;
+        readonly GluonNewIncomingChangesUpdater mGluonNewIncomingChangesUpdater;
+        readonly IShelvePendingChangesQuestionerBuilder mShelvePendingChangesQuestionerBuilder;
+        readonly IShelvedChangesUpdater mShelvedChangesUpdater;
+        readonly SwitchAndShelve.IEnableSwitchAndShelveFeatureDialog mEnableSwitchAndShelveFeatureDialog;
     }
 }

@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using UnityEditor;
 using UnityEngine;
 
+using Codice.Client.BaseCommands;
 using Codice.Client.Common;
 using Codice.Client.Common.EventTracking;
 using Codice.Client.Common.Threading;
@@ -17,8 +18,9 @@ using PlasticGui.WorkspaceWindow.NotificationBar;
 using Unity.PlasticSCM.Editor.AssetMenu;
 using Unity.PlasticSCM.Editor.Configuration;
 using Unity.PlasticSCM.Editor.Configuration.CloudEdition.Welcome;
+using Unity.PlasticSCM.Editor.Developer;
 using Unity.PlasticSCM.Editor.Inspector;
-using Unity.PlasticSCM.Editor.Preferences;
+using Unity.PlasticSCM.Editor.Settings;
 using Unity.PlasticSCM.Editor.Tool;
 using Unity.PlasticSCM.Editor.UI;
 using Unity.PlasticSCM.Editor.UI.Avatar;
@@ -27,24 +29,32 @@ using Unity.PlasticSCM.Editor.UI.StatusBar;
 using Unity.PlasticSCM.Editor.Views.CreateWorkspace;
 using Unity.PlasticSCM.Editor.Views.Welcome;
 using Unity.PlasticSCM.Editor.WebApi;
+
 using GluonCheckIncomingChanges = PlasticGui.Gluon.WorkspaceWindow.CheckIncomingChanges;
 using GluonNewIncomingChangesUpdater = PlasticGui.Gluon.WorkspaceWindow.NewIncomingChangesUpdater;
+using GluonShelvedChangesNotification = Unity.PlasticSCM.Editor.Gluon.ShelvedChangesNotification;
 using PlasticAssetModificationProcessor = Unity.PlasticSCM.Editor.AssetUtils.Processor.AssetModificationProcessor;
+using ShelvedChangesNotification = Unity.PlasticSCM.Editor.Developer.ShelvedChangesNotification;
 
 namespace Unity.PlasticSCM.Editor
 {
     internal class PlasticWindow : EditorWindow,
         CheckIncomingChanges.IAutoRefreshIncomingChangesView,
         GluonCheckIncomingChanges.IAutoRefreshIncomingChangesView,
+        CheckShelvedChanges.IAutoRefreshApplyShelveView,
         CreateWorkspaceView.ICreateWorkspaceListener
     {
         internal bool ShowWelcomeViewForTesting { get; set; }
+
+        internal WelcomeView WelcomeViewForTesting { get { return mWelcomeView; } }
 
         internal WorkspaceWindow WorkspaceWindowForTesting { get { return mWorkspaceWindow; } }
 
         internal ViewSwitcher ViewSwitcherForTesting { get { return mViewSwitcher; } }
 
         internal CmConnection CmConnectionForTesting { get { return CmConnection.Get(); } }
+
+        internal IShelvedChangesUpdater ShelvedChangesUpdater { get { return mShelvedChangesUpdater; } }
 
         internal WelcomeView GetWelcomeView()
         {
@@ -92,11 +102,13 @@ namespace Unity.PlasticSCM.Editor
 
             try
             {
-                if (UnityConfigurationChecker.NeedsConfiguration())
+                if (UnityConfigurationChecker.NeedsConfiguration() ||
+                    ShowWelcomeViewForTesting)
                     return;
 
                 mWkInfo = FindWorkspace.InfoForApplicationPath(
                     ApplicationDataPath.Get(), PlasticGui.Plastic.API);
+                mRepSpec = PlasticGui.Plastic.API.GetRepositorySpec(mWkInfo);
 
                 if (mWkInfo == null)
                     return;
@@ -111,11 +123,8 @@ namespace Unity.PlasticSCM.Editor
 
                 mStatusBar = new StatusBar();
 
-                ViewSwitcher.SelectedTab viewToShow = mViewSwitcher != null ?
-                    mViewSwitcher.SelectedView : ViewSwitcher.SelectedTab.PendingChanges;
-
                 mViewSwitcher = new ViewSwitcher(
-                    PlasticGui.Plastic.API.GetRepositorySpec(mWkInfo),
+                    mRepSpec,
                     mWkInfo,
                     mViewHost,
                     mIsGluonMode,
@@ -126,7 +135,15 @@ namespace Unity.PlasticSCM.Editor
                     mStatusBar,
                     this);
 
-                InitializeNewIncomingChanges(mWkInfo, mIsGluonMode, mViewSwitcher);
+                InitializeNewIncomingChanges(
+                    mWkInfo, mViewSwitcher, mIsGluonMode);
+
+                InitializeShelvedChanges(
+                    mWkInfo,
+                    mRepSpec,
+                    mViewSwitcher,
+                    mShowDownloadPlasticExeWindow,
+                    mIsGluonMode);
 
                 // Create a CooldownWindowDelayer to make the auto-refresh changes delayed.
                 // In this way, we cover the following scenario:
@@ -152,10 +169,17 @@ namespace Unity.PlasticSCM.Editor
                     mViewSwitcher,
                     mViewSwitcher,
                     mDeveloperNewIncomingChangesUpdater,
+                    mShelvedChangesUpdater,
                     this);
 
                 mViewSwitcher.SetWorkspaceWindow(mWorkspaceWindow);
-                mViewSwitcher.ShowInitialView(viewToShow);
+
+                mStatusBar.Initialize(
+                    mWorkspaceWindow,
+                    mIncomingChangesNotification,
+                    mShelvedChangesNotification);
+
+                mViewSwitcher.InitializeFromState(mViewSwitcherState);
 
                 PlasticApp.RegisterWorkspaceWindow(mWorkspaceWindow);
                 PlasticPlugin.WorkspaceOperationsMonitor.RegisterWindow(
@@ -173,6 +197,7 @@ namespace Unity.PlasticSCM.Editor
                     mViewHost,
                     PlasticPlugin.WorkspaceOperationsMonitor,
                     mDeveloperNewIncomingChangesUpdater,
+                    mShelvedChangesUpdater,
                     PlasticPlugin.AssetStatusCache,
                     mViewSwitcher,
                     mViewSwitcher,
@@ -187,6 +212,7 @@ namespace Unity.PlasticSCM.Editor
                     mViewHost,
                     PlasticPlugin.WorkspaceOperationsMonitor,
                     mDeveloperNewIncomingChangesUpdater,
+                    mShelvedChangesUpdater,
                     PlasticPlugin.AssetStatusCache,
                     mViewSwitcher,
                     mViewSwitcher,
@@ -196,11 +222,12 @@ namespace Unity.PlasticSCM.Editor
                 mLastUpdateTime = EditorApplication.timeSinceStartup;
 
                 mViewSwitcher.ShowBranchesViewIfNeeded();
+                mViewSwitcher.ShowShelvesViewIfNeeded();
                 mViewSwitcher.ShowLocksViewIfNeeded();
                 MergeInProgress.ShowIfNeeded(mWkInfo, mViewSwitcher);
 
                 // Note: this need to be initialized regardless of the type of the UVCS Edition installed
-                InitializeCloudSubscriptionData(mWkInfo);
+                InitializeCloudSubscriptionData();
 
                 if (!EditionToken.IsCloudEdition())
                     return;
@@ -226,10 +253,16 @@ namespace Unity.PlasticSCM.Editor
             mViewSwitcher.AutoRefreshIncomingChangesView();
         }
 
+        void CheckShelvedChanges.IAutoRefreshApplyShelveView.IfVisible()
+        {
+            mViewSwitcher.AutoRefreshMergeView();
+        }
+
         void CreateWorkspaceView.ICreateWorkspaceListener.OnWorkspaceCreated(
             WorkspaceInfo wkInfo, bool isGluonMode)
         {
             mWkInfo = wkInfo;
+            mRepSpec = PlasticGui.Plastic.API.GetRepositorySpec(wkInfo);
             mIsGluonMode = isGluonMode;
             mWelcomeView = null;
 
@@ -244,6 +277,8 @@ namespace Unity.PlasticSCM.Editor
 
         void OnEnable()
         {
+            // Note: this log isn't visible if the window is opened automatically at startup,
+            // as the logs are not initialized yet (later, conditionally, in PlasticPlugin.Enable())
             mLog.Debug("OnEnable");
 
             wantsMouseMove = true;
@@ -380,6 +415,7 @@ namespace Unity.PlasticSCM.Editor
 
                 DoTabToolbar(
                     mWkInfo,
+                    mRepSpec,
                     mViewSwitcher,
                     mShowDownloadPlasticExeWindow,
                     mProcessExecutor,
@@ -395,13 +431,7 @@ namespace Unity.PlasticSCM.Editor
                         mWorkspaceWindow, mWorkspaceWindow.Progress,
                         position.width);
 
-                mStatusBar.OnGUI(
-                    mWkInfo,
-                    mWorkspaceWindow,
-                    mViewSwitcher,
-                    mViewSwitcher,
-                    mIncomingChangesNotifier,
-                    mIsGluonMode);
+                mStatusBar.OnGUI();
             }
             catch (Exception ex)
             {
@@ -463,6 +493,10 @@ namespace Unity.PlasticSCM.Editor
             if (!PlasticPlugin.ConnectionMonitor.IsConnected)
                 return;
 
+            if (UnityConfigurationChecker.NeedsConfiguration() ||
+                ShowWelcomeViewForTesting)
+                return;
+
             Reload.IfWorkspaceConfigChanged(
                 PlasticGui.Plastic.API, mWkInfo, mIsGluonMode,
                 ExecuteFullReload);
@@ -473,6 +507,9 @@ namespace Unity.PlasticSCM.Editor
             NewIncomingChanges.LaunchUpdater(
                 mDeveloperNewIncomingChangesUpdater,
                 mGluonNewIncomingChangesUpdater);
+
+            mShelvedChangesUpdater.Start();
+            mShelvedChangesUpdater.Update(DateTime.Now);
 
             if (!PlasticApp.HasRunningOperation())
                 mCooldownAutoRefreshChangesAction.Ping();
@@ -496,6 +533,8 @@ namespace Unity.PlasticSCM.Editor
             NewIncomingChanges.StopUpdater(
                 mDeveloperNewIncomingChangesUpdater,
                 mGluonNewIncomingChangesUpdater);
+
+            mShelvedChangesUpdater.Stop();
         }
 
         void ExecuteFullReload()
@@ -507,30 +546,28 @@ namespace Unity.PlasticSCM.Editor
             InitializePlastic();
         }
 
-        void InitializeCloudSubscriptionData(WorkspaceInfo wkInfo)
+        void InitializeCloudSubscriptionData()
         {
             mIsCloudOrganization = false;
             mIsUnityOrganization = false;
             mIsUGOSubscription = false;
 
-            RepositorySpec repSpec = PlasticGui.Plastic.API.GetRepositorySpec(wkInfo);
-
-            if (repSpec == null)
+            if (mRepSpec == null)
                 return;
 
-            mIsCloudOrganization = PlasticGui.Plastic.API.IsCloud(repSpec.Server);
+            mIsCloudOrganization = PlasticGui.Plastic.API.IsCloud(mRepSpec.Server);
 
             if (!mIsCloudOrganization)
                 return;
 
-            mIsUnityOrganization = OrganizationsInformation.IsUnityOrganization(repSpec.Server);
+            mIsUnityOrganization = OrganizationsInformation.IsUnityOrganization(mRepSpec.Server);
 
-            string organizationName = ServerOrganizationParser.GetOrganizationFromServer(repSpec.Server);
+            string organizationName = ServerOrganizationParser.GetOrganizationFromServer(mRepSpec.Server);
 
             Task.Run(
                 () =>
                 {
-                    string authToken = AuthToken.GetForServer(repSpec.Server);
+                    string authToken = AuthToken.GetForServer(mRepSpec.Server);
 
                     if (string.IsNullOrEmpty(authToken))
                         return null;
@@ -584,28 +621,61 @@ namespace Unity.PlasticSCM.Editor
 
         void InitializeNewIncomingChanges(
             WorkspaceInfo wkInfo,
-            bool bIsGluonMode,
-            ViewSwitcher viewSwitcher)
+            ViewSwitcher viewSwitcher,
+            bool bIsGluonMode)
         {
             if (bIsGluonMode)
             {
-                Gluon.IncomingChangesNotifier gluonNotifier =
-                    new Gluon.IncomingChangesNotifier(this);
+                Gluon.IncomingChangesNotification gluonNotification =
+                    new Gluon.IncomingChangesNotification(wkInfo, viewSwitcher, this);
                 mGluonNewIncomingChangesUpdater =
                     NewIncomingChanges.BuildUpdaterForGluon(
-                        wkInfo, viewSwitcher, gluonNotifier, this, gluonNotifier,
+                        wkInfo, viewSwitcher, gluonNotification, this, gluonNotification,
                         new GluonCheckIncomingChanges.CalculateIncomingChanges());
-                mIncomingChangesNotifier = gluonNotifier;
+                mIncomingChangesNotification = gluonNotification;
                 return;
             }
 
-            Developer.IncomingChangesNotifier developerNotifier =
-                new Developer.IncomingChangesNotifier(this);
+            IncomingChangesNotification developerNotification =
+                new IncomingChangesNotification(wkInfo, viewSwitcher, this);
             mDeveloperNewIncomingChangesUpdater =
                 NewIncomingChanges.BuildUpdaterForDeveloper(
-                    wkInfo, viewSwitcher, developerNotifier,
-                    this, developerNotifier);
-            mIncomingChangesNotifier = developerNotifier;
+                    wkInfo, viewSwitcher, developerNotification,
+                    this, developerNotification);
+            mIncomingChangesNotification = developerNotification;
+        }
+
+        void InitializeShelvedChanges(
+            WorkspaceInfo wkInfo,
+            RepositorySpec repSpec,
+            ViewSwitcher viewSwitcher,
+            LaunchTool.IShowDownloadPlasticExeWindow showDownloadPlasticExeWindow,
+            bool bIsGluonMode)
+        {
+            mShelvedChangesNotification = bIsGluonMode ?
+                new GluonShelvedChangesNotification(
+                    wkInfo,
+                    repSpec,
+                    viewSwitcher,
+                    showDownloadPlasticExeWindow,
+                    this) :
+                new ShelvedChangesNotification(
+                    wkInfo,
+                    repSpec,
+                    viewSwitcher,
+                    this) as StatusBar.IShelvedChangesNotification;
+
+            mShelvedChangesUpdater = new ShelvedChangesUpdater(
+                wkInfo,
+                new UnityPlasticTimerBuilder(),
+                this,
+                new CalculateShelvedChanges(new BaseCommandsImpl()),
+                mShelvedChangesNotification);
+
+            viewSwitcher.SetShelvedChanges(mShelvedChangesUpdater, mShelvedChangesNotification);
+            mShelvedChangesNotification.SetShelvedChangesUpdater(mShelvedChangesUpdater);
+
+            mShelvedChangesUpdater.Start();
         }
 
         void InitializeNotificationBarUpdater(
@@ -623,6 +693,7 @@ namespace Unity.PlasticSCM.Editor
 
         static void DoTabToolbar(
             WorkspaceInfo workspaceInfo,
+            RepositorySpec repSpec,
             ViewSwitcher viewSwitcher,
             LaunchTool.IShowDownloadPlasticExeWindow showDownloadPlasticExeWindow,
             LaunchTool.IProcessExecutor processExecutor,
@@ -651,6 +722,7 @@ namespace Unity.PlasticSCM.Editor
 
             DoToolbarButtons(
                 workspaceInfo,
+                repSpec,
                 viewSwitcher,
                 showDownloadPlasticExeWindow,
                 processExecutor,
@@ -690,6 +762,12 @@ namespace Unity.PlasticSCM.Editor
                 return;
             }
 
+            if (viewSwitcher.IsViewSelected(ViewSwitcher.SelectedTab.Shelves))
+            {
+                viewSwitcher.ShelvesTab.DrawSearchFieldForTab();
+                return;
+            }
+
             if (viewSwitcher.IsViewSelected(ViewSwitcher.SelectedTab.Locks))
             {
                 viewSwitcher.LocksTab.DrawSearchFieldForTab();
@@ -711,6 +789,7 @@ namespace Unity.PlasticSCM.Editor
 
         static void DoToolbarButtons(
             WorkspaceInfo wkInfo,
+            RepositorySpec repSpec,
             ViewSwitcher viewSwitcher,
             LaunchTool.IShowDownloadPlasticExeWindow showDownloadPlasticExeWindow,
             LaunchTool.IProcessExecutor processExecutor,
@@ -719,75 +798,82 @@ namespace Unity.PlasticSCM.Editor
             bool isUnityOrganization,
             bool isUGOSubscription)
         {
-            //TODO: Codice - beta: hide the diff button until the behavior is implemented
-            /*GUILayout.Button(PlasticLocalization.GetString(
-                PlasticLocalization.Name.DiffWindowMenuItemDiff),
-                EditorStyles.toolbarButton,
-                GUILayout.Width(UnityConstants.REGULAR_BUTTON_WIDTH));*/
-
             if (viewSwitcher.IsViewSelected(ViewSwitcher.SelectedTab.Changesets))
             {
                 viewSwitcher.ChangesetsTab.DrawDateFilter();
             }
-
-            if (viewSwitcher.IsViewSelected(ViewSwitcher.SelectedTab.Branches))
+            else if (viewSwitcher.IsViewSelected(ViewSwitcher.SelectedTab.Branches))
             {
                 viewSwitcher.BranchesTab.DrawDateFilter();
             }
+            else
+            {
+                DrawStaticElement.Empty();
+            }
 
-            Texture refreshIcon = Images.GetRefreshIcon();
-            string refreshIconTooltip = PlasticLocalization.GetString(
-                PlasticLocalization.Name.RefreshButton);
+            if (viewSwitcher.IsViewSelected(ViewSwitcher.SelectedTab.Shelves))
+            {
+                viewSwitcher.ShelvesTab.DrawOwnerFilter();
+            }
 
-            if (DrawToolbarButton(refreshIcon, refreshIconTooltip))
+            if (DrawToolbarButton(
+                    Images.GetRefreshIcon(),
+                    PlasticLocalization.Name.RefreshButton.GetString()))
             {
                 viewSwitcher.RefreshSelectedView();
             }
 
-            if (viewSwitcher.IsViewSelected(ViewSwitcher.SelectedTab.PendingChanges))
-            {
-                Texture2D icon = Images.GetUndoIcon();
-                string tooltip = PlasticLocalization.GetString(
-                    PlasticLocalization.Name.UndoSelectedChanges);
-
-                if (DrawToolbarButton(icon, tooltip))
-                {
-                    TrackFeatureUseEvent.For(
-                        PlasticGui.Plastic.API.GetRepositorySpec(wkInfo),
-                        TrackFeatureUseEvent.Features.UndoIconButton);
-
-                    viewSwitcher.PendingChangesTab.UndoForMode(wkInfo, isGluonMode);
-                }
-            }
-
             if (isGluonMode)
             {
-                string label = PlasticLocalization.GetString(PlasticLocalization.Name.ConfigureGluon);
-                if (DrawActionButton.For(label))
+                if (DrawActionButton.For(PlasticLocalization.Name.Configure.GetString()))
+                {
                     LaunchTool.OpenWorkspaceConfiguration(
-                        showDownloadPlasticExeWindow,
-                        processExecutor,
-                        wkInfo,
-                        isGluonMode);
+                        showDownloadPlasticExeWindow, processExecutor, wkInfo, isGluonMode);
+                }
             }
             else
             {
-                Texture2D icon = Images.GetBranchIcon();
-                string tooltip = PlasticLocalization.GetString(PlasticLocalization.Name.Branches);
-                if (DrawToolbarButton(icon, tooltip))
-                {
-                    ShowBranchesContextMenu(
-                        wkInfo,
-                        viewSwitcher,
-                        showDownloadPlasticExeWindow,
-                        processExecutor,
-                        isGluonMode);
-                }
+                DrawStaticElement.Empty();
             }
 
-            if (DrawToolbarButton(Images.GetLockIcon(), PlasticLocalization.Name.ShowLocks.GetString()))
+            if (DrawToolbarButton(
+                    Images.GetShelveIcon(),
+                    PlasticLocalization.Name.ShowShelvesButton.GetString()))
             {
-                OpenLocksViewAndSendEvent(wkInfo, viewSwitcher);
+                TrackFeatureUseEvent.For(
+                    repSpec,
+                    TrackFeatureUseEvent.Features.UnityPackage.ShowShelvesViewFromToolbarButton);
+
+                viewSwitcher.ShowShelvesView();
+            }
+
+            if (DrawToolbarButton(
+                    Images.GetBranchesIcon(),
+                    PlasticLocalization.Name.Branches.GetString()))
+            {
+                viewSwitcher.ShowBranchesView();
+            }
+
+            if (!isGluonMode)
+            {
+                if (DrawToolbarButton(
+                        Images.GetBranchExplorerIcon(),
+                        PlasticLocalization.Name.BranchExplorerMenu.GetString()))
+                {
+                    LaunchTool.OpenBranchExplorer(
+                        showDownloadPlasticExeWindow, processExecutor, wkInfo, isGluonMode);
+                }
+            }
+            else
+            {
+                DrawStaticElement.Empty();
+            }
+
+            if (DrawToolbarButton(
+                    Images.GetLockIcon(),
+                    PlasticLocalization.Name.ShowLocks.GetString()))
+            {
+                viewSwitcher.ShowLocksView();
             }
 
             if (isCloudOrganization)
@@ -798,16 +884,24 @@ namespace Unity.PlasticSCM.Editor
                         ? PlasticLocalization.Name.InviteMembersToProject.GetString()
                         : PlasticLocalization.Name.InviteMembersToOrganization.GetString()))
                 {
-                    InviteMembers(wkInfo);
+                    InviteMembers(repSpec);
                 }
+            }
+            else
+            {
+                DrawStaticElement.Empty();
+            }
 
-                if (isUGOSubscription)
+            if (isCloudOrganization && isUGOSubscription)
+            {
+                if (DrawToolbarTextButton(PlasticLocalization.Name.UpgradePlan.GetString()))
                 {
-                    if (DrawToolbarTextButton(PlasticLocalization.Name.UpgradePlan.GetString()))
-                    {
-                        OpenDevOpsUpgradePlanUrl();
-                    }
+                    OpenDevOpsUpgradePlanUrl();
                 }
+            }
+            else
+            {
+                DrawStaticElement.Empty();
             }
 
             //TODO: Add settings button tooltip localization
@@ -837,10 +931,13 @@ namespace Unity.PlasticSCM.Editor
                 EditorStyles.toolbarButton);
         }
 
-        static void InviteMembers(WorkspaceInfo wkInfo)
+        static void OpenUnityDashboardInviteUsersUrl(RepositorySpec repSpec)
         {
-            RepositorySpec repSpec = PlasticGui.Plastic.API.GetRepositorySpec(wkInfo);
+            OpenInviteUsersPage.Run(repSpec, UnityUrl.UnityDashboard.UnityCloudRequestSource.Editor);
+        }
 
+        static void InviteMembers(RepositorySpec repSpec)
+        {
             string organizationName = ServerOrganizationParser.GetOrganizationFromServer(repSpec.Server);
 
             CurrentUserAdminCheckResponse response = null;
@@ -866,7 +963,7 @@ namespace Unity.PlasticSCM.Editor
                     {
                         ExceptionsHandler.LogException("IsUserAdmin", waiter.Exception);
 
-                        OpenUnityDashboardInviteUsersUrl(wkInfo);
+                        OpenUnityDashboardInviteUsersUrl(repSpec);
                         return;
                     }
 
@@ -876,7 +973,7 @@ namespace Unity.PlasticSCM.Editor
                             "Error checking if the user is the organization admin for {0}",
                             organizationName);
 
-                        OpenUnityDashboardInviteUsersUrl(wkInfo);
+                        OpenUnityDashboardInviteUsersUrl(repSpec);
                         return;
                     }
 
@@ -888,7 +985,7 @@ namespace Unity.PlasticSCM.Editor
                               response.Error.Message,
                               response.Error.ErrorCode));
 
-                        OpenUnityDashboardInviteUsersUrl(wkInfo);
+                        OpenUnityDashboardInviteUsersUrl(repSpec);
                         return;
                     }
 
@@ -901,67 +998,8 @@ namespace Unity.PlasticSCM.Editor
                         return;
                     }
 
-                    OpenUnityDashboardInviteUsersUrl(wkInfo);
+                    OpenUnityDashboardInviteUsersUrl(repSpec);
                 });
-        }
-
-        static void OpenUnityDashboardInviteUsersUrl(WorkspaceInfo wkInfo)
-        {
-            OpenInviteUsersPage.Run(wkInfo, UnityUrl.UnityDashboard.UnityCloudRequestSource.Editor);
-        }
-
-        static void OpenBranchListViewAndSendEvent(
-            WorkspaceInfo wkInfo,
-            ViewSwitcher viewSwitcher)
-        {
-            viewSwitcher.ShowBranchesView();
-
-            TrackFeatureUseEvent.For(
-               PlasticGui.Plastic.API.GetRepositorySpec(wkInfo),
-               TrackFeatureUseEvent.Features.OpenBranchesView);
-        }
-
-        static void OpenLocksViewAndSendEvent(
-            WorkspaceInfo wkInfo,
-            ViewSwitcher viewSwitcher)
-        {
-            viewSwitcher.ShowLocksView();
-
-            TrackFeatureUseEvent.For(
-                PlasticGui.Plastic.API.GetRepositorySpec(wkInfo),
-                TrackFeatureUseEvent.Features.OpenLocksView);
-        }
-
-        static void ShowBranchesContextMenu(
-            WorkspaceInfo wkInfo,
-            ViewSwitcher viewSwitcher,
-            LaunchTool.IShowDownloadPlasticExeWindow showDownloadPlasticExeWindow,
-            LaunchTool.IProcessExecutor processExecutor,
-            bool isGluonMode)
-        {
-            GenericMenu menu = new GenericMenu();
-
-            string branchesListView = PlasticLocalization.GetString(
-                PlasticLocalization.Name.Branches);
-
-            menu.AddItem(
-               new GUIContent(branchesListView),
-               false,
-               () => OpenBranchListViewAndSendEvent(wkInfo, viewSwitcher));
-
-            string branchExplorer = PlasticLocalization.GetString(
-                PlasticLocalization.Name.BranchExplorerMenu);
-
-            menu.AddItem(
-              new GUIContent(branchExplorer),
-              false,
-              () => LaunchTool.OpenBranchExplorer(
-                showDownloadPlasticExeWindow,
-                processExecutor,
-                wkInfo,
-                isGluonMode));
-
-            menu.ShowAsContext();
         }
 
         static void ShowSettingsContextMenu(
@@ -989,7 +1027,7 @@ namespace Unity.PlasticSCM.Editor
             if (isCloudOrganization)
             {
                 menu.AddItem(
-                    new GUIContent(PlasticLocalization.Name.OpenRepositoryInUnityCloud.GetString()),
+                    new GUIContent(PlasticLocalization.Name.OpenInUnityCloud.GetString()),
                     false,
                     () => OpenUnityCloudRepository.Run(wkInfo));
             }
@@ -999,7 +1037,7 @@ namespace Unity.PlasticSCM.Editor
             menu.AddItem(
                 new GUIContent(PlasticLocalization.Name.Settings.GetString()),
                 false,
-                () => SettingsService.OpenProjectSettings(UnityConstants.PROJECT_SETTINGS_TAB_PATH));
+                OpenPlasticProjectSettings.ByDefault);
 
             menu.AddItem(
                 new GUIContent(PlasticAssetModificationProcessor.ForceCheckout ?
@@ -1038,6 +1076,15 @@ namespace Unity.PlasticSCM.Editor
             window.mGluonNewIncomingChangesUpdater = null;
         }
 
+        static void DisposeShelvedChanges(PlasticWindow window)
+        {
+            if (window.mShelvedChangesUpdater == null)
+                return;
+
+            window.mShelvedChangesUpdater.Dispose();
+            window.mShelvedChangesUpdater = null;
+        }
+
         static void DisposeNotificationBarUpdater(PlasticWindow window)
         {
             if (window.mNotificationBarUpdater == null)
@@ -1068,8 +1115,14 @@ namespace Unity.PlasticSCM.Editor
 
             window.InitializeNewIncomingChanges(
                 window.mWkInfo,
-                window.mIsGluonMode,
-                window.mViewSwitcher);
+                window.mViewSwitcher,
+                window.mIsGluonMode);
+            window.InitializeShelvedChanges(
+                window.mWkInfo,
+                window.mRepSpec,
+                window.mViewSwitcher,
+                window.mShowDownloadPlasticExeWindow,
+                window.mIsGluonMode);
 
             PlasticApp.RegisterWorkspaceWindow(
                 window.mWorkspaceWindow);
@@ -1101,6 +1154,7 @@ namespace Unity.PlasticSCM.Editor
                 PlasticPlugin.WorkspaceOperationsMonitor.UnRegisterWindow();
 
             DisposeNewIncomingChanges(window);
+            DisposeShelvedChanges(window);
 
             DisposeNotificationBarUpdater(window);
 
@@ -1154,20 +1208,25 @@ namespace Unity.PlasticSCM.Editor
             PlasticWindow result = Instantiate(window);
             result.mIsGluonMode = window.mIsGluonMode;
             result.mIsCloudOrganization = window.mIsCloudOrganization;
+            result.mIsUnityOrganization = window.mIsUnityOrganization;
             result.mIsUGOSubscription = window.mIsUGOSubscription;
             result.mLastUpdateTime = window.mLastUpdateTime;
-            result.mWkInfo = window.mWkInfo;
+            result.mViewSwitcherState = window.mViewSwitcherState;
             result.mException = window.mException;
+            result.mWkInfo = window.mWkInfo;
+            result.mRepSpec = window.mRepSpec;
             result.mWelcomeView = window.mWelcomeView;
             result.mViewSwitcher = window.mViewSwitcher;
-            result.mViewHost = window.mViewHost;
             result.mWorkspaceWindow = window.mWorkspaceWindow;
             result.mStatusBar = window.mStatusBar;
-            result.mNotificationBarUpdater = window.mNotificationBarUpdater;
+            result.mViewHost = window.mViewHost;
             result.mCooldownAutoRefreshChangesAction = window.mCooldownAutoRefreshChangesAction;
+            result.mIncomingChangesNotification = window.mIncomingChangesNotification;
+            result.mShelvedChangesNotification = window.mShelvedChangesNotification;
+            result.mNotificationBarUpdater = window.mNotificationBarUpdater;
             result.mDeveloperNewIncomingChangesUpdater = window.mDeveloperNewIncomingChangesUpdater;
             result.mGluonNewIncomingChangesUpdater = window.mGluonNewIncomingChangesUpdater;
-            result.mIncomingChangesNotifier = window.mIncomingChangesNotifier;
+            result.mShelvedChangesUpdater = window.mShelvedChangesUpdater;
             return result;
         }
 
@@ -1226,27 +1285,30 @@ namespace Unity.PlasticSCM.Editor
 
         [SerializeField]
         bool mForceToReOpen;
-
         bool mIsGluonMode;
         bool mIsCloudOrganization;
         bool mIsUnityOrganization;
         bool mIsUGOSubscription;
+        double mLastUpdateTime = 0f;
+        ViewSwitcherState mViewSwitcherState = new ViewSwitcherState();
+        Exception mException;
 
         [NonSerialized]
         WorkspaceInfo mWkInfo;
-        double mLastUpdateTime = 0f;
+        RepositorySpec mRepSpec;
 
-        Exception mException;
         WelcomeView mWelcomeView;
-        ViewHost mViewHost;
+        ViewSwitcher mViewSwitcher;
         WorkspaceWindow mWorkspaceWindow;
         StatusBar mStatusBar;
+        ViewHost mViewHost;
         CooldownWindowDelayer mCooldownAutoRefreshChangesAction;
-        IIncomingChangesNotifier mIncomingChangesNotifier;
-        ViewSwitcher mViewSwitcher;
+        StatusBar.IIncomingChangesNotification mIncomingChangesNotification;
+        StatusBar.IShelvedChangesNotification mShelvedChangesNotification;
         NotificationBarUpdater mNotificationBarUpdater;
         NewIncomingChangesUpdater mDeveloperNewIncomingChangesUpdater;
         GluonNewIncomingChangesUpdater mGluonNewIncomingChangesUpdater;
+        ShelvedChangesUpdater mShelvedChangesUpdater;
 
         LaunchTool.IShowDownloadPlasticExeWindow mShowDownloadPlasticExeWindow =
             new LaunchTool.ShowDownloadPlasticExeWindow();

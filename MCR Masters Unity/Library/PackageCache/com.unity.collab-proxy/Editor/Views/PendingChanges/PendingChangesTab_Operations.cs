@@ -1,8 +1,7 @@
+using System;
 using System.Collections.Generic;
-using System.Linq;
 
 using Codice.Client.BaseCommands;
-using Codice.Client.Commands.CheckIn;
 using Codice.Client.Common;
 using Codice.Client.Common.EventTracking;
 using Codice.Client.Common.Threading;
@@ -10,6 +9,7 @@ using Codice.CM.Common;
 using GluonGui.WorkspaceWindow.Views.Checkin.Operations;
 using PlasticGui;
 using Unity.PlasticSCM.Editor.AssetUtils;
+using Unity.PlasticSCM.Editor.Settings;
 using Unity.PlasticSCM.Editor.Tool;
 using Unity.PlasticSCM.Editor.UI;
 using Unity.PlasticSCM.Editor.Views.PendingChanges.Dialogs;
@@ -17,416 +17,23 @@ using Unity.PlasticSCM.Editor.WebApi;
 
 namespace Unity.PlasticSCM.Editor.Views.PendingChanges
 {
-    internal partial class PendingChangesTab
+    internal partial class PendingChangesTab : GetOperationDelegate.INotifySuccess
     {
-        internal void UndoForMode(
-            WorkspaceInfo wkInfo,
-            bool isGluonMode)
+        void GetOperationDelegate.INotifySuccess.InStatusBar(string message)
         {
-            TrackFeatureUseEvent.For(
-                PlasticGui.Plastic.API.GetRepositorySpec(wkInfo),
-                    isGluonMode ?
-                    TrackFeatureUseEvent.Features.PartialUndo :
-                    TrackFeatureUseEvent.Features.Undo);
-
-            if (isGluonMode)
-            {
-                PartialUndo();
-                return;
-            }
-
-            Undo(false);
-        }
-
-        void UndoChangesForMode(
-            WorkspaceInfo wkInfo,
-            bool isGluonMode,
-            List<ChangeInfo> changesToUndo,
-            List<ChangeInfo> dependenciesCandidates)
-        {
-            TrackFeatureUseEvent.For(
-                PlasticGui.Plastic.API.GetRepositorySpec(wkInfo),
-                    isGluonMode ?
-                    TrackFeatureUseEvent.Features.PartialUndo :
-                    TrackFeatureUseEvent.Features.Undo);
-
-            if (isGluonMode)
-            {
-                PartialUndoChanges(
-                    changesToUndo, dependenciesCandidates);
-                return;
-            }
-
-            UndoChanges(changesToUndo, dependenciesCandidates, false);
-        }
-
-        void CheckinForMode(
-            WorkspaceInfo wkInfo,
-            bool isGluonMode,
-            bool keepItemsLocked)
-        {
-            TrackFeatureUseEvent.For(
-                PlasticGui.Plastic.API.GetRepositorySpec(wkInfo),
-                isGluonMode ?
-                    TrackFeatureUseEvent.Features.PartialCheckin :
-                    TrackFeatureUseEvent.Features.Checkin);
-
-            if (isGluonMode)
-            {
-                PartialCheckin(keepItemsLocked);
-                return;
-            }
-
-            Checkin();
-        }
-
-        void CheckinChangesForMode(
-            List<ChangeInfo> changesToCheckin,
-            List<ChangeInfo> dependenciesCandidates,
-            WorkspaceInfo wkInfo,
-            bool isGluonMode,
-            bool keepItemsLocked)
-        {
-            TrackFeatureUseEvent.For(
-                PlasticGui.Plastic.API.GetRepositorySpec(wkInfo),
-                isGluonMode ?
-                    TrackFeatureUseEvent.Features.PartialCheckin :
-                    TrackFeatureUseEvent.Features.Checkin);
-
-            if (isGluonMode)
-            {
-                PartialCheckinChanges(
-                    changesToCheckin, dependenciesCandidates, keepItemsLocked);
-                return;
-            }
-
-            CheckinChanges(
-                changesToCheckin, dependenciesCandidates);
-        }
-
-        void PartialCheckin(bool keepItemsLocked)
-        {
-            List<ChangeInfo> changesToCheckin;
-            List<ChangeInfo> dependenciesCandidates;
-
-            mPendingChangesTreeView.GetCheckedChanges(
-                null,
-                false,
-                out changesToCheckin,
-                out dependenciesCandidates);
-
-            PartialCheckinChanges(
-                changesToCheckin, dependenciesCandidates, keepItemsLocked);
-        }
-
-        void PartialCheckinChanges(
-            List<ChangeInfo> changesToCheckin,
-            List<ChangeInfo> dependenciesCandidates,
-            bool keepItemsLocked)
-        {
-            if (CheckEmptyOperation(changesToCheckin))
-            {
-                ((IProgressControls)mProgressControls).ShowWarning(
-                    PlasticLocalization.GetString(PlasticLocalization.Name.NoItemsAreSelected));
-                return;
-            }
-
-            bool isCancelled;
-            SaveAssets.ForChangesWithConfirmation(
-                changesToCheckin, mWorkspaceOperationsMonitor,
-                out isCancelled);
-
-            if (isCancelled)
-                return;
-
-            CheckinUIOperation ciOperation = new CheckinUIOperation(
-                mWkInfo, mViewHost, mProgressControls, mGuiMessage,
-                new LaunchCheckinConflictsDialog(mParentWindow),
-                new LaunchDependenciesDialog(
-                    PlasticLocalization.GetString(PlasticLocalization.Name.CheckinButton),
-                    mParentWindow),
-                this,
-                mWorkspaceWindow.GluonProgressOperationHandler,
-                null);
-
-            ciOperation.Checkin(
-                changesToCheckin,
-                dependenciesCandidates,
-                CommentText,
-                keepItemsLocked,
-                false,
-                () => { },
-                EndCheckin);
-        }
-
-        void Checkin()
-        {
-            List<ChangeInfo> changesToCheckin;
-            List<ChangeInfo> dependenciesCandidates;
-
-            mPendingChangesTreeView.GetCheckedChanges(
-                null,
-                false, out changesToCheckin, out dependenciesCandidates);
-
-            CheckinChanges(changesToCheckin, dependenciesCandidates);
-        }
-
-        void CheckinChanges(
-            List<ChangeInfo> changesToCheckin,
-            List<ChangeInfo> dependenciesCandidates)
-        {
-            if (CheckEmptyOperation(changesToCheckin, HasPendingMergeLinks()))
-            {
-                ((IProgressControls)mProgressControls).ShowWarning(
-                    PlasticLocalization.GetString(PlasticLocalization.Name.NoItemsAreSelected));
-                return;
-            }
-
-            bool isCancelled;
-            SaveAssets.ForChangesWithConfirmation(
-                changesToCheckin, mWorkspaceOperationsMonitor,
-                out isCancelled);
-
-            if (isCancelled)
-                return;
-
-            mPendingChangesOperations.Checkin(
-                changesToCheckin,
-                dependenciesCandidates,
-                CommentText,
-                null,
-                EndCheckin,
-                null);
-        }
-
-        void ShelveChanges(
-           List<ChangeInfo> changesToShelve,
-           List<ChangeInfo> dependenciesCandidates,
-           WorkspaceInfo wkInfo)
-        {
-            ShelveChanges(changesToShelve, dependenciesCandidates);
-        }
-
-        void ShelveChanges(
-            List<ChangeInfo> changesToShelve,
-            List<ChangeInfo> dependenciesCandidates)
-        {
-            bool hasPendingMergeLinks = HasPendingMergeLinks();
-
-            if (hasPendingMergeLinks &&
-                !UserWantsShelveWithPendingMergeLinks(mGuiMessage))
-            {
-                return;
-            }
-
-            if (CheckEmptyOperation(changesToShelve, hasPendingMergeLinks))
-            {
-                ((IProgressControls)mProgressControls).ShowWarning(
-                    PlasticLocalization.GetString(PlasticLocalization.Name.NoItemsAreSelected));
-                return;
-            }
-
-            bool isCancelled;
-            SaveAssets.ForChangesWithConfirmation(
-                changesToShelve, mWorkspaceOperationsMonitor,
-                out isCancelled);
-
-            if (isCancelled)
-                return;
-
-            mPendingChangesOperations.Shelve(
-                changesToShelve,
-                dependenciesCandidates,
-                CommentText,
-                () => {},
-                ShowShelveSuccess);
-        }
-
-        void PartialUndo()
-        {
-            List<ChangeInfo> changesToUndo;
-            List<ChangeInfo> dependenciesCandidates;
-
-            mPendingChangesTreeView.GetCheckedChanges(
-                null, true,
-                out changesToUndo, out dependenciesCandidates);
-
-            PartialUndoChanges(changesToUndo, dependenciesCandidates);
-        }
-
-        void PartialUndoChanges(
-            List<ChangeInfo> changesToUndo,
-            List<ChangeInfo> dependenciesCandidates)
-        {
-            if (CheckEmptyOperation(changesToUndo))
-            {
-                ((IProgressControls)mProgressControls).ShowWarning(
-                    PlasticLocalization.GetString(PlasticLocalization.Name.NoItemsToUndo));
-                return;
-            }
-
-            SaveAssets.ForChangesWithoutConfirmation(
-                changesToUndo, mWorkspaceOperationsMonitor);
-
-            UndoUIOperation undoOperation = new UndoUIOperation(
-                mWkInfo, mViewHost,
-                new LaunchDependenciesDialog(
-                    PlasticLocalization.GetString(PlasticLocalization.Name.UndoButton),
-                    mParentWindow),
-                mProgressControls);
-
-            undoOperation.Undo(
-                changesToUndo,
-                dependenciesCandidates,
-                RefreshAsset.UnityAssetDatabase);
-        }
-
-        void Undo(bool keepLocalChanges)
-        {
-            List<ChangeInfo> changesToUndo;
-            List<ChangeInfo> dependenciesCandidates;
-
-            mPendingChangesTreeView.GetCheckedChanges(
-                null, true,
-                out changesToUndo, out dependenciesCandidates);
-
-            UndoChanges(changesToUndo, dependenciesCandidates, keepLocalChanges);
-        }
-
-        void UndoChanges(
-            List<ChangeInfo> changesToUndo,
-            List<ChangeInfo> dependenciesCandidates,
-            bool keepLocalChanges)
-        {
-            if (CheckEmptyOperation(changesToUndo, HasPendingMergeLinks()))
-            {
-                ((IProgressControls)mProgressControls).ShowWarning(
-                    PlasticLocalization.GetString(PlasticLocalization.Name.NoItemsToUndo));
-                return;
-            }
-
-            SaveAssets.ForChangesWithoutConfirmation(
-                changesToUndo, mWorkspaceOperationsMonitor);
-
-            mPendingChangesOperations.Undo(
-                changesToUndo,
-                dependenciesCandidates,
-                mPendingMergeLinks.Count,
-                keepLocalChanges,
-                () => AfterUndoOperation(changesToUndo, keepLocalChanges),
-                null);
-        }
-
-        void AfterUndoOperation(List<ChangeInfo> changesToUndo, bool keepLocalChanges)
-        {
-            if (keepLocalChanges)
-            {
-                return;
-            }
-
-            if (changesToUndo.Any(change => AssetsPath.IsPackagesRootElement(change.Path) && !IsAddedChange(change)))
-            {
-                RefreshAsset.UnityAssetDatabaseAndPackageManagerAsync();
-            }
-            else
-            {
-                RefreshAsset.UnityAssetDatabase();
-            }
-        }
-
-        static bool IsAddedChange(ChangeInfo change)
-        {
-            return ChangeTypesOperator.ContainsAny(change.ChangeTypes, ChangeTypesClassifier.ADDED_TYPES);
-        }
-
-        void UndoUnchanged()
-        {
-            List<ChangeInfo> changesToUndo;
-            List<ChangeInfo> dependenciesCandidates;
-
-            mPendingChangesTreeView.GetCheckedChanges(
-                null, true,
-                out changesToUndo, out dependenciesCandidates);
-
-            UndoUnchangedFor(changesToUndo);
-        }
-
-        void UndoUnchangedFor(List<ChangeInfo> changesToUndo)
-        {
-            if (CheckEmptyOperation(changesToUndo, HasPendingMergeLinks()))
-            {
-                ((IProgressControls) mProgressControls).ShowWarning(
-                    PlasticLocalization.GetString(PlasticLocalization.Name.NoItemsToUndo));
-
-                return;
-            }
-
-            SaveAssets.ForChangesWithoutConfirmation(changesToUndo, mWorkspaceOperationsMonitor);
-
-            mPendingChangesOperations.UndoUnchanged(
-                changesToUndo,
-                RefreshAsset.UnityAssetDatabase,
-                null);
-        }
-
-        void UndoCheckoutsKeepingChanges()
-        {
-            Undo(true);
-        }
-
-        void UndoCheckoutsKeepingChangesFor(List<ChangeInfo> changesToUndo)
-        {
-            UndoChanges(changesToUndo, new List<ChangeInfo>(), true);
-        }
-
-        void EndCheckin()
-        {
-            ShowCheckinSuccess();
-
-            RefreshAsset.UnityAssetDatabase();
-        }
-
-        void ShowCheckinSuccess()
-        {
-            bool isTreeViewEmpty = mPendingChangesTreeView.GetCheckedItemCount() ==
-                mPendingChangesTreeView.GetTotalItemCount();
-
-            if (isTreeViewEmpty)
-            {
-                RepositorySpec repSpec = PlasticGui.Plastic.API.GetRepositorySpec(mWkInfo);
-                bool isFirstCheckin = !BoolSetting.Load(UnityConstants.FIRST_CHECKIN_SUBMITTED, false);
-
-                if (PlasticGui.Plastic.API.IsCloud(repSpec.Server) && isFirstCheckin)
-                {
-                    BoolSetting.Save(true, UnityConstants.FIRST_CHECKIN_SUBMITTED);
-                    EnableInviteMembersIfOrganizationAdmin(repSpec.Server);
-                }
-
-                mIsCheckedInSuccessful = true;
-                mCooldownClearCheckinSuccessAction.Ping();
-                return;
-            }
-
             mStatusBar.Notify(
-                PlasticLocalization.GetString(PlasticLocalization.Name.CheckinCompleted),
+                message,
                 UnityEditor.MessageType.None,
                 Images.GetStepOkIcon());
         }
 
-        void ShowShelveSuccess(CheckinResult checkinResult)
+        void GetOperationDelegate.INotifySuccess.InEmptyState(string message)
         {
-            ((IProgressControls)mProgressControls).ShowSuccess(
-                PlasticLocalization.Name.ShelveCreatedMessage.GetString(
-                    checkinResult.CreatedChangesets.ToArray()));
+            mOperationSuccessfulMessage = message;
+            mCooldownClearOperationSuccessAction.Ping();
         }
 
-        void DelayedClearCheckinSuccess()
-        {
-            mIsCheckedInSuccessful = false;
-            mCanInviteMembersFromPendingChanges = false;
-        }
-
-        void EnableInviteMembersIfOrganizationAdmin(string server)
+        void GetOperationDelegate.INotifySuccess.EnableInviteMembersIfOrganizationAdmin(string server)
         {
             string organizationName = ServerOrganizationParser.GetOrganizationFromServer(server);
 
@@ -454,6 +61,325 @@ namespace Unity.PlasticSCM.Editor.Views.PendingChanges
 
                     mParentWindow.Repaint();
                 });
+        }
+
+        void UndoForMode(bool isGluonMode, bool keepLocalChanges)
+        {
+            List<ChangeInfo> changesToUndo;
+            List<ChangeInfo> dependenciesCandidates;
+
+            mPendingChangesTreeView.GetCheckedChanges(
+                null, true,
+                out changesToUndo,
+                out dependenciesCandidates);
+
+            UndoChangesForMode(
+                isGluonMode, keepLocalChanges, changesToUndo, dependenciesCandidates);
+        }
+
+        void UndoChangesForMode(
+            bool isGluonMode,
+            bool keepLocalChanges,
+            List<ChangeInfo> changesToUndo,
+            List<ChangeInfo> dependenciesCandidates)
+        {
+            if (isGluonMode)
+            {
+                PartialUndoChanges(changesToUndo, dependenciesCandidates);
+                return;
+            }
+
+            UndoChanges(changesToUndo, dependenciesCandidates, keepLocalChanges);
+        }
+
+        void UndoUnchanged()
+        {
+            List<ChangeInfo> changesToUndo;
+            List<ChangeInfo> dependenciesCandidates;
+
+            mPendingChangesTreeView.GetCheckedChanges(
+                null, true,
+                out changesToUndo,
+                out dependenciesCandidates);
+
+            UndoUnchangedChanges(changesToUndo);
+        }
+
+        void CheckinForMode(
+            bool isGluonMode,
+            bool keepItemsLocked)
+        {
+            List<ChangeInfo> changesToCheckin;
+            List<ChangeInfo> dependenciesCandidates;
+
+            mPendingChangesTreeView.GetCheckedChanges(
+                null, false,
+                out changesToCheckin,
+                out dependenciesCandidates);
+
+            CheckinChangesForMode(
+                changesToCheckin, dependenciesCandidates, isGluonMode, keepItemsLocked);
+        }
+
+        void CheckinChangesForMode(
+            List<ChangeInfo> changesToCheckin,
+            List<ChangeInfo> dependenciesCandidates,
+            bool isGluonMode,
+            bool keepItemsLocked)
+        {
+            if (isGluonMode)
+            {
+                PartialCheckinChanges(changesToCheckin, dependenciesCandidates, keepItemsLocked);
+                return;
+            }
+
+            CheckinChanges(changesToCheckin, dependenciesCandidates);
+        }
+
+        void ShelveForMode(
+            bool isGluonMode,
+            bool keepItemsLocked)
+        {
+            List<ChangeInfo> changesToShelve;
+            List<ChangeInfo> dependenciesCandidates;
+
+            mPendingChangesTreeView.GetCheckedChanges(
+                null, false,
+                out changesToShelve,
+                out dependenciesCandidates);
+
+            ShelveChangesForMode(
+                changesToShelve, dependenciesCandidates, isGluonMode, keepItemsLocked);
+        }
+
+        void ShelveChangesForMode(
+           List<ChangeInfo> changesToShelve,
+           List<ChangeInfo> dependenciesCandidates,
+           bool isGluonMode,
+           bool keepItemsLocked)
+        {
+            if (isGluonMode)
+            {
+                PartialCheckinChanges(
+                    changesToShelve, dependenciesCandidates, keepItemsLocked, isShelve: true);
+                return;
+            }
+
+            ShelveChanges(changesToShelve, dependenciesCandidates);
+        }
+
+        void PartialCheckinChanges(
+            List<ChangeInfo> changesToCheckin,
+            List<ChangeInfo> dependenciesCandidates,
+            bool keepItemsLocked,
+            bool isShelve = false)
+        {
+            if (CheckEmptyOperation(changesToCheckin))
+            {
+                ((IProgressControls)mProgressControls).ShowWarning(
+                    PlasticLocalization.GetString(PlasticLocalization.Name.NoItemsAreSelected));
+                return;
+            }
+
+            bool isCancelled;
+            SaveAssets.ForChangesWithConfirmation(
+                mWkInfo.ClientPath, changesToCheckin, mWorkspaceOperationsMonitor,
+                out isCancelled);
+
+            if (isCancelled)
+                return;
+
+            CheckinUIOperation checkinOperation = new CheckinUIOperation(
+                mWkInfo,
+                mViewHost,
+                mProgressControls,
+                mGuiMessage,
+                new LaunchCheckinConflictsDialog(mParentWindow),
+                new LaunchDependenciesDialog(
+                    PlasticLocalization.GetString(PlasticLocalization.Name.CheckinButton),
+                    mParentWindow),
+                this,
+                mWorkspaceWindow.GluonProgressOperationHandler,
+                null);
+
+            bool areAllItemsChecked = mPendingChangesTreeView.AreAllItemsChecked();
+
+            checkinOperation.Checkin(
+                changesToCheckin,
+                dependenciesCandidates,
+                mCommentText,
+                keepItemsLocked,
+                isShelve,
+                isShelve ?
+                    OpenPlasticProjectSettings.InShelveAndSwitchFoldout:
+                    (Action)null,
+                isShelve ?
+                    GetOperationDelegate.ForUndoEnd(changesToCheckin, false) :
+                    (Action)null,
+                isShelve ?
+                    (Action)null :
+                    RefreshAsset.UnityAssetDatabase,
+                isShelve ?
+                    GetOperationDelegate.ForShelveSuccess(areAllItemsChecked, this) :
+                    GetOperationDelegate.ForPartialCheckinSuccess(mWkInfo, areAllItemsChecked, this));
+        }
+
+        void CheckinChanges(
+            List<ChangeInfo> changesToCheckin,
+            List<ChangeInfo> dependenciesCandidates)
+        {
+            if (CheckEmptyOperation(changesToCheckin, HasPendingMergeLinks()))
+            {
+                ((IProgressControls)mProgressControls).ShowWarning(
+                    PlasticLocalization.GetString(PlasticLocalization.Name.NoItemsAreSelected));
+                return;
+            }
+
+            bool isCancelled;
+            SaveAssets.ForChangesWithConfirmation(
+                mWkInfo.ClientPath, changesToCheckin, mWorkspaceOperationsMonitor,
+                out isCancelled);
+
+            if (isCancelled)
+                return;
+
+            bool areAllItemsChecked = mPendingChangesTreeView.AreAllItemsChecked();
+
+            mPendingChangesOperations.Checkin(
+                changesToCheckin,
+                dependenciesCandidates,
+                mCommentText,
+                null,
+                RefreshAsset.UnityAssetDatabase,
+                GetOperationDelegate.ForCheckinSuccess(mWkInfo, areAllItemsChecked, this));
+        }
+
+        void ShelveChanges(
+            List<ChangeInfo> changesToShelve,
+            List<ChangeInfo> dependenciesCandidates)
+        {
+            bool hasPendingMergeLinks = HasPendingMergeLinks();
+
+            if (hasPendingMergeLinks &&
+                !UserWantsShelveWithPendingMergeLinks(mGuiMessage))
+            {
+                return;
+            }
+
+            if (CheckEmptyOperation(changesToShelve, hasPendingMergeLinks))
+            {
+                ((IProgressControls)mProgressControls).ShowWarning(
+                    PlasticLocalization.GetString(PlasticLocalization.Name.NoItemsAreSelected));
+                return;
+            }
+
+            bool isCancelled;
+            SaveAssets.ForChangesWithConfirmation(
+                mWkInfo.ClientPath, changesToShelve, mWorkspaceOperationsMonitor,
+                out isCancelled);
+
+            if (isCancelled)
+                return;
+
+            bool areAllItemsChecked = mPendingChangesTreeView.AreAllItemsChecked();
+
+            mPendingChangesOperations.Shelve(
+                changesToShelve,
+                dependenciesCandidates,
+                mCommentText,
+                OpenPlasticProjectSettings.InShelveAndSwitchFoldout,
+                GetOperationDelegate.ForUndoEnd(changesToShelve, false),
+                null,
+                GetOperationDelegate.ForShelveSuccess(areAllItemsChecked, this));
+        }
+
+        void PartialUndoChanges(
+            List<ChangeInfo> changesToUndo,
+            List<ChangeInfo> dependenciesCandidates)
+        {
+            if (CheckEmptyOperation(changesToUndo))
+            {
+                ((IProgressControls)mProgressControls).ShowWarning(
+                    PlasticLocalization.GetString(PlasticLocalization.Name.NoItemsToUndo));
+                return;
+            }
+
+            SaveAssets.ForChangesWithoutConfirmation(
+                mWkInfo.ClientPath, changesToUndo, mWorkspaceOperationsMonitor);
+
+            UndoUIOperation undoOperation = new UndoUIOperation(
+                mWkInfo, mViewHost,
+                new LaunchDependenciesDialog(
+                    PlasticLocalization.GetString(PlasticLocalization.Name.UndoButton),
+                    mParentWindow),
+                mProgressControls);
+
+            undoOperation.Undo(
+                changesToUndo,
+                dependenciesCandidates,
+                RefreshAsset.UnityAssetDatabase);
+        }
+
+        void UndoChanges(
+            List<ChangeInfo> changesToUndo,
+            List<ChangeInfo> dependenciesCandidates,
+            bool keepLocalChanges)
+        {
+            if (CheckEmptyOperation(changesToUndo, HasPendingMergeLinks()))
+            {
+                ((IProgressControls)mProgressControls).ShowWarning(
+                    PlasticLocalization.GetString(PlasticLocalization.Name.NoItemsToUndo));
+                return;
+            }
+
+            SaveAssets.ForChangesWithoutConfirmation(
+                mWkInfo.ClientPath, changesToUndo, mWorkspaceOperationsMonitor);
+
+            mPendingChangesOperations.Undo(
+                changesToUndo,
+                dependenciesCandidates,
+                mPendingMergeLinks.Count,
+                keepLocalChanges,
+                GetOperationDelegate.ForUndoEnd(changesToUndo, keepLocalChanges),
+                null);
+        }
+
+        void UndoUnchangedChanges(List<ChangeInfo> changesToUndo)
+        {
+            if (CheckEmptyOperation(changesToUndo, HasPendingMergeLinks()))
+            {
+                ((IProgressControls) mProgressControls).ShowWarning(
+                    PlasticLocalization.GetString(PlasticLocalization.Name.NoItemsToUndo));
+
+                return;
+            }
+
+            SaveAssets.ForChangesWithoutConfirmation(
+                mWkInfo.ClientPath, changesToUndo, mWorkspaceOperationsMonitor);
+
+            mPendingChangesOperations.UndoUnchanged(
+                changesToUndo,
+                RefreshAsset.UnityAssetDatabase,
+                null);
+        }
+
+        void UndoCheckoutsKeepingLocalChanges()
+        {
+            UndoForMode(isGluonMode: false, keepLocalChanges: true);
+        }
+
+        void UndoCheckoutChangesKeepingLocalChanges(List<ChangeInfo> changesToUndo)
+        {
+            UndoChanges(changesToUndo, new List<ChangeInfo>(), keepLocalChanges: true);
+        }
+
+        void ShowShelvesView(IViewSwitcher viewSwitcher)
+        {
+            TrackFeatureUseEvent.For(
+                mRepSpec,
+                TrackFeatureUseEvent.Features.UnityPackage.ShowShelvesViewFromDropdownMenu);
+
+            viewSwitcher.ShowShelvesView();
         }
 
         static bool CheckEmptyOperation(List<ChangeInfo> elements)

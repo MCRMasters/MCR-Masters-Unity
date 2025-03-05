@@ -1,9 +1,10 @@
 ﻿using GluonGui.WorkspaceWindow.Views.Checkin.Operations;
 using GluonGui.WorkspaceWindow.Views.WorkspaceExplorer.Explorer;
+using PlasticGui;
 
 namespace Unity.PlasticSCM.Editor.Gluon
 {
-    internal class ProgressOperationHandler : IUpdateProgress, ICheckinProgress
+    internal class ProgressOperationHandler : IUpdateProgress, ICheckinProgress, IProgressOperationHandler
     {
         internal ProgressOperationHandler(WorkspaceWindow workspaceWindow)
         {
@@ -62,6 +63,11 @@ namespace Unity.PlasticSCM.Editor.Gluon
             mUpdateProgress = null;
             mWorkspaceWindow.Progress.ResetProgress();
             mWorkspaceWindow.RequestRepaint();
+        }
+
+        bool IProgressOperationHandler.CheckOperationInProgress()
+        {
+            return IsOperationInProgress();
         }
 
         UpdateProgress mUpdateProgress;

@@ -1,4 +1,4 @@
-﻿using UnityEditor;
+using UnityEditor;
 using UnityEngine;
 
 using PlasticGui;
@@ -37,7 +37,7 @@ namespace Unity.PlasticSCM.Editor.Views.Branches
             if (operationToExecute == BranchMenuOperations.None)
                 return false;
 
-            BranchMenuOperations operations = 
+            BranchMenuOperations operations =
                 BranchMenuUpdater.GetAvailableMenuOperations(
                     mBranchMenuOperations.GetSelectedBranchesCount(),
                     mIsGluonMode,
@@ -74,7 +74,12 @@ namespace Unity.PlasticSCM.Editor.Views.Branches
         {
             mBranchMenuOperations.MergeBranch();
         }
-    
+
+        void CreateCodeReviewMenuItem_Click()
+        {
+            mBranchMenuOperations.CreateCodeReview();
+        }
+
         void UpdateMenuItems(GenericMenu menu)
         {
             BranchMenuOperations operations = BranchMenuUpdater.GetAvailableMenuOperations(
@@ -121,6 +126,15 @@ namespace Unity.PlasticSCM.Editor.Views.Branches
                 operations,
                 BranchMenuOperations.Delete,
                 DeleteBranchMenuItem_Click);
+
+            menu.AddSeparator(string.Empty);
+
+            AddBranchMenuItem(
+                mCreateCodeReviewMenuItemContent,
+                menu,
+                operations,
+                BranchMenuOperations.CreateCodeReview,
+                CreateCodeReviewMenuItem_Click);
         }
 
         static void AddBranchMenuItem(
@@ -185,6 +199,8 @@ namespace Unity.PlasticSCM.Editor.Views.Branches
             mDeleteBranchMenuItemContent = new GUIContent(string.Format("{0} {1}",
                 PlasticLocalization.GetString(PlasticLocalization.Name.BranchMenuItemDeleteBranch),
                 GetPlasticShortcut.ForDelete()));
+            mCreateCodeReviewMenuItemContent = new GUIContent(
+                PlasticLocalization.Name.BranchMenuCreateANewCodeReview.GetString());
         }
 
         GenericMenu mMenu;
@@ -194,6 +210,7 @@ namespace Unity.PlasticSCM.Editor.Views.Branches
         GUIContent mMergeBranchMenuItemContent;
         GUIContent mRenameBranchMenuItemContent;
         GUIContent mDeleteBranchMenuItemContent;
+        GUIContent mCreateCodeReviewMenuItemContent;
 
         readonly IBranchMenuOperations mBranchMenuOperations;
         readonly bool mIsGluonMode;

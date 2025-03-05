@@ -123,9 +123,7 @@ namespace Unity.PlasticSCM.Editor.Views.PendingChanges.Dialogs
             if (string.IsNullOrEmpty(mRulesText))
                 return new string[0];
 
-            return mRulesText.Split(
-                Environment.NewLine.ToCharArray(),
-                StringSplitOptions.RemoveEmptyEntries);
+            return mRulesText.Split(new string[] { Environment.NewLine }, StringSplitOptions.None);
         }
 
         static bool FixTextAreaSelectionIfNeeded(bool isTextAreaFocused)

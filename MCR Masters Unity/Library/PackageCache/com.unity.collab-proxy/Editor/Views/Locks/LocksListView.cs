@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 using UnityEditor;
@@ -19,7 +19,7 @@ namespace Unity.PlasticSCM.Editor.Views.Locks
         FillLocksTable.ILocksList
     {
         internal GenericMenu Menu { get { return mMenu.Menu; } }
-        internal string EmptyStateMessage { get { return mEmptyStateMessage; } }
+        internal string EmptyStateMessage { get { return mEmptyStateContent.text; } }
 
         internal LocksListView(
             RepositorySpec repSpec,
@@ -55,7 +55,7 @@ namespace Unity.PlasticSCM.Editor.Views.Locks
             base.OnGUI(rect);
 
             if (mRows.Count == 0)
-                DrawTreeViewEmptyState.For(rect, mEmptyStateMessage);
+                DrawTreeViewEmptyState.For(rect, mEmptyStateContent);
 
             Event e = Event.current;
 
@@ -154,7 +154,7 @@ namespace Unity.PlasticSCM.Editor.Views.Locks
 
         void FillLocksTable.IShowContentView.ShowContentPanel()
         {
-            mEmptyStateMessage = null;
+            mEmptyStateContent.text = string.Empty;
 
             Reload();
 
@@ -163,7 +163,7 @@ namespace Unity.PlasticSCM.Editor.Views.Locks
 
         void FillLocksTable.IShowContentView.ShowEmptyStatePanel(string explanationText)
         {
-            mEmptyStateMessage = explanationText;
+            mEmptyStateContent.text = explanationText;
 
             Reload();
         }
@@ -174,7 +174,7 @@ namespace Unity.PlasticSCM.Editor.Views.Locks
                 PlasticLocalization.Name.LoadLocksErrorExplanation.GetString(),
                 errorText);
 
-            mEmptyStateMessage = PlasticLocalization.Name.LoadLocksError.GetString();
+            mEmptyStateContent.text = PlasticLocalization.Name.LoadLocksError.GetString();
 
             mLocksList = null;
             mListViewItemIds.Clear();
@@ -321,8 +321,8 @@ namespace Unity.PlasticSCM.Editor.Views.Locks
         List<TreeViewItem> mRows = new List<TreeViewItem>();
 
         LockInfoList mLocksList;
-        string mEmptyStateMessage;
 
+        readonly GUIContent mEmptyStateContent = new GUIContent(string.Empty);
         readonly CooldownWindowDelayer mCooldownFilterAction;
         readonly CooldownWindowDelayer mCooldownSelectionAction;
         readonly LocksSelector mLocksSelector;

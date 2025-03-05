@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using System.Collections.Generic;
 
 using UnityEditor;
@@ -13,51 +13,77 @@ namespace Unity.PlasticSCM.Editor.AssetUtils
 {
     internal static class SaveAssets
     {
+        internal static void UnderWorkspaceWithConfirmation(
+            string wkPath,
+            WorkspaceOperationsMonitor workspaceOperationsMonitor,
+            out bool isCancelled)
+        {
+            ForPaths(
+                wkPath,
+                null,
+                true,
+                workspaceOperationsMonitor,
+                out isCancelled);
+        }
+
         internal static void ForChangesWithConfirmation(
+            string wkPath,
             List<ChangeInfo> changes,
             WorkspaceOperationsMonitor workspaceOperationsMonitor,
             out bool isCancelled)
         {
             ForPaths(
-                GetPaths(changes), true,
+                wkPath,
+                GetPaths(changes),
+                true,
                 workspaceOperationsMonitor,
                 out isCancelled);
         }
 
         internal static void ForPathsWithConfirmation(
+            string wkPath,
             List<string> paths,
             WorkspaceOperationsMonitor workspaceOperationsMonitor,
             out bool isCancelled)
         {
             ForPaths(
-                paths, true,
+                wkPath,
+                paths,
+                true,
                 workspaceOperationsMonitor,
                 out isCancelled);
         }
 
         internal static void ForChangesWithoutConfirmation(
+            string wkPath,
             List<ChangeInfo> changes,
             WorkspaceOperationsMonitor workspaceOperationsMonitor)
         {
             bool isCancelled;
             ForPaths(
-                GetPaths(changes), false,
+                wkPath,
+                GetPaths(changes),
+                false,
                 workspaceOperationsMonitor,
                 out isCancelled);
         }
 
         internal static void ForPathsWithoutConfirmation(
+            string wkPath,
             List<string> paths,
             WorkspaceOperationsMonitor workspaceOperationsMonitor)
         {
             bool isCancelled;
             ForPaths(
-                paths, false,
+                wkPath,
+                paths,
+                false,
                 workspaceOperationsMonitor,
                 out isCancelled);
         }
 
         static void ForPaths(
+            string wkPath,
             List<string> paths,
             bool askForUserConfirmation,
             WorkspaceOperationsMonitor workspaceOperationsMonitor,
@@ -67,6 +93,7 @@ namespace Unity.PlasticSCM.Editor.AssetUtils
             try
             {
                 SaveDirtyScenes(
+                    wkPath,
                     paths,
                     askForUserConfirmation,
                     out isCancelled);
@@ -83,19 +110,14 @@ namespace Unity.PlasticSCM.Editor.AssetUtils
         }
 
         static void SaveDirtyScenes(
+            string wkPath,
             List<string> paths,
             bool askForUserConfirmation,
             out bool isCancelled)
         {
             isCancelled = false;
 
-            List<Scene> scenesToSave = new List<Scene>();
-
-            foreach (Scene dirtyScene in GetDirtyScenes())
-            {
-                if (Contains(paths, dirtyScene))
-                    scenesToSave.Add(dirtyScene);
-            }
+            List<Scene> scenesToSave = GetScenesToSave(wkPath, paths);
 
             if (scenesToSave.Count == 0)
                 return;
@@ -105,6 +127,10 @@ namespace Unity.PlasticSCM.Editor.AssetUtils
                 isCancelled = !EditorSceneManager.
                     SaveModifiedScenesIfUserWantsTo(
                         scenesToSave.ToArray());
+
+                if (!isCancelled)
+                    DiscardChangesInActiveSceneIfDirty(scenesToSave);
+
                 return;
             }
 
@@ -112,7 +138,50 @@ namespace Unity.PlasticSCM.Editor.AssetUtils
                 scenesToSave.ToArray());
         }
 
-        static List<Scene> GetDirtyScenes()
+        static void DiscardChangesInActiveSceneIfDirty(List<Scene> scenesToSave)
+        {
+            string activeScenePath = EditorSceneManager.GetActiveScene().path;
+            Scene? activeScene = GetSceneByPath(scenesToSave, activeScenePath);
+
+            if (activeScene == null)
+                return;
+
+            if (!activeScene.Value.isDirty)
+                return;
+
+            EditorSceneManager.OpenScene(activeScenePath);
+        }
+
+        static Scene? GetSceneByPath(List<Scene> scenes, string scenePath)
+        {
+            foreach (Scene scene in scenes)
+            {
+                if (scene.path == scenePath)
+                    return scene;
+            }
+
+            return null;
+        }
+
+        static List<Scene> GetScenesToSave(string wkPath, List<string> paths)
+        {
+            List<Scene> dirtyScenes = GetDirtyScenesUnderWorkspace(wkPath);
+
+            if (paths == null)
+                return dirtyScenes;
+
+            List<Scene> scenesToSave = new List<Scene>();
+
+            foreach (Scene dirtyScene in dirtyScenes)
+            {
+                if (Contains(paths, dirtyScene))
+                    scenesToSave.Add(dirtyScene);
+            }
+
+            return scenesToSave;
+        }
+
+        static List<Scene> GetDirtyScenesUnderWorkspace(string wkPath)
         {
             List<Scene> dirtyScenes = new List<Scene>();
 
@@ -121,6 +190,14 @@ namespace Unity.PlasticSCM.Editor.AssetUtils
                 Scene scene = SceneManager.GetSceneAt(i);
 
                 if (!scene.isDirty)
+                    continue;
+
+                if (string.IsNullOrEmpty(scene.path))
+                    continue;
+
+                string fullPath = Path.GetFullPath(scene.path);
+
+                if (!PathHelper.IsContainedOn(fullPath, wkPath))
                     continue;
 
                 dirtyScenes.Add(scene);
@@ -133,9 +210,6 @@ namespace Unity.PlasticSCM.Editor.AssetUtils
             List<string> paths,
             Scene scene)
         {
-            if (string.IsNullOrEmpty(scene.path))
-                return false;
-
             foreach (string path in paths)
             {
                 if (PathHelper.IsSamePath(

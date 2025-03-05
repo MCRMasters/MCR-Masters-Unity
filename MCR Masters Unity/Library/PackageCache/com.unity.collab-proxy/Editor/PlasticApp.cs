@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Linq;
 
@@ -32,17 +32,17 @@ namespace Unity.PlasticSCM.Editor
 {
     internal static class PlasticApp
     {
-        static PlasticApp()
-        {
-            ConfigureLogging();
-
-            RegisterDomainUnloadHandler();
-
-            mLog = GetLogger("PlasticApp");
-        }
-
         internal static ILog GetLogger(string name)
         {
+            if (!mIsDomainUnloadHandlerRegistered)
+            {
+                // Register the Domain Unload Handler before the LogManager is initialized,
+                // so the domain unload handler for the app is processed before the log manager one,
+                // and thus the AppDomainUnload is printed in the log
+                RegisterDomainUnloadHandler();
+                mIsDomainUnloadHandlerRegistered = true;
+            }
+
             return LogManager.GetLogger(name);
         }
 
@@ -65,8 +65,12 @@ namespace Unity.PlasticSCM.Editor
 
             mIsInitialized = true;
 
+            // Configure logging on initialize to avoid adding the performance cost of it
+            // on every Editor load and Domain reload for non-UVCS users.
+            ConfigureLogging();
+
             mLog.Debug("InitializeIfNeeded");
-            
+
             // Ensures that the Edition Token is initialized from the UVCS installation regardless of if the PlasticWindow is opened
             UnityConfigurationChecker.SynchronizeUnityEditionToken();
             PlasticInstallPath.LogInstallationInfo();
@@ -311,6 +315,13 @@ namespace Unity.PlasticSCM.Editor
             mLog.Debug("OnApplicationActivated");
 
             EnableMonoFsWatcherIfNeeded();
+
+            // When the editor gets the focus back, we need to guarantee our status caches are cleared.
+            // This way we can reflect external changes that are not captured by the internal watchers.
+            if (PlasticPlugin.AssetStatusCache != null)
+            {
+                PlasticPlugin.AssetStatusCache.Clear();
+            }
         }
 
         static void OnApplicationDeactivated()
@@ -420,11 +431,12 @@ namespace Unity.PlasticSCM.Editor
             }
         }
 
+        static bool mIsDomainUnloadHandlerRegistered;
         static bool mIsInitialized;
         static IWorkspaceWindow mWorkspaceWindow;
         static WorkspaceInfo mWkInfo;
         static EventSenderScheduler mEventSenderScheduler;
         static PingEventLoop mPingEventLoop;
-        static ILog mLog;
+        static readonly ILog mLog = PlasticApp.GetLogger("PlasticApp");
     }
 }

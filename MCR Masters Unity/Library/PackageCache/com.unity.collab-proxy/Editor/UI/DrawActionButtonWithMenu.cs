@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 using UnityEditor;
 using UnityEngine;
@@ -7,43 +7,65 @@ namespace Unity.PlasticSCM.Editor.UI
 {
     internal static class DrawActionButtonWithMenu
     {
-        internal static void For(string buttonText, Action buttonAction, GenericMenu actionMenu)
+        internal static GUIStyle ButtonStyle { get { return mButtonStyle; } }
+
+        internal static void For(
+            string text,
+            string tooltip,
+            Action buttonAction,
+            GenericMenu actionMenu)
+        {
+            float width = MeasureMaxWidth.ForTexts(mButtonStyle, text);
+
+            For(text, tooltip, width, buttonAction, actionMenu);
+        }
+
+        internal static void For(
+            string text,
+            string tooltip,
+            float width,
+            Action buttonAction,
+            GenericMenu actionMenu)
         {
             // Action button
-            GUIContent buttonContent = new GUIContent(buttonText);
-
-            GUIStyle buttonStyle = new GUIStyle(EditorStyles.miniButtonLeft);
-            buttonStyle.stretchWidth = false;
-
-            float width = MeasureMaxWidth.ForTexts(buttonStyle, buttonText);
+            GUIContent buttonContent = new GUIContent(text, tooltip);
 
             Rect rt = GUILayoutUtility.GetRect(
                 buttonContent,
-                buttonStyle,
+                mButtonStyle,
                 GUILayout.MinWidth(width),
                 GUILayout.MaxWidth(width));
 
-            if (GUI.Button(rt, buttonContent, buttonStyle))
+            if (GUI.Button(rt, buttonContent, mButtonStyle))
             {
                 buttonAction();
             }
 
             // Menu dropdown
-            GUIStyle dropDownStyle = new GUIStyle(EditorStyles.miniButtonRight);
-
-            GUIContent dropDownContent = new GUIContent(string.Empty, Images.GetDropDownIcon());
+            GUIContent dropDownContent = new GUIContent(
+                string.Empty, Images.GetDropDownIcon());
 
             Rect dropDownRect = GUILayoutUtility.GetRect(
                 dropDownContent,
-                dropDownStyle,
+                mDropDownStyle,
                 GUILayout.MinWidth(DROPDOWN_BUTTON_WIDTH),
                 GUILayout.MaxWidth(DROPDOWN_BUTTON_WIDTH));
 
-            if (EditorGUI.DropdownButton(dropDownRect, dropDownContent, FocusType.Passive, dropDownStyle))
+            if (EditorGUI.DropdownButton(
+                    dropDownRect, dropDownContent, FocusType.Passive, mDropDownStyle))
             {
                 actionMenu.DropDown(dropDownRect);
             }
         }
+
+        static readonly GUIStyle mButtonStyle =
+            new GUIStyle(EditorStyles.miniButtonLeft)
+            {
+                stretchWidth = false
+            };
+
+        static readonly GUIStyle mDropDownStyle =
+            new GUIStyle(EditorStyles.miniButtonRight);
 
         const int DROPDOWN_BUTTON_WIDTH = 16;
     }

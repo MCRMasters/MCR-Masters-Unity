@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 using UnityEngine;
@@ -17,6 +17,7 @@ namespace Unity.PlasticSCM.Editor.Views.Branches
     internal class BranchesListView : TreeView
     {
         internal GenericMenu Menu { get { return mMenu.Menu; } }
+        internal long LoadedBranchId { get { return mLoadedBranchId; } }
 
         internal BranchesListView(
             BranchesListHeaderState headerState,
@@ -377,9 +378,7 @@ namespace Unity.PlasticSCM.Editor.Views.Branches
                 return;
             }
 
-            if (column == BranchesListColumn.Branch ||
-                column == BranchesListColumn.Repository ||
-                column == BranchesListColumn.Guid)
+            if (column == BranchesListColumn.Repository)
             {
                 DrawTreeViewItem.ForSecondaryLabel(
                     rect, columnText, isSelected, isFocused, isBoldText);

@@ -24,8 +24,6 @@ namespace Unity.PlasticSCM.Editor.Hub.Operations
         internal static void LaunchOperation(
             OperationParams parameters)
         {
-            PlasticApp.InitializeIfNeeded();
-
             DownloadRepository downloadOperation =
                 new DownloadRepository();
 

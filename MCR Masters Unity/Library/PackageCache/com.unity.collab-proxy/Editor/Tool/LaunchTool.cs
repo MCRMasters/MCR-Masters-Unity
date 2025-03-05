@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 
+using Codice.Client.Common;
 using Codice.Client.Common.EventTracking;
 using Codice.CM.Common;
 using Codice.LogWrapper;
@@ -259,6 +260,35 @@ namespace Unity.PlasticSCM.Editor.Tool
                     branchDiffArg, fullBranchSpec));
         }
 
+        internal static void OpenCodeReview(
+            IShowDownloadPlasticExeWindow showDownloadPlasticExeWindow,
+            IProcessExecutor processExecutor,
+            RepositorySpec repSpec,
+            long reviewId,
+            bool isGluonMode)
+        {
+            if (showDownloadPlasticExeWindow.Show(
+                    repSpec,
+                    isGluonMode,
+                    TrackFeatureUseEvent.Features.InstallPlasticCloudFromOpenCodeReview,
+                    TrackFeatureUseEvent.Features.InstallPlasticEnterpriseFromOpenCodeReview,
+                    TrackFeatureUseEvent.Features.CancelPlasticInstallationFromOpenCodeReview))
+                return;
+
+            mLog.DebugFormat("Open Code Review {0} for '{1}'", reviewId, repSpec);
+
+            string plasticExePath = PlasticInstallPath.GetPlasticExePath();
+
+            bool bShowReviewChangesTab = IsExeVersion.GreaterOrEqual(
+                plasticExePath,
+                CODE_REVIEW_REVIEW_CHANGES_TAB_MIN_VERSION);
+
+            string plasticLink = GetCodeReviewPlasticLink.From(
+                repSpec, reviewId, bShowReviewChangesTab);
+
+            processExecutor.ExecuteProcess(plasticExePath, plasticLink);
+        }
+
         internal static void OpenWorkspaceConfiguration(
             IShowDownloadPlasticExeWindow showDownloadPlasticExeWindow,
             IProcessExecutor processExecutor,
@@ -301,6 +331,8 @@ namespace Unity.PlasticSCM.Editor.Tool
         static int mBrexProcessId = -1;
 
         static readonly ILog mLog = PlasticApp.GetLogger("LaunchTool");
+
+        const string CODE_REVIEW_REVIEW_CHANGES_TAB_MIN_VERSION = "11.0.16.9116";
 
         internal class ShowDownloadPlasticExeWindow : LaunchTool.IShowDownloadPlasticExeWindow
         {

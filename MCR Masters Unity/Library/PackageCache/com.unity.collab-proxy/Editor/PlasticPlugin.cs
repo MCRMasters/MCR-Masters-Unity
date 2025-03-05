@@ -74,7 +74,7 @@ namespace Unity.PlasticSCM.Editor
 
         static PlasticPlugin()
         {
-            ProcessCommand.Initialize();
+            ProcessHubCommand.Initialize();
             EditorDispatcher.Initialize();
 
             if (!FindWorkspace.HasWorkspace(ApplicationDataPath.Get()))
@@ -131,22 +131,16 @@ namespace Unity.PlasticSCM.Editor
 
             PlasticAssetsProcessor plasticAssetsProcessor = new PlasticAssetsProcessor();
 
-            mWorkspaceOperationsMonitor = BuildWorkspaceOperationsMonitor(
-                plasticAssetsProcessor, isGluonMode);
+            mWorkspaceOperationsMonitor = BuildWorkspaceOperationsMonitor(plasticAssetsProcessor, isGluonMode);
             mWorkspaceOperationsMonitor.Start();
 
             UnityCloudProjectLinkMonitor.CheckCloudProjectAlignmentAsync(wkInfo);
 
-            AssetsProcessors.Enable(
-                wkInfo.ClientPath, plasticAssetsProcessor, mAssetStatusCache);
-            AssetMenuItems.Enable(
-                wkInfo, mAssetStatusCache);
-            DrawAssetOverlay.Enable(
-                wkInfo.ClientPath, mAssetStatusCache);
-            DrawInspectorOperations.Enable(
-                wkInfo.ClientPath, mAssetStatusCache);
-            DrawSceneOperations.Enable(
-                wkInfo.ClientPath, mWorkspaceOperationsMonitor, mAssetStatusCache);
+            AssetsProcessors.Enable(wkInfo.ClientPath, plasticAssetsProcessor, mAssetStatusCache);
+            AssetMenuItems.Enable(wkInfo, mAssetStatusCache);
+            DrawAssetOverlay.Enable(wkInfo.ClientPath, mAssetStatusCache);
+            DrawInspectorOperations.Enable(wkInfo.ClientPath, mAssetStatusCache);
+            DrawSceneOperations.Enable(wkInfo.ClientPath, mWorkspaceOperationsMonitor, mAssetStatusCache);
 
             Task.Run(() => EnsureServerConnection(wkInfo, mPlasticConnectionMonitor));
         }
@@ -258,7 +252,7 @@ namespace Unity.PlasticSCM.Editor
         }
 
         static PlasticNotification.Status mNotificationStatus;
-        static AssetStatusCache mAssetStatusCache;
+        static IAssetStatusCache mAssetStatusCache;
         static WorkspaceOperationsMonitor mWorkspaceOperationsMonitor;
         static PlasticConnectionMonitor mPlasticConnectionMonitor = new PlasticConnectionMonitor();
         static bool mIsEnabled;

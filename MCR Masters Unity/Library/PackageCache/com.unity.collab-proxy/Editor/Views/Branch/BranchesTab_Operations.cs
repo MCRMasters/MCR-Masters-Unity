@@ -1,14 +1,24 @@
 using Codice.CM.Common;
 using GluonGui.WorkspaceWindow.Views.WorkspaceExplorer.Explorer;
+using PlasticGui.WorkspaceWindow.QueryViews.Branches;
 using Unity.PlasticSCM.Editor.AssetUtils;
 using Unity.PlasticSCM.Editor.UI;
+using Unity.PlasticSCM.Editor.Views.Branches.Dialogs;
 
 namespace Unity.PlasticSCM.Editor.Views.Branches
 {
     internal partial class BranchesTab
     {
-        private void SwitchToBranchForMode()
+        void SwitchToBranchForMode()
         {
+            bool isCancelled;
+            SaveAssets.UnderWorkspaceWithConfirmation(
+                mWkInfo.ClientPath, mWorkspaceOperationsMonitor,
+                out isCancelled);
+
+            if (isCancelled)
+                return;
+
             if (mIsGluonMode)
             {
                 SwitchToBranchForGluon();
@@ -18,7 +28,7 @@ namespace Unity.PlasticSCM.Editor.Views.Branches
             SwitchToBranchForDeveloper();
         }
 
-        private void SwitchToBranchForDeveloper()
+        void SwitchToBranchForDeveloper()
         {
             RepositorySpec repSpec = BranchesSelection.GetSelectedRepository(mBranchesListView);
             BranchInfo branchInfo = BranchesSelection.GetSelectedBranch(mBranchesListView);
@@ -28,30 +38,85 @@ namespace Unity.PlasticSCM.Editor.Views.Branches
                 branchInfo,
                 RefreshAsset.BeforeLongAssetOperation,
                 items => RefreshAsset.AfterLongAssetOperation(
-                    ProjectPackages.ShouldBeResolved(items, mWkInfo, false)));
+                    ProjectPackages.ShouldBeResolvedFromUpdateReport(mWkInfo, items)));
         }
 
-        private void SwitchToBranchForGluon()
+        void SwitchToBranchForGluon()
         {
             BranchInfo branchInfo = BranchesSelection.GetSelectedBranch(mBranchesListView);
 
             new SwitchToUIOperation().SwitchToBranch(
                 mWkInfo,
-                PlasticGui.Plastic.API.GetRepositorySpec(mWkInfo),
                 branchInfo,
                 mViewHost,
-                null,
+                mGluonNewIncomingChangesUpdater,
                 new UnityPlasticGuiMessage(),
                 mProgressControls,
                 mWorkspaceWindow.GluonProgressOperationHandler,
                 mGluonUpdateReport,
                 mWorkspaceWindow,
-                null,
-                null,
-                null,
+                mShelvePendingChangesQuestionerBuilder,
+                mShelvedChangesUpdater,
+                mEnableSwitchAndShelveFeatureDialog,
                 RefreshAsset.BeforeLongAssetOperation,
                 items => RefreshAsset.AfterLongAssetOperation(
-                    ProjectPackages.ShouldBeResolved(items, mWkInfo, true)));
+                    ProjectPackages.ShouldBeResolvedFromPaths(mWkInfo, items)));
+        }
+
+        void CreateBranchForMode()
+        {
+            if (mIsGluonMode)
+            {
+                CreateBranchForGluon();
+                return;
+            }
+
+            CreateBranchForDeveloper();
+        }
+
+        void CreateBranchForDeveloper()
+        {
+            RepositorySpec repSpec = BranchesSelection.GetSelectedRepository(mBranchesListView);
+            BranchInfo branchInfo = BranchesSelection.GetSelectedBranch(mBranchesListView);
+
+            BranchCreationData branchCreationData = CreateBranchDialog.CreateBranchFromLastParentBranchChangeset(
+                mParentWindow,
+                repSpec,
+                branchInfo);
+
+            mBranchOperations.CreateBranch(
+                branchCreationData,
+                RefreshAsset.BeforeLongAssetOperation,
+                items => RefreshAsset.AfterLongAssetOperation(
+                    ProjectPackages.ShouldBeResolvedFromUpdateReport(mWkInfo, items)));
+        }
+
+        void CreateBranchForGluon()
+        {
+            RepositorySpec repSpec = BranchesSelection.GetSelectedRepository(mBranchesListView);
+            BranchInfo branchInfo = BranchesSelection.GetSelectedBranch(mBranchesListView);
+
+            BranchCreationData branchCreationData = CreateBranchDialog.CreateBranchFromLastParentBranchChangeset(
+                mParentWindow,
+                repSpec,
+                branchInfo);
+
+            CreateBranchOperation.CreateBranch(
+                mWkInfo,
+                branchCreationData,
+                mViewHost,
+                mGluonNewIncomingChangesUpdater,
+                new UnityPlasticGuiMessage(),
+                mProgressControls,
+                mWorkspaceWindow.GluonProgressOperationHandler,
+                mGluonUpdateReport,
+                mWorkspaceWindow,
+                mShelvePendingChangesQuestionerBuilder,
+                mShelvedChangesUpdater,
+                mEnableSwitchAndShelveFeatureDialog,
+                RefreshAsset.BeforeLongAssetOperation,
+                items => RefreshAsset.AfterLongAssetOperation(
+                    ProjectPackages.ShouldBeResolvedFromPaths(mWkInfo, items)));
         }
     }
 }

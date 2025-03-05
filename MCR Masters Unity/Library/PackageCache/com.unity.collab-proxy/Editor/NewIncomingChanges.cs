@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 using Codice.Client.Common;
 using Codice.CM.Common;
@@ -16,21 +16,20 @@ namespace Unity.PlasticSCM.Editor
         internal static NewIncomingChangesUpdater BuildUpdaterForDeveloper(
             WorkspaceInfo wkInfo,
             ViewSwitcher viewSwitcher,
-            IIncomingChangesNotifier incomingChangesNotifier,
+            StatusBar.IIncomingChangesNotification incomingChangesNotification,
             CheckIncomingChanges.IAutoRefreshIncomingChangesView autoRefreshIncomingChangesView,
             CheckIncomingChanges.IUpdateIncomingChanges updateIncomingChanges)
         {
             NewIncomingChangesUpdater updater = new NewIncomingChangesUpdater(
+                wkInfo,
                 new UnityPlasticTimerBuilder(),
+                autoRefreshIncomingChangesView,
                 new CheckIncomingChanges.CalculateIncomingChanges(),
                 updateIncomingChanges);
-            updater.SetAutoRefreshIncomingChangesView(
-                autoRefreshIncomingChangesView);
 
             viewSwitcher.SetNewIncomingChanges(
-                updater, null, incomingChangesNotifier);
+                updater, null, incomingChangesNotification);
 
-            updater.SetWorkspace(wkInfo);
             updater.Start();
             return updater;
         }
@@ -38,7 +37,7 @@ namespace Unity.PlasticSCM.Editor
         internal static GluonNewIncomingChangesUpdater BuildUpdaterForGluon(
             WorkspaceInfo wkInfo,
             ViewSwitcher viewSwitcher,
-            IIncomingChangesNotifier incomingChangesNotifier,
+            StatusBar.IIncomingChangesNotification incomingChangesNotification,
             GluonCheckIncomingChanges.IAutoRefreshIncomingChangesView autoRefreshIncomingChangesView,
             GluonCheckIncomingChanges.IUpdateIncomingChanges updateIncomingChanges,
             GluonCheckIncomingChanges.ICalculateIncomingChanges calculateIncomingChanges)
@@ -46,12 +45,12 @@ namespace Unity.PlasticSCM.Editor
             GluonNewIncomingChangesUpdater updater = new GluonNewIncomingChangesUpdater(
                 wkInfo,
                 new UnityPlasticTimerBuilder(),
-                updateIncomingChanges,
                 autoRefreshIncomingChangesView,
-                calculateIncomingChanges);
+                calculateIncomingChanges,
+                updateIncomingChanges);
 
             viewSwitcher.SetNewIncomingChanges(
-                null, updater, incomingChangesNotifier);
+                null, updater, incomingChangesNotification);
 
             updater.Start();
             return updater;

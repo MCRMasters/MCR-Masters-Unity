@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 
 namespace Unity.PlasticSCM.Editor.UI
 {
@@ -25,7 +25,7 @@ namespace Unity.PlasticSCM.Editor.UI
         internal const float FIRST_COLUMN_WITHOUT_ICON_INDENT = 5f;
         internal const int OVERLAY_STATUS_ICON_SIZE = 16;
 
-        internal const int SETTINGS_GUI_WIDTH = 415;
+        internal const int SETTINGS_GUI_WIDTH = 425;
 
         internal const int STATUS_BAR_HEIGHT = 24;
         internal const int STATUS_BAR_ICON_SIZE = 16;
@@ -68,6 +68,7 @@ namespace Unity.PlasticSCM.Editor.UI
         internal const double NOTIFICATION_CLEAR_INTERVAL = 5;
 
         internal const string PENDING_CHANGES_TABLE_SETTINGS_NAME = "{0}_PendingChangesTreeV3_{1}";
+        internal const string PENDING_CHANGES_ERRORS_TABLE_SETTINGS_NAME = "{0}_PendingChangesErrorsList{1}";
         internal const string GLUON_INCOMING_CHANGES_TABLE_SETTINGS_NAME = "{0}_GluonIncomingChangesTreeV2_{1}";
         internal const string GLUON_INCOMING_ERRORS_TABLE_SETTINGS_NAME = "{0}_GluonIncomingErrorsListV2_{1}";
         internal const string GLUON_UPDATE_REPORT_TABLE_SETTINGS_NAME = "{0}_GluonUpdateReportListV2_{1}";
@@ -82,16 +83,21 @@ namespace Unity.PlasticSCM.Editor.UI
         internal const string BRANCHES_TABLE_SETTINGS_NAME = "{0}_BranchesListV2_{1}";
         internal const string BRANCHES_DATE_FILTER_SETTING_NAME = "{0}_BranchesDateFilter_{1}";
         internal const string LOCKS_TABLE_SETTINGS_NAME = "{0}_LocksListV2_{1}";
+        internal const string SHELVES_TABLE_SETTINGS_NAME = "{0}_ShelvesList_{1}";
+        internal const string SHELVES_OWNER_FILTER_SETTING_NAME = "{0}_ShelvesOwnerFilter_{1}";
 
         internal const string PLASTIC_PLUGIN_IS_ENABLED_KEY_NAME = "{0}_PlasticPluginIsEnabled";
         internal const string SHOW_BRANCHES_VIEW_KEY_NAME = "{0}_ShowBranchesView";
         internal const string SHOW_LOCKS_VIEW_KEY_NAME = "{0}_ShowLocksView";
+        internal const string SHOW_SHELVES_VIEW_KEY_NAME = "{0}_ShowShelvesView";
 
         internal const string FIRST_CHECKIN_SUBMITTED = "{0}_FirstCheckinSubmitted";
 
         internal const string SHOW_NOTIFICATION_KEY_NAME = "ShowNotification";
         internal const string FORCE_CHECKOUT_KEY_NAME = "forceCheckoutPlasticSCM";
         internal const string AUTOMATIC_ADD_KEY_NAME = "{0}_AutomaticAdd";
+        internal const string PENDING_CHANGES_CI_COMMENTS_KEY_NAME = "CheckInComments";
+        internal const string PENDING_CHANGES_UNCHECKED_ITEMS_KEY_NAME = "PendingChangesUnchecked";
 
         internal static class ChangesetsColumns
         {
@@ -105,6 +111,10 @@ namespace Unity.PlasticSCM.Editor.UI
             internal const float COMMENT_MIN_WIDTH = 100f;
             internal const float BRANCH_WIDTH = 160f;
             internal const float BRANCH_MIN_WIDTH = 90f;
+            internal const float REPOSITORY_WIDTH = 210f;
+            internal const float REPOSITORY_MIN_WIDTH = 90f;
+            internal const float GUID_WIDTH = 270f;
+            internal const float GUID_MIN_WIDTH = 100f;
         }
 
         internal static class BranchesColumns
@@ -135,6 +145,20 @@ namespace Unity.PlasticSCM.Editor.UI
             internal const float BRANCH_NAME_MIN_WIDTH = 90f;
             internal const float DESTINATION_BRANCH_NAME_WIDTH = 180f;
             internal const float DESTINATION_BRANCH_NAME_MIN_WIDTH = 90f;
+        }
+
+        internal static class ShelvesColumns
+        {
+            internal const float SHELVES_NAME_WIDTH = 80f;
+            internal const float SHELVES_NAME_MIN_WIDTH = 50f;
+            internal const float CREATION_DATE_WIDTH = 150f;
+            internal const float CREATION_DATE_MIN_WIDTH = 100f;
+            internal const float CREATEDBY_WIDTH = 200f;
+            internal const float CREATEDBY_MIN_WIDTH = 110f;
+            internal const float COMMENT_WIDTH = 300f;
+            internal const float COMMENT_MIN_WIDTH = 100f;
+            internal const float REPOSITORY_WIDTH = 180f;
+            internal const float REPOSITORY_MIN_WIDTH = 90f;
         }
     }
 }

@@ -218,11 +218,11 @@ namespace Unity.PlasticSCM.Editor.Views.Diff
             bool selectionHasMeta)
         {
             if (selectionHasMeta && !isMultipleSelection)
-                return PlasticLocalization.GetString(PlasticLocalization.Name.UndoThisChangePlusMeta);
+                return PlasticLocalization.GetString(PlasticLocalization.Name.RevertThisFilePlusMeta);
 
             return isMultipleSelection ?
-                PlasticLocalization.GetString(PlasticLocalization.Name.UndoSelectedChanges) :
-                PlasticLocalization.GetString(PlasticLocalization.Name.UndoThisChange);
+                PlasticLocalization.GetString(PlasticLocalization.Name.RevertSelectedFiles) :
+                PlasticLocalization.GetString(PlasticLocalization.Name.RevertThisFile);
         }
 
         static string GetUndeleteMenuItemText(

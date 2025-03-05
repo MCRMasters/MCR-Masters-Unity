@@ -129,9 +129,15 @@ namespace Unity.PlasticSCM.Editor.UI
             MultiLinkLabelData dontShowAgainContent,
             out bool checkBoxValue)
         {
-            checkBoxValue = false;
-            return ((GuiMessage.IGuiMessage)this).ShowQuestion(
-                title, message, positiveButtonText, neutralButtonText, negativeButtonText);
+            return DialogWithCheckBox.Show(
+                title,
+                message,
+                positiveButtonText,
+                neutralButtonText,
+                negativeButtonText,
+                dontShowAgainContent,
+                ParentWindow.Get(),
+                out checkBoxValue);
         }
 
         static string GetDialogTitle(string title)

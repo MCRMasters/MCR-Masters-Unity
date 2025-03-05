@@ -22,8 +22,6 @@ namespace Unity.PlasticSCM.Editor.Hub.Operations
         internal static void LaunchOperation(
             OperationParams parameters)
         {
-            PlasticApp.InitializeIfNeeded();
-
             CreateWorkspace createWorkspaceOperation =
                 new CreateWorkspace();
 

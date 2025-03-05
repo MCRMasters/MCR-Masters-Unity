@@ -1,7 +1,8 @@
-using Codice.CM.Common;
-using PlasticGui;
 using UnityEditor;
 using UnityEngine;
+
+using Codice.CM.Common;
+using PlasticGui;
 
 namespace Unity.PlasticSCM.Editor.UI.Tree
 {
@@ -9,9 +10,8 @@ namespace Unity.PlasticSCM.Editor.UI.Tree
     {
         internal static void For(
             Rect rect,
-            string text)
+            GUIContent content)
         {
-            GUIContent content = new GUIContent(text);
             Vector2 contentSize = GetContentSize(content);
 
             GUI.BeginGroup(rect);
@@ -27,10 +27,9 @@ namespace Unity.PlasticSCM.Editor.UI.Tree
 
         internal static void For(
             Rect rect,
-            string text,
+            GUIContent content,
             Texture2D icon)
         {
-            GUIContent content = new GUIContent(text);
             Vector2 contentSize = GetContentSize(content);
 
             GUI.BeginGroup(rect);
@@ -47,11 +46,10 @@ namespace Unity.PlasticSCM.Editor.UI.Tree
 
         internal static void ForInviteMembers(
             Rect rect,
-            string text,
+            GUIContent textContent,
             Texture2D icon,
-            WorkspaceInfo wkInfo)
+            RepositorySpec repSpec)
         {
-            GUIContent textContent = new GUIContent(text);
             Vector2 textContentSize = GetContentSize(textContent);
 
             GUIContent linkContent = new GUIContent(PlasticLocalization.Name.InviteOtherTeamMembers.GetString());
@@ -70,7 +68,7 @@ namespace Unity.PlasticSCM.Editor.UI.Tree
                 icon);
 
             DrawInviteMembersLink(
-                wkInfo,
+                repSpec,
                 linkContent,
                 linkContentSize,
                 (rect.width - linkContentSize.x) / 2,
@@ -117,7 +115,7 @@ namespace Unity.PlasticSCM.Editor.UI.Tree
         }
 
         static void DrawInviteMembersLink(
-            WorkspaceInfo wkInfo,
+            RepositorySpec repSpec,
             GUIContent linkContent,
             Vector2 linkContentSize,
             float offsetX,
@@ -133,7 +131,7 @@ namespace Unity.PlasticSCM.Editor.UI.Tree
 
             if (GUI.Button(buttonPosition, linkContent, EditorStyles.linkLabel))
             {
-                OpenInviteUsersPage.Run(wkInfo, UnityUrl.UnityDashboard.UnityCloudRequestSource.Editor);
+                OpenInviteUsersPage.Run(repSpec, UnityUrl.UnityDashboard.UnityCloudRequestSource.Editor);
             }
         }
 

@@ -361,18 +361,18 @@ namespace Unity.PlasticSCM.Editor.AssetUtils.Processor
                     return false;
 
                 hasProcessedPaths |= AssetsProcessorOperations.
-                    CheckoutIfControlledAndChanged(
+                    MoveIfControlled(
                         plasticApi,
-                        ExtractPathsToProcess(assetsProcessorPathsToCheckout, lockObj),
+                        ExtractPathsToMoveToProcess(assetsProcessorPathsToMove, lockObj).AsReadOnly(),
                         cancelToken);
 
                 if (cancelToken.IsCancelled())
                     return false;
 
                 hasProcessedPaths |= AssetsProcessorOperations.
-                    MoveIfControlled(
+                    CheckoutIfControlledAndChanged(
                         plasticApi,
-                        ExtractPathsToMoveToProcess(assetsProcessorPathsToMove, lockObj).AsReadOnly(),
+                        ExtractPathsToProcess(assetsProcessorPathsToCheckout, lockObj),
                         cancelToken);
             }
             catch (Exception ex)
