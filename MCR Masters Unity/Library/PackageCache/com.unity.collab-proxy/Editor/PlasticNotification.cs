@@ -15,7 +15,7 @@ namespace Unity.PlasticSCM.Editor
         internal static Texture GetIcon(Status status)
         {
             if (status == Status.IncomingChanges)
-                return Images.GePlasticNotifyIncomingIcon();
+                return Images.GetPlasticNotifyIncomingIcon();
 
             if (status == Status.Conflicts)
                 return Images.GetPlasticNotifyConflictIcon();

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -42,6 +42,11 @@ namespace Unity.PlasticSCM.Editor
 
         internal OperationProgressData Progress { get { return mOperationProgressData; } }
 
+        internal IProgressOperationHandler DeveloperProgressOperationHandler
+        {
+            get { return mDeveloperProgressOperationHandler; }
+        }
+
         internal Gluon.ProgressOperationHandler GluonProgressOperationHandler
         {
             get { return mGluonProgressOperationHandler; }
@@ -53,6 +58,7 @@ namespace Unity.PlasticSCM.Editor
             ViewSwitcher switcher,
             IMergeViewLauncher mergeViewLauncher,
             NewIncomingChangesUpdater developerNewIncomingChangesUpdater,
+            ShelvedChangesUpdater shelvedChangesUpdater,
             EditorWindow parentWindow)
         {
             mWkInfo = wkInfo;
@@ -60,6 +66,7 @@ namespace Unity.PlasticSCM.Editor
             mSwitcher = switcher;
             mMergeViewLauncher = mergeViewLauncher;
             mDeveloperNewIncomingChangesUpdater = developerNewIncomingChangesUpdater;
+            mShelvedChangesUpdater = shelvedChangesUpdater;
             mPlasticWindow = parentWindow;
             mGuiMessage = new UnityPlasticGuiMessage();
 
@@ -125,7 +132,7 @@ namespace Unity.PlasticSCM.Editor
             UpdateWorkspaceOperation update = new UpdateWorkspaceOperation(
                 mWkInfo, this, mSwitcher, mMergeViewLauncher, this,
                 mDeveloperNewIncomingChangesUpdater,
-                null,
+                mShelvedChangesUpdater,
                 null);
 
             update.Run(
@@ -161,7 +168,7 @@ namespace Unity.PlasticSCM.Editor
 
         void IWorkspaceWindow.UpdateTitle()
         {
-            UpdateWorkspaceTitle();
+            RefreshWorkspaceStatus();
         }
 
         bool IWorkspaceWindow.IsOperationInProgress()
@@ -171,7 +178,7 @@ namespace Unity.PlasticSCM.Editor
 
         bool IWorkspaceWindow.CheckOperationInProgress()
         {
-            return mDeveloperProgressOperationHandler.CheckOperationInProgress();
+            return ((IProgressOperationHandler)mDeveloperProgressOperationHandler).CheckOperationInProgress();
         }
 
         void IWorkspaceWindow.ShowUpdateProgress(string title, UpdateNotifier notifier)
@@ -292,7 +299,8 @@ namespace Unity.PlasticSCM.Editor
 
         void IGluonWorkspaceStatusChangeListener.OnWorkspaceStatusChanged()
         {
-            UpdateWorkspaceTitle();
+            RefreshWorkspaceStatus();
+            RefreshWorkingObject();
         }
 
         UpdateReportResult IGluonUpdateReport.ShowUpdateReport(
@@ -302,7 +310,7 @@ namespace Unity.PlasticSCM.Editor
                 wkInfo, errors, mPlasticWindow);
         }
 
-        void UpdateWorkspaceTitle()
+        void RefreshWorkspaceStatus()
         {
             WorkspaceStatusString.Data status = null;
 
@@ -322,6 +330,30 @@ namespace Unity.PlasticSCM.Editor
                     ServerDisplayName = ResolveServer.ToDisplayString(status.Server);
 
                     RequestRepaint();
+                });
+        }
+
+        void RefreshWorkingObject()
+        {
+            // For partial workspaces the calculation of the working object is just
+            // supported for branches, not for changesets
+            if (mSwitcher.State.SelectedTab != ViewSwitcher.SelectedTab.Branches)
+                return;
+
+            WorkingObjectInfo workingObjectInfo = null;
+
+            IThreadWaiter waiter = ThreadWaiter.GetWaiter();
+            waiter.Execute(
+                /*threadOperationDelegate*/ delegate
+                {
+                    workingObjectInfo = WorkingObjectInfo.Calculate(mWkInfo);
+                },
+                /*afterOperationDelegate*/ delegate
+                {
+                    if (waiter.Exception != null)
+                        return;
+
+                    mSwitcher.BranchesTab.SetWorkingObjectInfo(workingObjectInfo);
                 });
         }
 
@@ -422,6 +454,7 @@ namespace Unity.PlasticSCM.Editor
         readonly GuiMessage.IGuiMessage mGuiMessage;
         readonly EditorWindow mPlasticWindow;
         readonly NewIncomingChangesUpdater mDeveloperNewIncomingChangesUpdater;
+        readonly ShelvedChangesUpdater mShelvedChangesUpdater;
         readonly IMergeViewLauncher mMergeViewLauncher;
         readonly ViewSwitcher mSwitcher;
         readonly ViewHost mViewHost;

@@ -10,10 +10,12 @@ using Codice.CM.Common;
 using GluonGui;
 using PlasticGui;
 using PlasticGui.WorkspaceWindow;
+using PlasticGui.WorkspaceWindow.CodeReview;
 using PlasticGui.WorkspaceWindow.QueryViews;
 using PlasticGui.WorkspaceWindow.QueryViews.Branches;
 using PlasticGui.WorkspaceWindow.Update;
-using Unity.PlasticSCM.Editor.AssetUtils;
+using Unity.PlasticSCM.Editor.AssetUtils.Processor;
+using Unity.PlasticSCM.Editor.Tool;
 using Unity.PlasticSCM.Editor.UI;
 using Unity.PlasticSCM.Editor.UI.Progress;
 using Unity.PlasticSCM.Editor.UI.Tree;
@@ -28,7 +30,8 @@ namespace Unity.PlasticSCM.Editor.Views.Branches
     internal partial class BranchesTab :
         IRefreshableView,
         IQueryRefreshableView,
-        IBranchMenuOperations
+        IBranchMenuOperations,
+        ILaunchCodeReviewWindow
     {
         internal BranchesListView Table { get { return mBranchesListView; } }
         internal IBranchMenuOperations Operations { get { return this; } }
@@ -43,6 +46,10 @@ namespace Unity.PlasticSCM.Editor.Views.Branches
             IGluonUpdateReport gluonUpdateReport,
             NewIncomingChangesUpdater developerNewIncomingChangesUpdater,
             GluonNewIncomingChangesUpdater gluonNewIncomingChangesUpdater,
+            IShelvedChangesUpdater shelvedChangesUpdater,
+            LaunchTool.IShowDownloadPlasticExeWindow showDownloadPlasticExeWindow,
+            LaunchTool.IProcessExecutor processExecutor,
+            WorkspaceOperationsMonitor workspaceOperationsMonitor,
             EditorWindow parentWindow,
             bool isGluonMode)
         {
@@ -56,6 +63,15 @@ namespace Unity.PlasticSCM.Editor.Views.Branches
 
             mDeveloperNewIncomingChangesUpdater = developerNewIncomingChangesUpdater;
             mGluonNewIncomingChangesUpdater = gluonNewIncomingChangesUpdater;
+            mShelvedChangesUpdater = shelvedChangesUpdater;
+            mShowDownloadPlasticExeWindow = showDownloadPlasticExeWindow;
+            mProcessExecutor = processExecutor;
+            mWorkspaceOperationsMonitor = workspaceOperationsMonitor;
+            mShelvePendingChangesQuestionerBuilder =
+                new ShelvePendingChangesQuestionerBuilder(parentWindow);
+            mEnableSwitchAndShelveFeatureDialog = new EnableSwitchAndShelveFeature(
+                PlasticGui.Plastic.API.GetRepositorySpec(mWkInfo),
+                mParentWindow);
 
             BuildComponents(
                 wkInfo,
@@ -64,6 +80,9 @@ namespace Unity.PlasticSCM.Editor.Views.Branches
                 mergeViewLauncher,
                 updateReport,
                 developerNewIncomingChangesUpdater,
+                shelvedChangesUpdater,
+                mShelvePendingChangesQuestionerBuilder,
+                mEnableSwitchAndShelveFeatureDialog,
                 parentWindow);
 
             ((IRefreshableView)this).Refresh();
@@ -171,21 +190,14 @@ namespace Unity.PlasticSCM.Editor.Views.Branches
             return BranchesSelection.GetSelectedBranchesCount(mBranchesListView);
         }
 
+        bool IBranchMenuOperations.AreHiddenBranchesShown()
+        {
+            return false;
+        }
+
         void IBranchMenuOperations.CreateBranch()
         {
-            RepositorySpec repSpec = BranchesSelection.GetSelectedRepository(mBranchesListView);
-            BranchInfo branchInfo = BranchesSelection.GetSelectedBranch(mBranchesListView);
-
-            BranchCreationData branchCreationData = CreateBranchDialog.CreateBranchFromLastParentBranchChangeset(
-                mParentWindow,
-                repSpec,
-                branchInfo);
-
-            mBranchOperations.CreateBranch(
-                branchCreationData,
-                RefreshAsset.BeforeLongAssetOperation,
-                items => RefreshAsset.AfterLongAssetOperation(
-                    ProjectPackages.ShouldBeResolved(items, mWkInfo, false)));
+            CreateBranchForMode();
         }
 
         void IBranchMenuOperations.CreateTopLevelBranch() { }
@@ -233,6 +245,10 @@ namespace Unity.PlasticSCM.Editor.Views.Branches
             mBranchOperations.RenameBranch(branchRenameData);
         }
 
+        void IBranchMenuOperations.HideUnhideBranch()
+        {
+        }
+
         void IBranchMenuOperations.DeleteBranch()
         {
             var branchesToDelete = BranchesSelection.GetSelectedBranches(mBranchesListView);
@@ -243,10 +259,45 @@ namespace Unity.PlasticSCM.Editor.Views.Branches
             mBranchOperations.DeleteBranch(
                 BranchesSelection.GetSelectedRepositories(mBranchesListView),
                 branchesToDelete,
-                DeleteBranchOptions.IncludeChangesets);
+                DeleteBranchOptions.IncludeChangesets,
+                false);
         }
 
-        void IBranchMenuOperations.CreateCodeReview() { }
+        void IBranchMenuOperations.CreateCodeReview()
+        {
+            RepositorySpec repSpec = BranchesSelection.GetSelectedRepository(mBranchesListView);
+            BranchInfo branchInfo = BranchesSelection.GetSelectedBranch(mBranchesListView);
+
+            NewCodeReviewBehavior choice = SelectNewCodeReviewBehavior.For(repSpec.Server);
+
+            switch (choice)
+            {
+                case NewCodeReviewBehavior.CreateAndOpenInDesktop:
+                    mBranchOperations.CreateCodeReview(repSpec, branchInfo, this);
+                    break;
+                case NewCodeReviewBehavior.RequestFromUnityCloud:
+                    OpenRequestReviewPage.ForBranch(repSpec, branchInfo.BranchId);
+                    break;
+                case NewCodeReviewBehavior.Ask:
+                default:
+                    break;
+            }
+        }
+
+        void ILaunchCodeReviewWindow.Show(
+            WorkspaceInfo wkInfo,
+            RepositorySpec repSpec,
+            ReviewInfo reviewInfo,
+            RepObjectInfo repObjectInfo,
+            bool bShowReviewChangesTab)
+        {
+            LaunchTool.OpenCodeReview(
+                mShowDownloadPlasticExeWindow,
+                mProcessExecutor,
+                repSpec,
+                reviewInfo.Id,
+                mIsGluonMode);
+        }
 
         void IBranchMenuOperations.ViewPermissions() { }
 
@@ -415,6 +466,9 @@ namespace Unity.PlasticSCM.Editor.Views.Branches
             IMergeViewLauncher mergeViewLauncher,
             IUpdateReport updateReport,
             NewIncomingChangesUpdater developerNewIncomingChangesUpdater,
+            IShelvedChangesUpdater shelvedChangesUpdater,
+            IShelvePendingChangesQuestionerBuilder shelvePendingChangesQuestionerBuilder,
+            SwitchAndShelve.IEnableSwitchAndShelveFeatureDialog enableSwitchAndShelveFeatureDialog,
             EditorWindow parentWindow)
         {
             mSearchField = new SearchField();
@@ -444,20 +498,17 @@ namespace Unity.PlasticSCM.Editor.Views.Branches
             mBranchOperations = new BranchOperations(
                 wkInfo,
                 workspaceWindow,
-                null,
-                viewSwitcher,
                 mergeViewLauncher,
                 this,
                 ViewType.BranchesView,
                 mProgressControls,
                 updateReport,
                 new ContinueWithPendingChangesQuestionerBuilder(viewSwitcher, parentWindow),
-                null,
-                null,
+                shelvePendingChangesQuestionerBuilder,
+                new ApplyShelveWithConflictsQuestionerBuilder(),
                 developerNewIncomingChangesUpdater,
-                null,
-                null,
-                null);
+                shelvedChangesUpdater,
+                enableSwitchAndShelveFeatureDialog);
         }
 
         SearchField mSearchField;
@@ -471,6 +522,10 @@ namespace Unity.PlasticSCM.Editor.Views.Branches
         long mLoadedBranchId = -1;
         object mLock = new object();
 
+        LaunchTool.IProcessExecutor mProcessExecutor;
+        LaunchTool.IShowDownloadPlasticExeWindow mShowDownloadPlasticExeWindow;
+
+        readonly WorkspaceOperationsMonitor mWorkspaceOperationsMonitor;
         readonly bool mIsGluonMode;
         readonly ViewHost mViewHost;
         readonly IGluonUpdateReport mGluonUpdateReport;
@@ -481,5 +536,8 @@ namespace Unity.PlasticSCM.Editor.Views.Branches
         readonly EditorWindow mParentWindow;
         readonly NewIncomingChangesUpdater mDeveloperNewIncomingChangesUpdater;
         readonly GluonNewIncomingChangesUpdater mGluonNewIncomingChangesUpdater;
+        readonly IShelvePendingChangesQuestionerBuilder mShelvePendingChangesQuestionerBuilder;
+        readonly IShelvedChangesUpdater mShelvedChangesUpdater;
+        readonly SwitchAndShelve.IEnableSwitchAndShelveFeatureDialog mEnableSwitchAndShelveFeatureDialog;
     }
 }

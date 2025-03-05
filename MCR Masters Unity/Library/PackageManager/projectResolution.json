@@ -8,12 +8,12 @@
     "C:\\Users\\uyu\\Documents\\GitHub\\MCR-Masters-Unity\\MCR Masters Unity\\Packages\\packages-lock.json"
   ],
   "outputs": {
-    "com.unity.collab-proxy@2.6.0": {
+    "com.unity.collab-proxy@2.7.1": {
       "name": "com.unity.collab-proxy",
       "resolvedPath": "C:\\Users\\uyu\\Documents\\GitHub\\MCR-Masters-Unity\\MCR Masters Unity\\Library\\PackageCache\\com.unity.collab-proxy",
-      "fingerprint": "001b54a8988a14785c8e209d6c788bb15f9e58cf",
+      "fingerprint": "50ac96531b6358586ccfdf8cc845939bf50d9fab",
       "editorCompatibility": "2021.3.0f1",
-      "version": "2.6.0",
+      "version": "2.7.1",
       "source": "registry"
     },
     "com.unity.feature.2d@2.0.1": {
@@ -54,22 +54,6 @@
       "editorCompatibility": "6000.0.0a1",
       "version": "1.0.0",
       "source": "builtin"
-    },
-    "com.unity.nuget.newtonsoft-json@3.2.1": {
-      "name": "com.unity.nuget.newtonsoft-json",
-      "resolvedPath": "C:\\Users\\uyu\\Documents\\GitHub\\MCR-Masters-Unity\\MCR Masters Unity\\Library\\PackageCache\\com.unity.nuget.newtonsoft-json",
-      "fingerprint": "74deb55db2a0c29ddfda576608bcb86abbd13ee6",
-      "editorCompatibility": "2018.4.0a1",
-      "version": "3.2.1",
-      "source": "registry"
-    },
-    "com.unity.postprocessing@3.4.0": {
-      "name": "com.unity.postprocessing",
-      "resolvedPath": "C:\\Users\\uyu\\Documents\\GitHub\\MCR-Masters-Unity\\MCR Masters Unity\\Library\\PackageCache\\com.unity.postprocessing",
-      "fingerprint": "026b2a0827a438e3079df62a60ca03d54961393d",
-      "editorCompatibility": "2019.4.19f1",
-      "version": "3.4.0",
-      "source": "registry"
     },
     "com.unity.render-pipelines.universal@17.0.3": {
       "name": "com.unity.render-pipelines.universal",
@@ -310,14 +294,6 @@
       "resolvedPath": "C:\\Users\\uyu\\Documents\\GitHub\\MCR-Masters-Unity\\MCR Masters Unity\\Library\\PackageCache\\com.unity.modules.xr",
       "version": "1.0.0",
       "source": "builtin"
-    },
-    "net.gree.unity-webview@https://github.com/gree/unity-webview.git?path=/dist/package": {
-      "name": "net.gree.unity-webview",
-      "resolvedPath": "C:\\Users\\uyu\\Documents\\GitHub\\MCR-Masters-Unity\\MCR Masters Unity\\Library\\PackageCache\\net.gree.unity-webview",
-      "fingerprint": "02d34651cd79f5a4e6bde14c66fc0cdc3ece7450",
-      "editorCompatibility": "2019.1.0a1",
-      "version": "1.0.0",
-      "source": "git"
     },
     "com.unity.modules.subsystems@1.0.0": {
       "name": "com.unity.modules.subsystems",

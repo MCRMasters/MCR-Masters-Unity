@@ -7,12 +7,25 @@ using PlasticGui.WorkspaceWindow;
 
 namespace Unity.PlasticSCM.Editor.Developer
 {
-    internal class ProgressOperationHandler
+    internal class ProgressOperationHandler : IProgressOperationHandler
     {
         internal ProgressOperationHandler(WorkspaceInfo wkInfo, WorkspaceWindow workspaceWindow)
         {
             mWkInfo = wkInfo;
             mWorkspaceWindow = workspaceWindow;
+        }
+
+        bool IProgressOperationHandler.CheckOperationInProgress()
+        {
+            if (IsOperationInProgress())
+            {
+                GuiMessage.ShowInformation(
+                    PlasticLocalization.GetString(PlasticLocalization.Name.OperationRunning),
+                    PlasticLocalization.GetString(PlasticLocalization.Name.OperationInProgress));
+                return true;
+            }
+
+            return false;
         }
 
         internal void Update(double elapsedSeconds)
@@ -26,19 +39,6 @@ namespace Unity.PlasticSCM.Editor.Developer
                 mUpdateProgress.OnUpdateProgress();
                 mSecondsSinceLastProgressUpdate -= UPDATE_INTERVAL_SECONDS;
             }
-        }
-
-        internal bool CheckOperationInProgress()
-        {
-            if (IsOperationInProgress())
-            {
-                GuiMessage.ShowInformation(
-                    PlasticLocalization.GetString(PlasticLocalization.Name.OperationRunning),
-                    PlasticLocalization.GetString(PlasticLocalization.Name.OperationInProgress));
-                return true;
-            }
-
-            return false;
         }
 
         internal bool IsOperationInProgress()

@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.IO;
 
 using UnityEditor;
@@ -26,6 +26,7 @@ namespace Unity.PlasticSCM.Editor.UI
             IconDeletedRemote,
             IconDeletedRemoteOverlay,
             IconOutOfSync,
+            IconInfoBellNotification,
             IconOutOfSyncOverlay,
             IconMoved,
             IconMergeLink,
@@ -56,10 +57,13 @@ namespace Unity.PlasticSCM.Editor.UI
             ButtonSsoSignInEmail,
             ButtonSsoSignInGoogle,
             IconBranch,
+            IconBranches,
+            IconBrEx,
             IconUndo,
             Refresh,
             IconInviteUsers,
-            IconLock
+            IconLock,
+            IconShelve
         }
 
         internal static Texture2D GetImage(Name image)
@@ -273,6 +277,22 @@ namespace Unity.PlasticSCM.Editor.UI
             return mBranchIcon;
         }
 
+        internal static Texture2D GetBranchesIcon()
+        {
+            if (mBranchesIcon == null)
+                mBranchesIcon = GetImage(Name.IconBranches);
+
+            return mBranchesIcon;
+        }
+
+        internal static Texture2D GetBranchExplorerIcon()
+        {
+            if (mBranchExplorerIcon == null)
+                mBranchExplorerIcon = GetImage(Name.IconBrEx);
+
+            return mBranchExplorerIcon;
+        }
+
         internal static Texture2D GetConflictedIcon()
         {
             if (mConflictedIcon == null)
@@ -289,6 +309,14 @@ namespace Unity.PlasticSCM.Editor.UI
             return mOutOfSyncIcon;
         }
 
+        internal static Texture2D GetInfoBellNotificationIcon()
+        {
+            if (mIncomingNotificationIcon == null)
+                mIncomingNotificationIcon = GetImage(Name.IconInfoBellNotification);
+
+            return mIncomingNotificationIcon;
+        }
+
         internal static Texture2D GetPlasticViewIcon()
         {
             if (mPlasticViewIcon == null)
@@ -297,7 +325,7 @@ namespace Unity.PlasticSCM.Editor.UI
             return mPlasticViewIcon;
         }
 
-        internal static Texture2D GePlasticNotifyIncomingIcon()
+        internal static Texture2D GetPlasticNotifyIncomingIcon()
         {
             if (mPlasticNotifyIncomingIcon == null)
                 mPlasticNotifyIncomingIcon = GetImage(Name.IconPlasticNotifyIncoming);
@@ -418,13 +446,21 @@ namespace Unity.PlasticSCM.Editor.UI
 
             return mLinkUnderlineImage;
         }
-        
+
         internal static Texture2D GetInviteUsersIcon()
         {
             if (mInviteUsersIcon == null)
                 mInviteUsersIcon = GetImage(Name.IconInviteUsers);
 
             return mInviteUsersIcon;
+        }
+
+        internal static Texture2D GetShelveIcon()
+        {
+            if (mShelveIcon == null)
+                mShelveIcon = GetImage(Name.IconShelve);
+
+            return mShelveIcon;
         }
 
         internal static Texture2D GetLockIcon()
@@ -724,9 +760,13 @@ namespace Unity.PlasticSCM.Editor.UI
         static Texture2D mUndoIcon;
         static Texture2D mPlasticIcon;
         static Texture2D mBranchIcon;
+        static Texture2D mBranchesIcon;
+        static Texture2D mBranchExplorerIcon;
         static Texture2D mConflictedIcon;
         static Texture2D mOutOfSyncIcon;
+        static Texture2D mIncomingNotificationIcon;
         static Texture2D mInviteUsersIcon;
+        static Texture2D mShelveIcon;
         static Texture2D mLockIcon;
 
         static Texture2D mPlasticViewIcon;

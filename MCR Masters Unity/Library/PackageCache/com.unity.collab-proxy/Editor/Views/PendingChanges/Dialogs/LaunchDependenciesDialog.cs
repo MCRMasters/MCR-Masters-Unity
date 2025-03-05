@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 
 using UnityEditor;
 
@@ -17,7 +17,7 @@ namespace Unity.PlasticSCM.Editor.Views.PendingChanges.Dialogs
         }
 
         bool DependenciesHandler.IDependenciesDialog.IncludeDependencies(
-            WorkspaceInfo wkInfo, IList<ChangeDependencies<ChangeInfo>> dependencies)
+            WorkspaceInfo wkInfo, IList<ChangeDependencies> dependencies)
         {
             return DependenciesDialog.IncludeDependencies(
                 wkInfo, dependencies, mOperation, mParentWindow);

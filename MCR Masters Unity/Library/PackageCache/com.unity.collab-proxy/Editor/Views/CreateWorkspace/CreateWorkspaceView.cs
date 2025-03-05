@@ -78,11 +78,13 @@ namespace Unity.PlasticSCM.Editor.Views.CreateWorkspace
 
         void Initialize(IPlasticAPI plasticApi, IPlasticWebRestApi plasticWebRestApi)
         {
-            ((IProgressControls)mProgressControls).ShowProgress(string.Empty);
+            ((IProgressControls) mProgressControls).ShowProgress(string.Empty);
 
             WorkspaceInfo[] allWorkspaces = null;
             IList allRepositories = null;
             string repositoryProject = null;
+
+            string localProjectFolder = Application.productName;
 
             IThreadWaiter waiter = ThreadWaiter.GetWaiter(10);
             waiter.Execute(
@@ -97,10 +99,16 @@ namespace Unity.PlasticSCM.Editor.Views.CreateWorkspace
                     {
                         List<string> serverProjects = OrganizationsInformation.GetOrganizationProjects(mDefaultServer);
 
-                        if (serverProjects.Count > 0)
+                        if (serverProjects.Count == 0)
                         {
-                            repositoryProject = serverProjects.First();
+                            return;
                         }
+
+                        // If any of the organization projects match in name with the local project, we select it.
+                        // Otherwise, we return the first project in alphabetic order
+                        repositoryProject = serverProjects.Contains(localProjectFolder)
+                            ? localProjectFolder
+                            : serverProjects.First();
                     }
                 },
                 /*afterOperationDelegate*/ delegate

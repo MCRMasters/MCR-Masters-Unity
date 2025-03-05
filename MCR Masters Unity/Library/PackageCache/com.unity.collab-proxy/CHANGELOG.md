@@ -2,6 +2,34 @@
 
 All notable changes to this package will be documented in this file.
 
+## [2.7.1] - 2025-02-13
+
+### Added
+
+- You can now Shelve your selected Pending Changes, inspect the shelves content, and apply them to your workspace.
+- You can now Shelve your Pending Changes when switching to another branch (or changeset) and decide if you want to apply them automatically after the switch.
+- You can now create a code review from the list of branches (or changesets) opening either the Desktop App or the Unity Cloud website.
+
+### Changed
+
+- Serialize the Checkin comment and tick selection so they are kept on any domain reload and play mode.
+- Optimized incoming changes & merge to only reload the Package Manager when needed.
+- Added dedicated toolbar buttons to open the list of branches and the Branch Explorer of the Desktop App.
+- Reworded the changeset context menu "Undo this change" to "Revert this file to the previous revision" so it’s more explicit.
+- Moved the 'Unity Version Control' menu item under 'Window'/'Version Control' submenu starting from Unity 6.1.
+- Improve the Create workspace window to suggest the matching Unity Cloud project if it exists.
+
+### Fixed
+
+- Ensured ignore.conf is not being reformatted when adding or removing an ignore rule, so it keeps empty lines and comments.
+- Fixed missing checked-out for renamed assets.
+- Fixed rename asset leaves 'Added' + 'Remove locally' status instead of 'Moved'.
+- Fixed console error GUI Error: Invalid GUILayout state in PlasticWindow view which is caused under some circumstances.
+- Fixed null exception on entering in Play Mode before creating the workspace.
+- Fixed lock statuses to correctly refresh in Project View and Inspector after merging.
+- Fixed a performance issue by preventing the ConfigureLogging call on every domain reload when Unity Version Control is not used, reducing the load time by ~200ms. .
+- Fixed the create branch operation to work in Gluon mode which uses partial workspaces.
+
 ## [2.6.0] - 2024-11-28
 
 ### Added

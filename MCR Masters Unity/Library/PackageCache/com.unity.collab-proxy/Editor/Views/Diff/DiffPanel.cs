@@ -17,9 +17,10 @@ using PlasticGui.WorkspaceWindow;
 using PlasticGui.WorkspaceWindow.BrowseRepository;
 using PlasticGui.WorkspaceWindow.Diff;
 using Unity.PlasticSCM.Editor.AssetUtils;
+using Unity.PlasticSCM.Editor.Tool;
 using Unity.PlasticSCM.Editor.UI;
 using Unity.PlasticSCM.Editor.UI.Progress;
-using Unity.PlasticSCM.Editor.Tool;
+using Unity.PlasticSCM.Editor.UI.Tree;
 using Unity.PlasticSCM.Editor.Views.Diff.Dialogs;
 using Unity.PlasticSCM.Editor.Views.History;
 
@@ -103,6 +104,7 @@ namespace Unity.PlasticSCM.Editor.Views.Diff
 
             DoDiffTreeViewArea(
                 mDiffTreeView,
+                mEmptyStateContent,
                 mProgressControls.IsOperationRunning());
 
             if (mProgressControls.HasNotification())
@@ -350,9 +352,6 @@ namespace Unity.PlasticSCM.Editor.Views.Diff
             mIsSkipMergeTrackingButtonVisible = false;
 
             ClearDiffTreeView(mDiffTreeView);
-
-            ((IProgressControls)mProgressControls).ShowNotification(
-                PlasticLocalization.GetString(PlasticLocalization.Name.NoContentToCompare));
         }
 
         static void ClearDiffTreeView(
@@ -411,24 +410,8 @@ namespace Unity.PlasticSCM.Editor.Views.Diff
                 searchField,
                 diffTreeView,
                 UnityConstants.SEARCH_FIELD_WIDTH);
-            VerifyIfSearchFieldIsRecentlyFocused(searchField);
 
             EditorGUILayout.EndHorizontal();
-        }
-
-        void VerifyIfSearchFieldIsRecentlyFocused(SearchField searchField)
-        {
-            if (searchField.HasFocus() != mIsSearchFieldFocused)
-            {
-                mIsSearchFieldFocused = !mIsSearchFieldFocused;
-
-                if (mIsSearchFieldFocused)
-                {
-                    TrackFeatureUseEvent.For(
-                        PlasticGui.Plastic.API.GetRepositorySpec(mWkInfo),
-                        TrackFeatureUseEvent.Features.ChangesetViewDiffSearchBox);
-                }
-            }
         }
 
         void DoSkipMergeTrackingButton(
@@ -471,6 +454,7 @@ namespace Unity.PlasticSCM.Editor.Views.Diff
 
         static void DoDiffTreeViewArea(
             DiffTreeView diffTreeView,
+            GUIContent emptyStateContent,
             bool isOperationRunning)
         {
             GUI.enabled = !isOperationRunning;
@@ -479,7 +463,22 @@ namespace Unity.PlasticSCM.Editor.Views.Diff
 
             diffTreeView.OnGUI(rect);
 
+            emptyStateContent.text = GetEmptyStateMessage(diffTreeView);
+
+            if (!string.IsNullOrEmpty(emptyStateContent.text))
+                DrawTreeViewEmptyState.For(rect, emptyStateContent);
+
             GUI.enabled = true;
+        }
+
+        static string GetEmptyStateMessage(DiffTreeView diffTreeView)
+        {
+            if (diffTreeView.GetRows().Count > 0)
+                return string.Empty;
+
+            return string.IsNullOrEmpty(diffTreeView.searchString) ?
+                PlasticLocalization.Name.NoContentToCompareExplanation.GetString() :
+                PlasticLocalization.Name.DiffsEmptyState.GetString();
         }
 
         void BuildComponents()
@@ -491,20 +490,19 @@ namespace Unity.PlasticSCM.Editor.Views.Diff
             mDiffTreeView.Reload();
         }
 
-        volatile List<ClientDiff> mDiffs;
-        volatile BranchResolver mDiffsBranchResolver;
-
         bool mIsSkipMergeTrackingButtonVisible;
         bool mIsSkipMergeTrackingButtonChecked;
-
-        SearchField mSearchField;
-        bool mIsSearchFieldFocused = false;
-
-        DiffTreeView mDiffTreeView;
 
         ChangesetInfo mSelectedChangesetInfo;
         MountPointWithPath mSelectedMountWithPath;
 
+        volatile List<ClientDiff> mDiffs;
+        volatile BranchResolver mDiffsBranchResolver;
+
+        SearchField mSearchField;
+        DiffTreeView mDiffTreeView;
+
+        readonly GUIContent mEmptyStateContent = new GUIContent(string.Empty);
         readonly ProgressControlsForViews mProgressControls;
         readonly GuiMessage.IGuiMessage mGuiMessage;
         readonly EditorWindow mParentWindow;

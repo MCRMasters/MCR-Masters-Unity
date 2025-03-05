@@ -9,6 +9,7 @@ using Codice.CM.Common;
 using PlasticGui;
 using PlasticGui.Help.Actions;
 using PlasticGui.WorkspaceWindow.Locks;
+using Unity.PlasticSCM.Editor.AssetsOverlays.Cache;
 using Unity.PlasticSCM.Editor.AssetUtils;
 using Unity.PlasticSCM.Editor.UI;
 using Unity.PlasticSCM.Editor.UI.Progress;
@@ -26,10 +27,12 @@ namespace Unity.PlasticSCM.Editor.Views.Locks
         internal LocksTab(
             RepositorySpec repSpec,
             IRefreshView refreshView,
+            IAssetStatusCache assetStatusCache,
             EditorWindow parentWindow)
         {
             mRepSpec = repSpec;
             mRefreshView = refreshView;
+            mAssetStatusCache = assetStatusCache;
             mParentWindow = parentWindow;
             mProgressControls = new ProgressControlsForViews();
             mFillLocksTable = new FillLocksTable();
@@ -47,7 +50,7 @@ namespace Unity.PlasticSCM.Editor.Views.Locks
 
         internal void OnDisable()
         {
-            mSearchField.downOrUpArrowKeyPressed -= 
+            mSearchField.downOrUpArrowKeyPressed -=
                 SearchField_OnDownOrUpArrowKeyPressed;
 
             mLocksListView.OnDisable();
@@ -88,6 +91,9 @@ namespace Unity.PlasticSCM.Editor.Views.Locks
                 mLocksListView,
                 mLocksListView,
                 mProgressControls);
+
+            if (mAssetStatusCache != null)
+                mAssetStatusCache.ClearLocks();
         }
 
         List<LockInfo.LockStatus> ILockMenuOperations.GetSelectedLocksStatus()
@@ -221,7 +227,7 @@ namespace Unity.PlasticSCM.Editor.Views.Locks
         void BuildComponents(RepositorySpec repSpec)
         {
             mSearchField = new SearchField();
-            mSearchField.downOrUpArrowKeyPressed += 
+            mSearchField.downOrUpArrowKeyPressed +=
                 SearchField_OnDownOrUpArrowKeyPressed;
 
             mLocksListView = new LocksListView(
@@ -245,5 +251,6 @@ namespace Unity.PlasticSCM.Editor.Views.Locks
         readonly EditorWindow mParentWindow;
         readonly IRefreshView mRefreshView;
         readonly RepositorySpec mRepSpec;
+        readonly IAssetStatusCache mAssetStatusCache;
     }
 }

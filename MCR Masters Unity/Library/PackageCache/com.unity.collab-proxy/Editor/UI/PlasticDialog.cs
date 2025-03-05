@@ -10,6 +10,12 @@ namespace Unity.PlasticSCM.Editor.UI
 {
     internal abstract class PlasticDialog : EditorWindow, IPlasticDialogCloser
     {
+        internal enum SizeToContent
+        {
+            Manual = 0,
+            Automatic = 1
+        }
+
         protected virtual Rect DefaultRect
         {
             get
@@ -21,6 +27,11 @@ namespace Unity.PlasticSCM.Editor.UI
         }
 
         protected virtual bool IsResizable { get; set; }
+
+        internal void SetSizeToContent(SizeToContent sizeToContent)
+        {
+            mSizeToContent = sizeToContent;
+        }
 
         internal void OkButtonAction()
         {
@@ -120,12 +131,22 @@ namespace Unity.PlasticSCM.Editor.UI
                     GUILayout.Space(margin);
                 }
 
-                var lastRect = GUILayoutUtility.GetLastRect();
-                float desiredHeight = lastRect.yMax;
-                Rect newPos = position;
-                newPos.height = desiredHeight;
-                if (position.height < desiredHeight)
-                    position = newPos;
+                if (!IsResizable && mSizeToContent == SizeToContent.Automatic)
+                {
+                    var lastRect = GUILayoutUtility.GetLastRect();
+                    float desiredHeight = lastRect.yMax;
+
+                    if (position.height < desiredHeight)
+                    {
+                        Rect newPos = position;
+                        newPos.height = desiredHeight;
+
+                        position = newPos;
+                    }
+
+                    maxSize = position.size;
+                    minSize = maxSize;
+                }
 
                 if (Event.current.type == EventType.Repaint)
                 {
@@ -175,7 +196,8 @@ namespace Unity.PlasticSCM.Editor.UI
                 Url = url
             };
 
-            DrawTextBlockWithEndLink.For(externalLink, formattedExplanation, textblockStyle);
+            DrawTextBlockWithLink.ForExternalLink(
+                externalLink, formattedExplanation, textblockStyle);
         }
 
         protected static void Title(string text)
@@ -391,6 +413,7 @@ namespace Unity.PlasticSCM.Editor.UI
                 EditorGUIUtility.GetBuiltinSkin(EditorSkin.Inspector);
         }
 
+        bool mFocusedOnce;
         bool mIsConfigured;
         bool mIsCompleted;
         bool mIsClosed;
@@ -399,9 +422,9 @@ namespace Unity.PlasticSCM.Editor.UI
         protected Action mEnterKeyAction = null;
         protected Action mEscapeKeyAction = null;
 
-        bool mFocusedOnce;
-
         EditorWindow mParentWindow;
+        SizeToContent mSizeToContent = SizeToContent.Automatic;
+
         const float DEFAULT_WIDTH = 500f;
         const float DEFAULT_HEIGHT = 180f;
         const float DEFAULT_PARAGRAPH_SPACING = 10f;

@@ -1,10 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
-using UnityEditor;
-
 using Codice.Client.Common;
-using Codice.Client.Common.FsNodeReaders.Watcher;
 using Codice.LogWrapper;
 using Unity.PlasticSCM.Editor.UI;
 
@@ -18,13 +15,13 @@ namespace Unity.PlasticSCM.Editor.AssetUtils.Processor
         {
             AutomaticAdd = BoolSetting.Load(UnityConstants.AUTOMATIC_ADD_KEY_NAME, true);
         }
-        
+
         internal static void SetAutomaticAddOption(bool isEnabled)
         {
             if (AutomaticAdd != isEnabled)
             {
                 AutomaticAdd = isEnabled;
-                
+
                 BoolSetting.Save(isEnabled, UnityConstants.AUTOMATIC_ADD_KEY_NAME);
             }
         }
@@ -86,22 +83,32 @@ namespace Unity.PlasticSCM.Editor.AssetUtils.Processor
             }
 
             // We need to ensure that the MonoFSWatcher is enabled before processing Plastic operations
-            // It fixes the following scenario: 
+            // It fixes the following scenario:
             // 1. Close PlasticSCM window
             // 2. Create an asset, it appears with the added overlay
             // 3. Open PlasticSCM window, the asset should appear as added instead of deleted locally
             PlasticApp.EnableMonoFsWatcherIfNeeded();
 
-            mPlasticAssetsProcessor.MoveOnSourceControl(
-                ExtractPathsToMove(movedAssets, movedFromAssetPaths));
+            List<PathToMove> pathsToMove = ExtractPathsToMove(movedAssets, movedFromAssetPaths);
+
+            mPlasticAssetsProcessor.MoveOnSourceControl(pathsToMove);
+
+            // The editor notifies patched assets by marking the new path as imported and moved.
+            // Those assets were effectively modified, so we need to check them out.
+            mPlasticAssetsProcessor.CheckoutOnSourceControl(
+                ExtractPatchedAssets(importedAssets, pathsToMove));
 
             mPlasticAssetsProcessor.DeleteFromSourceControl(
                 GetPathsContainedOnWorkspace(mWkPath, deletedAssets));
 
             if (AutomaticAdd)
             {
+                // Unity notifies patched assets as a combination of a moved asset plus an imported asset.
+                // We filter out "imported" assets that are also notified as moved to avoid undesired results.
+                string[] pathsToImport = importedAssets.Except(movedAssets).ToArray();
+
                 mPlasticAssetsProcessor.AddToSourceControl(
-                    GetPathsContainedOnWorkspace(mWkPath, importedAssets));
+                    GetPathsContainedOnWorkspace(mWkPath, pathsToImport));
             }
 
             // We expect modified assets to go through AssetModificationProcessor.OnWillSaveAssets before getting here.
@@ -110,8 +117,7 @@ namespace Unity.PlasticSCM.Editor.AssetUtils.Processor
                 return;
 
             mPlasticAssetsProcessor.CheckoutOnSourceControl(
-                GetPathsContainedOnWorkspace(
-                    mWkPath, AssetModificationProcessor.ModifiedAssets));
+                GetPathsContainedOnWorkspace(mWkPath, AssetModificationProcessor.ModifiedAssets));
 
             AssetModificationProcessor.ModifiedAssets = null;
         }
@@ -122,7 +128,7 @@ namespace Unity.PlasticSCM.Editor.AssetUtils.Processor
 
             // Unity doesn't provide the moved paths ordered.
             // We want to enqueue the batched movements in hierarchical order to avoid plastic considering assets as locally moved.
-            // It also avoid unnecessary children movements when their parents are also moved.
+            // It also avoids unnecessary children movements when their parents are also moved.
             proposedPathsToMove.Sort((x, y) => PathHelper.GetPathMatchSorter().Compare(x.SrcPath, y.SrcPath));
 
             List<PathToMove> pathsToMove = new List<PathToMove>();
@@ -138,6 +144,20 @@ namespace Unity.PlasticSCM.Editor.AssetUtils.Processor
             }
 
             return pathsToMove;
+        }
+
+        static List<string> ExtractPatchedAssets(string[] importedAssets, List<PathToMove> pathsToMove)
+        {
+            if (pathsToMove.Count == 0)
+            {
+                return new List<string>();
+            }
+
+            return importedAssets
+                .Select(relativePath => AssetsPath.GetFullPathUnderWorkspace.ForAsset(mWkPath, relativePath))
+                .Where(fullPath => pathsToMove.FindIndex(
+                    pathToMove => pathToMove.DstPath.Equals(fullPath)) >= 0)
+                .ToList();
         }
 
         static List<PathToMove> GetPathsToMoveContainedOnWorkspace(

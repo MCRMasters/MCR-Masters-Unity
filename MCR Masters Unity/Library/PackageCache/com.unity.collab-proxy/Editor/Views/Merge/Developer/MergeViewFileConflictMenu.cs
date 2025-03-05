@@ -24,10 +24,12 @@ namespace Unity.PlasticSCM.Editor.Views.Merge.Developer
             IMergeViewMenuOperations mergeViewMenuOperations,
             IMetaMenuOperations mergeMetaMenuOperations,
             bool isIncomingMerge,
-            bool isMergeTo)
+            bool isMergeTo,
+            bool isShelvesetMerge = false)
         {
             mMergeViewMenuOperations = mergeViewMenuOperations;
             mMergeMetaMenuOperations = mergeMetaMenuOperations;
+            mIsShelvesetMerge = isShelvesetMerge;
 
             BuildComponents(isIncomingMerge, isMergeTo);
         }
@@ -138,9 +140,12 @@ namespace Unity.PlasticSCM.Editor.Views.Merge.Developer
                 return;
             }
 
-            AddMergeActions(menu, operations);
+            if (!mIsShelvesetMerge)
+            {
+                AddMergeActions(menu, operations);
 
-            menu.AddSeparator(string.Empty);
+                menu.AddSeparator(string.Empty);
+            }
 
             AddDiffActions(menu, info, operations);
 
@@ -489,5 +494,7 @@ namespace Unity.PlasticSCM.Editor.Views.Merge.Developer
 
         readonly IMergeViewMenuOperations mMergeViewMenuOperations;
         readonly IMetaMenuOperations mMergeMetaMenuOperations;
+
+        readonly bool mIsShelvesetMerge;
     }
 }

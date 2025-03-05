@@ -1,25 +1,68 @@
 using UnityEditor;
 using UnityEngine;
 
-using Codice.Client.Common;
-using Codice.CM.Common;
 using PlasticGui;
-using PlasticGui.Gluon;
-using PlasticGui.WorkspaceWindow.Topbar;
-using PlasticGui.WorkspaceWindow.PendingChanges;
-
-using GluonShowIncomingChanges = PlasticGui.Gluon.WorkspaceWindow.ShowIncomingChanges;
+using PlasticGui.WorkspaceWindow;
+using Unity.PlasticSCM.Editor.Developer;
 
 namespace Unity.PlasticSCM.Editor.UI.StatusBar
 {
-    interface IIncomingChangesNotifier
-    {
-        bool HasNotification { get; }
-        IncomingChangesNotification Notification { get; }
-    }
-
     internal class StatusBar
     {
+        internal interface IIncomingChangesNotification
+        {
+            bool HasNotification { get; }
+            void OnGUI();
+        }
+
+        internal class IncomingChangesNotificationData
+        {
+            internal string InfoText { get; private set; }
+            internal string ActionText { get; private set; }
+            internal string TooltipText { get; private set; }
+            internal bool HasUpdateAction { get; private set; }
+            internal PlasticNotification.Status Status { get; private set; }
+
+            internal void UpdateData(
+                string infoText,
+                string actionText,
+                string tooltipText,
+                bool hasUpdateAction,
+                PlasticNotification.Status status)
+            {
+                InfoText = infoText;
+                ActionText = actionText;
+                TooltipText = tooltipText;
+                HasUpdateAction = hasUpdateAction;
+                Status = status;
+            }
+
+            internal void Clear()
+            {
+                InfoText = string.Empty;
+                ActionText = string.Empty;
+                TooltipText = string.Empty;
+                HasUpdateAction = false;
+                Status = PlasticNotification.Status.None;
+            }
+        }
+
+        internal interface IShelvedChangesNotification :
+            CheckShelvedChanges.IUpdateShelvedChangesNotification
+        {
+            bool HasNotification { get; }
+            void SetWorkspaceWindow(
+                WorkspaceWindow workspaceWindow);
+            void SetShelvedChangesUpdater(
+                IShelvedChangesUpdater shelvedChangesUpdater);
+            void OnGUI();
+        }
+
+        internal void Notify(string message, MessageType type, Texture2D image)
+        {
+            mNotification = new Notification(message, type, image);
+            mCooldownNotificationClearAction.Ping();
+        }
         internal NotificationBar NotificationBar { get; private set; }
 
         internal StatusBar()
@@ -31,19 +74,27 @@ namespace Unity.PlasticSCM.Editor.UI.StatusBar
             NotificationBar = new NotificationBar();
         }
 
-        internal void Notify(string message, MessageType type, Texture2D image)
+        internal void Initialize(
+            WorkspaceWindow workspaceWindow,
+            IIncomingChangesNotification incomingChangesNotification,
+            IShelvedChangesNotification shelvedChangesNotification)
         {
-            mNotification = new Notification(message, type, image);
-            mCooldownNotificationClearAction.Ping();
+            mWorkspaceWindow = workspaceWindow;
+            mIncomingChangesNotification = incomingChangesNotification;
+            mShelvedChangesNotification = shelvedChangesNotification;
+
+            if (incomingChangesNotification is IncomingChangesNotification)
+                ((IncomingChangesNotification)incomingChangesNotification).SetWorkspaceWindow(workspaceWindow);
+
+            shelvedChangesNotification.SetWorkspaceWindow(workspaceWindow);
         }
 
-        internal void OnGUI(
-            WorkspaceInfo wkInfo,
-            WorkspaceWindow workspaceWindow,
-            IMergeViewLauncher mergeViewLauncher,
-            IGluonViewSwitcher gluonViewSwitcher,
-            IIncomingChangesNotifier incomingChangesNotifier,
-            bool isGluonMode)
+        void DelayedClearNotification()
+        {
+            mNotification = null;
+        }
+
+        internal void OnGUI()
         {
             if (NotificationBar.HasNotification &&
                 NotificationBar.IsVisible)
@@ -60,15 +111,17 @@ namespace Unity.PlasticSCM.Editor.UI.StatusBar
                 DrawNotificationAvailablePanel(NotificationBar);
             }
 
-            if (incomingChangesNotifier.HasNotification)
+            if (mIncomingChangesNotification.HasNotification)
             {
-                DrawIncomingChangesNotification(
-                    wkInfo,
-                    workspaceWindow,
-                    mergeViewLauncher,
-                    gluonViewSwitcher,
-                    incomingChangesNotifier.Notification,
-                    isGluonMode);
+                mIncomingChangesNotification.OnGUI();
+            }
+
+            if (mShelvedChangesNotification.HasNotification)
+            {
+                if (mIncomingChangesNotification.HasNotification)
+                    EditorGUILayout.Space(15);
+
+                mShelvedChangesNotification.OnGUI();
             }
 
             if (mNotification != null)
@@ -76,14 +129,37 @@ namespace Unity.PlasticSCM.Editor.UI.StatusBar
 
             GUILayout.FlexibleSpace();
 
-            DrawWorkspaceStatus(workspaceWindow);
+            DrawWorkspaceStatus(mWorkspaceWindow);
 
             EndDrawBar();
         }
 
-        void DelayedClearNotification()
+        internal static void DrawNotificationLabel(GUIContent label)
         {
-            mNotification = null;
+            GUILayout.BeginVertical();
+            GUILayout.FlexibleSpace();
+
+            GUILayout.Label(
+                label,
+                UnityStyles.StatusBar.NotificationLabel);
+
+            GUILayout.FlexibleSpace();
+            GUILayout.EndVertical();
+        }
+
+        internal static bool DrawButton(GUIContent content)
+        {
+            GUIStyle buttonStyle = new GUIStyle(EditorStyles.miniButton);
+
+            Rect rt = GUILayoutUtility.GetRect(
+                content,
+                buttonStyle,
+                GUILayout.Width(60));
+
+            return GUI.Button(
+                rt,
+                content,
+                buttonStyle);
         }
 
         static void DrawNotificationAvailablePanel(
@@ -104,42 +180,10 @@ namespace Unity.PlasticSCM.Editor.UI.StatusBar
             GUILayout.EndVertical();
         }
 
-        static void DrawIncomingChangesNotification(
-            WorkspaceInfo wkInfo,
-            WorkspaceWindow workspaceWindow,
-            IMergeViewLauncher mergeViewLauncher,
-            IGluonViewSwitcher gluonViewSwitcher,
-            IncomingChangesNotification notification,
-            bool isGluonMode)
-        {
-            Texture2D icon = notification.Status == PlasticNotification.Status.Conflicts ?
-                Images.GetConflictedIcon() :
-                Images.GetOutOfSyncIcon();
-
-            DrawIcon(icon);
-
-            DrawNotificationLabel(notification.InfoText);
-
-            if (DrawButton(notification.ActionText, notification.TooltipText))
-            {
-                if (notification.HasUpdateAction)
-                {
-                    workspaceWindow.UpdateWorkspace();
-                    return;
-                }
-
-                ShowIncomingChangesForMode(
-                    wkInfo,
-                    mergeViewLauncher,
-                    gluonViewSwitcher,
-                    isGluonMode);
-            }
-        }
-
         static void DrawNotification(Notification notification)
         {
             DrawIcon(notification.Image);
-            DrawNotificationLabel(notification.Message);
+            DrawNotificationLabel(new GUIContent(notification.Message));
         }
 
         static void DrawWorkspaceStatus(WorkspaceWindow workspaceWindow)
@@ -156,7 +200,7 @@ namespace Unity.PlasticSCM.Editor.UI.StatusBar
                 workspaceWindow.ServerDisplayName));
         }
 
-        static void DrawIcon(Texture2D icon)
+        internal static void DrawIcon(Texture2D icon, int size = UnityConstants.STATUS_BAR_ICON_SIZE)
         {
             GUILayout.BeginVertical();
             GUILayout.FlexibleSpace();
@@ -164,8 +208,8 @@ namespace Unity.PlasticSCM.Editor.UI.StatusBar
             GUILayout.Label(
                 icon,
                 UnityStyles.StatusBar.Icon,
-                GUILayout.Height(UnityConstants.STATUS_BAR_ICON_SIZE),
-                GUILayout.Width(UnityConstants.STATUS_BAR_ICON_SIZE));
+                GUILayout.Height(size),
+                GUILayout.Width(size));
 
             GUILayout.FlexibleSpace();
             GUILayout.EndVertical();
@@ -182,51 +226,6 @@ namespace Unity.PlasticSCM.Editor.UI.StatusBar
 
             GUILayout.FlexibleSpace();
             GUILayout.EndVertical();
-        }
-
-        static void DrawNotificationLabel(string label)
-        {
-            GUILayout.BeginVertical();
-            GUILayout.FlexibleSpace();
-
-            GUILayout.Label(
-                label,
-                UnityStyles.StatusBar.NotificationLabel);
-
-            GUILayout.FlexibleSpace();
-            GUILayout.EndVertical();
-        }
-
-        static bool DrawButton(string label, string tooltip)
-        {
-            GUILayout.BeginVertical();
-            GUILayout.FlexibleSpace();
-
-            bool buttonClicked = GUILayout.Button(
-                new GUIContent(label, tooltip),
-                UnityStyles.StatusBar.Button);
-
-            GUILayout.FlexibleSpace();
-            GUILayout.EndVertical();
-
-            return buttonClicked;
-        }
-
-        static void ShowIncomingChangesForMode(
-            WorkspaceInfo workspaceInfo,
-            IMergeViewLauncher mergeViewLauncher,
-            IGluonViewSwitcher gluonSwitcher,
-            bool isGluonMode)
-        {
-            if (isGluonMode)
-            {
-                GluonShowIncomingChanges.FromNotificationBar(
-                    workspaceInfo, gluonSwitcher);
-                return;
-            }
-
-            ShowIncomingChanges.FromNotificationBar(
-                workspaceInfo, mergeViewLauncher);
         }
 
         static void BeginDrawBar()
@@ -275,6 +274,9 @@ namespace Unity.PlasticSCM.Editor.UI.StatusBar
         }
 
         Notification mNotification;
+        WorkspaceWindow mWorkspaceWindow;
+        IIncomingChangesNotification mIncomingChangesNotification;
+        IShelvedChangesNotification mShelvedChangesNotification;
 
         readonly CooldownWindowDelayer mCooldownNotificationClearAction;
 

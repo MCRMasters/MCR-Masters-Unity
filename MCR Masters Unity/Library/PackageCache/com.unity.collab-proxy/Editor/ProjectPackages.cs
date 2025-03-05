@@ -1,34 +1,75 @@
 using System.Collections.Generic;
 using System.Linq;
 
+using Codice.Client.BaseCommands;
 using Codice.CM.Common;
-using Codice.CM.WorkspaceServer;
 using Unity.PlasticSCM.Editor.AssetUtils;
 
 namespace Unity.PlasticSCM.Editor
 {
     internal static class ProjectPackages
     {
-        internal static bool ShouldBeResolved(
-            List<string> updatedItems, WorkspaceInfo wkInfo, bool isGluonMode)
+        internal static bool ShouldBeResolvedFromPaths(
+            WorkspaceInfo wkInfo, List<string> updatedItems)
         {
-            // We cannot obtain the updated items from a dynamic workspace, so for the moment,
-            // we'll force the Packages reimport for these kind of workspaces.
-            if (IsDynamicWorkspace.Check(wkInfo))
+            if (IsDynamicWorkspace(wkInfo))
                 return true;
-
-            if (!isGluonMode)
-                updatedItems = updatedItems.Select(GetPathFromDeveloperUpdateReport).ToList();
 
             return updatedItems.Any(ShouldPathBeResolved);
         }
 
-        static bool ShouldPathBeResolved(string path)
+        internal static bool ShouldBeResolvedFromUpdateReport(
+            WorkspaceInfo wkInfo, List<string> updatedItems)
         {
-            return AssetsPath.IsPackagesRootElement(path) || AssetsPath.IsScript(path);
+            if (IsDynamicWorkspace(wkInfo))
+                return true;
+
+            updatedItems = updatedItems.Select(GetPathFromUpdateReport).ToList();
+
+            return updatedItems.Any(ShouldPathBeResolved);
         }
 
-        static string GetPathFromDeveloperUpdateReport(string item)
+        internal static bool ShouldBeResolvedFromUpdateProgress(
+           WorkspaceInfo wkInfo, UpdateProgress progress)
+        {
+            if (progress == null)
+                return false;
+
+            if (IsDynamicWorkspace(wkInfo))
+                return true;
+
+            return ShouldBeResolved(progress.AddedItems.Where(i => !i.IsDirectory))
+                || ShouldBeResolved(progress.DeletedItems)
+                || ShouldBeResolved(progress.ChangedItems.Where(i => !i.IsDirectory))
+                || ShouldBeResolved(progress.MovedItems);
+        }
+
+        static bool IsDynamicWorkspace(WorkspaceInfo wkInfo)
+        {
+            // We cannot obtain the updated items from a dynamic workspace, so for the moment,
+            // we'll force the Packages reimport for these kind of workspaces.
+            return Codice.CM.WorkspaceServer.IsDynamicWorkspace.Check(wkInfo);
+        }
+
+        static bool ShouldBeResolved(IEnumerable<UpdateProgress.UpdatedItem> items)
+        {
+            return items.Select(i => i.Path).Any(ShouldPathBeResolved)
+                || items.Any(i => i.IsDirectory);
+        }
+
+        static bool ShouldBeResolved(IEnumerable<UpdateProgress.UpdatedMovedItem> items)
+        {
+            return items.Select(i => i.DstPath).Any(ShouldPathBeResolved)
+                || items.Any(i => i.IsDirectory);
+        }
+
+        static bool ShouldPathBeResolved(string path)
+        {
+            return AssetsPath.IsPackagesRootElement(path)
+                || AssetsPath.IsScript(path);
+        }
+
+        static string GetPathFromUpdateReport(string item)
         {
             if (string.IsNullOrEmpty(item))
                 return string.Empty;

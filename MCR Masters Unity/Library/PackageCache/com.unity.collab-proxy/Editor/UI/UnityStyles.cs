@@ -36,6 +36,7 @@ namespace Unity.PlasticSCM.Editor.UI
             internal static Color BarBorder = EditorGUIUtility.isProSkin ?
                 (Color)new Color32(35, 35, 35, 255) :
                 (Color)new Color32(153, 153, 153, 255);
+            internal static Color DarkGray = new Color(88f / 255, 88f / 255, 88f / 255);
 
             internal static Color InspectorHeaderBackground = Transparent;
 
@@ -101,6 +102,15 @@ namespace Unity.PlasticSCM.Editor.UI
                 return style;
             });
 
+            internal static readonly LazyStyle BoldText = new LazyStyle(() =>
+            {
+                var style = new GUIStyle(EditorStyles.label);
+                style.wordWrap = true;
+                style.fontSize = MODAL_FONT_SIZE;
+                style.fontStyle = FontStyle.Bold;
+                return style;
+            });
+
             internal static readonly LazyStyle Toggle = new LazyStyle(() =>
             {
                 var style = new GUIStyle(EditorStyles.boldLabel);
@@ -122,6 +132,16 @@ namespace Unity.PlasticSCM.Editor.UI
             {
                 var radioToggleStyle = new GUIStyle(EditorStyles.radioButton);
                 radioToggleStyle.fontSize = MODAL_FONT_SIZE - 1;
+                radioToggleStyle.clipping = TextClipping.Overflow;
+                radioToggleStyle.contentOffset = new Vector2(5, -2);
+                return radioToggleStyle;
+            });
+
+            internal static readonly LazyStyle BoldRadioToggle = new LazyStyle(() =>
+            {
+                var radioToggleStyle = new GUIStyle(EditorStyles.radioButton);
+                radioToggleStyle.fontSize = MODAL_FONT_SIZE;
+                radioToggleStyle.fontStyle = FontStyle.Bold;
                 radioToggleStyle.clipping = TextClipping.Overflow;
                 radioToggleStyle.contentOffset = new Vector2(5, -2);
                 return radioToggleStyle;
@@ -750,6 +770,17 @@ namespace Unity.PlasticSCM.Editor.UI
             style.hover.textColor = new Color(0.239f, 0.627f, 0.949f);
             style.active.textColor = new Color(0.239f, 0.627f, 0.949f);
 
+            return style;
+        });
+
+        internal static readonly LazyStyle NoSizeStyle = new LazyStyle(() =>
+        {
+            var style = new GUIStyle();
+            style.margin = new RectOffset(0, 0, 0, 0);
+            style.padding = new RectOffset(0, 0, 0, 0);
+            style.border = new RectOffset(0, 0, 0, 0);
+            style.stretchWidth = false;
+            style.stretchHeight = false;
             return style;
         });
 

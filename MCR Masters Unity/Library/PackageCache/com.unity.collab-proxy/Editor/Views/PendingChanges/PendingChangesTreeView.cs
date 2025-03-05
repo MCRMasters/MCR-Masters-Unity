@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
@@ -551,6 +551,11 @@ namespace Unity.PlasticSCM.Editor.Views.PendingChanges
             return CheckableItems.GetTotalChildNodeCount(mPendingChangesTree.GetNodes());
         }
 
+        internal bool AreAllItemsChecked()
+        {
+            return GetCheckedItemCount() == GetTotalItemCount();
+        }
+
         ChangeInfo GetNextExistingAddedItem(
             PendingChangeCategory addedCategory, int targetAddedItemIndex)
         {
@@ -765,7 +770,6 @@ namespace Unity.PlasticSCM.Editor.Views.PendingChanges
 
             if (column == PendingChangesTreeColumn.Item)
             {
-
                 if (pendingChangesTree.HasMeta(changeInfo.ChangeInfo))
                     label = string.Concat(label, UnityConstants.TREEVIEW_META_LABEL);
 

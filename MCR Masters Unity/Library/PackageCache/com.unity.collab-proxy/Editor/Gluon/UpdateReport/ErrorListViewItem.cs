@@ -1,4 +1,4 @@
-﻿using UnityEditor.IMGUI.Controls;
+using UnityEditor.IMGUI.Controls;
 
 using Codice.CM.Common;
 
@@ -17,4 +17,3 @@ namespace Unity.PlasticSCM.Editor.Gluon.UpdateReport
         }
     }
 }
-

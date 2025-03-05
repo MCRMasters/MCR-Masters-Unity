@@ -9,6 +9,14 @@ namespace Unity.PlasticSCM.Editor.Views.Changesets
     {
         void SwitchToChangesetForMode()
         {
+            bool isCancelled;
+            SaveAssets.UnderWorkspaceWithConfirmation(
+                mWkInfo.ClientPath, mWorkspaceOperationsMonitor,
+                out isCancelled);
+
+            if (isCancelled)
+                return;
+
             if (mIsGluonMode)
             {
                 SwitchToChangesetForGluon();
@@ -25,7 +33,7 @@ namespace Unity.PlasticSCM.Editor.Views.Changesets
                 ChangesetsSelection.GetSelectedChangeset(mChangesetsListView),
                 RefreshAsset.BeforeLongAssetOperation,
                 items => RefreshAsset.AfterLongAssetOperation(
-                    ProjectPackages.ShouldBeResolved(items, mWkInfo, false)));
+                    ProjectPackages.ShouldBeResolvedFromUpdateReport(mWkInfo, items)));
         }
 
         void SwitchToChangesetForGluon()
@@ -38,18 +46,18 @@ namespace Unity.PlasticSCM.Editor.Views.Changesets
                 csetInfo.BranchName,
                 csetInfo.ChangesetId,
                 mViewHost,
-                null,
+                mGluonNewIncomingChangesUpdater,
                 new UnityPlasticGuiMessage(),
                 mProgressControls,
                 mWorkspaceWindow.GluonProgressOperationHandler,
                 mGluonUpdateReport,
                 mWorkspaceWindow,
-                null,
-                null,
-                null,
+                mShelvePendingChangesQuestionerBuilder,
+                mShelvedChangesUpdater,
+                mEnableSwitchAndShelveFeatureDialog,
                 RefreshAsset.BeforeLongAssetOperation,
                 items => RefreshAsset.AfterLongAssetOperation(
-                    ProjectPackages.ShouldBeResolved(items, mWkInfo, true)));
+                    ProjectPackages.ShouldBeResolvedFromPaths(mWkInfo, items)));
         }
     }
 }

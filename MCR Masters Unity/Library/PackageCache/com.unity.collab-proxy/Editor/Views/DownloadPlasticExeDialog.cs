@@ -1,6 +1,5 @@
-﻿using System.Linq;
+using System.Linq;
 
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -61,6 +60,7 @@ namespace Unity.PlasticSCM.Editor.Views
             ProgressControlsForDialogs.Data progressData)
         {
             var instance = CreateInstance<DownloadPlasticExeDialog>();
+            instance.SetSizeToContent(SizeToContent.Manual);
             instance.mRepSpec = repSpec;
             instance.mInstallCloudFrom = installCloudFrom;
             instance.mInstallEnterpriseFrom = installEnterpriseFrom;
@@ -96,7 +96,10 @@ namespace Unity.PlasticSCM.Editor.Views
                 mCancelButton.text = PlasticLocalization.Name.CloseButton.GetString();
                 mConfirmMessageLabel.Collapse();
                 mDownloadButton.Collapse();
+
                 maxSize = new Vector2(DIALOG_WIDTH, REDUCED_DIALOG_HEIGHT);
+                minSize = maxSize;
+
                 return;
             }
 

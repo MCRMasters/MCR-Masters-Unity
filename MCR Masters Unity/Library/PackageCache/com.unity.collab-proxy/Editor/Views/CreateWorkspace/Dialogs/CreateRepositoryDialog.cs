@@ -259,19 +259,26 @@ namespace Unity.PlasticSCM.Editor.Views.CreateWorkspace.Dialogs
                     if (mCurrentServerProjects == null || mCurrentServerProjects.Count == 0)
                     {
                         mSelectedProject = null;
+                        mProposedProject = null;
 
                         ((IProgressControls) mProgressControls).ShowError(
                             PlasticLocalization.Name.NoServerProjectsFound.GetString());
-                    }
-                    else
-                    {
-                        if (string.IsNullOrEmpty(mSelectedProject) || !mCurrentServerProjects.Contains(mSelectedProject))
-                        {
-                            mSelectedProject = mCurrentServerProjects.First();
-                        }
 
-                        ((IProgressControls) mProgressControls).HideProgress();
+                        return;
                     }
+
+                    if (!string.IsNullOrEmpty(mProposedProject))
+                    {
+                        mSelectedProject = mProposedProject;
+                        mProposedProject = null;
+                    }
+
+                    if (string.IsNullOrEmpty(mSelectedProject) || !mCurrentServerProjects.Contains(mSelectedProject))
+                    {
+                        mSelectedProject = mCurrentServerProjects.First();
+                    }
+
+                    ((IProgressControls) mProgressControls).HideProgress();
                 });
         }
 
@@ -386,6 +393,7 @@ namespace Unity.PlasticSCM.Editor.Views.CreateWorkspace.Dialogs
 
                 if (repositoryNameParts.Length > 1)
                 {
+                    mProposedProject = repositoryNameParts[0].Trim();
                     mRepositoryName = repositoryNameParts[repositoryNameParts.Length - 1].Trim();
                 }
             }
@@ -414,6 +422,7 @@ namespace Unity.PlasticSCM.Editor.Views.CreateWorkspace.Dialogs
         string mRepositoryName;
         string mSelectedServer;
         string mSelectedProject;
+        string mProposedProject;
         bool mIsLoadingProjects;
         List<string> mCurrentServerProjects;
 

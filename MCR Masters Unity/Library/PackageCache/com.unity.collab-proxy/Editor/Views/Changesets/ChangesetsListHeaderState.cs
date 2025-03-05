@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 using UnityEditor.IMGUI.Controls;
@@ -37,6 +37,8 @@ namespace Unity.PlasticSCM.Editor.Views.Changesets
             result.Add(PlasticLocalization.GetString(PlasticLocalization.Name.CreatedByColumn));
             result.Add(PlasticLocalization.GetString(PlasticLocalization.Name.CommentColumn));
             result.Add(PlasticLocalization.GetString(PlasticLocalization.Name.BranchColumn));
+            result.Add(PlasticLocalization.GetString(PlasticLocalization.Name.RepositoryColumn));
+            result.Add(PlasticLocalization.GetString(PlasticLocalization.Name.GuidColumn));
             return result;
         }
 
@@ -54,6 +56,10 @@ namespace Unity.PlasticSCM.Editor.Views.Changesets
                     return PlasticLocalization.GetString(PlasticLocalization.Name.CommentColumn);
                 case ChangesetsListColumn.Branch:
                     return PlasticLocalization.GetString(PlasticLocalization.Name.BranchColumn);
+                case ChangesetsListColumn.Repository:
+                    return PlasticLocalization.GetString(PlasticLocalization.Name.RepositoryColumn);
+                case ChangesetsListColumn.Guid:
+                    return PlasticLocalization.GetString(PlasticLocalization.Name.GuidColumn);
                 default:
                     return null;
             }
@@ -64,8 +70,8 @@ namespace Unity.PlasticSCM.Editor.Views.Changesets
             if (mHeaderTitles != null)
                 TreeHeaderColumns.SetTitles(columns, mHeaderTitles);
 
-            if (mColumsAllowedToggleVisibility != null)
-                TreeHeaderColumns.SetVisibilities(columns, mColumsAllowedToggleVisibility);
+            if (mColumnsAllowedToggleVisibility != null)
+                TreeHeaderColumns.SetVisibilities(columns, mColumnsAllowedToggleVisibility);
         }
 
         void ISerializationCallbackReceiver.OnBeforeSerialize()
@@ -116,6 +122,22 @@ namespace Unity.PlasticSCM.Editor.Views.Changesets
                     headerContent = new GUIContent(
                         GetColumnName(ChangesetsListColumn.Branch)),
                     sortingArrowAlignment = TextAlignment.Right
+                },
+                new Column()
+                {
+                    width = UnityConstants.ChangesetsColumns.REPOSITORY_WIDTH,
+                    minWidth = UnityConstants.ChangesetsColumns.REPOSITORY_MIN_WIDTH,
+                    headerContent = new GUIContent(
+                        GetColumnName(ChangesetsListColumn.Repository)),
+                    sortingArrowAlignment = TextAlignment.Right
+                },
+                new Column()
+                {
+                    width = UnityConstants.ChangesetsColumns.GUID_WIDTH,
+                    minWidth = UnityConstants.ChangesetsColumns.GUID_MIN_WIDTH,
+                    headerContent = new GUIContent(
+                        GetColumnName(ChangesetsListColumn.Guid)),
+                    sortingArrowAlignment = TextAlignment.Right,
                 }
             };
         }
@@ -126,14 +148,14 @@ namespace Unity.PlasticSCM.Editor.Views.Changesets
             if (mHeaderTitles == null)
                 mHeaderTitles = TreeHeaderColumns.GetTitles(columns);
 
-            if (mColumsAllowedToggleVisibility == null)
-                mColumsAllowedToggleVisibility = TreeHeaderColumns.GetVisibilities(columns);
+            if (mColumnsAllowedToggleVisibility == null)
+                mColumnsAllowedToggleVisibility = TreeHeaderColumns.GetVisibilities(columns);
         }
 
         [SerializeField]
         string[] mHeaderTitles;
 
         [SerializeField]
-        bool[] mColumsAllowedToggleVisibility;
+        bool[] mColumnsAllowedToggleVisibility;
     }
 }

@@ -1,7 +1,6 @@
 using UnityEditor;
 using UnityEngine;
 
-using Codice.Client.Common.EventTracking;
 using Codice.CM.Common;
 using PlasticGui.WorkspaceWindow.QueryViews.Changesets;
 using PlasticGui;
@@ -32,7 +31,7 @@ namespace Unity.PlasticSCM.Editor.Views.Changesets
             mMenuOperations = menuOperations;
             mShowDownloadPlasticExeWindow = showDownloadPlasticExeWindow;
             mIsGluonMode = isGluonMode;
-            
+
             BuildComponents();
         }
 
@@ -104,6 +103,11 @@ namespace Unity.PlasticSCM.Editor.Views.Changesets
             mChangesetMenuOperations.MergeChangeset();
         }
 
+        void CreateCodeReviewMenuItem_Click()
+        {
+            mChangesetMenuOperations.CreateCodeReview();
+        }
+
         void UpdateMenuItems(GenericMenu menu)
         {
             ChangesetExtendedInfo singleSelectedChangeset = mMenuOperations.GetSelectedChangeset();
@@ -122,10 +126,11 @@ namespace Unity.PlasticSCM.Editor.Views.Changesets
                 operations,
                 DiffChangesetMenuItem_Click);
 
-            AddDiffSelectedChangesetsMenuItem(
+            AddChangesetsMenuItem(
                 mDiffSelectedChangesetsMenuItemContent,
                 menu,
                 operations,
+                ChangesetMenuOperations.DiffSelectedChangesets,
                 DiffSelectedChangesetsMenuItem_Click);
 
             if (!IsOnMainBranch(singleSelectedChangeset))
@@ -142,28 +147,40 @@ namespace Unity.PlasticSCM.Editor.Views.Changesets
 
             menu.AddSeparator(string.Empty);
 
-            AddSwitchToChangesetMenuItem(
+            AddChangesetsMenuItem(
                 mSwitchToChangesetMenuItemContent,
                 menu,
                 operations,
+                ChangesetMenuOperations.SwitchToChangeset,
                 SwitchToChangesetMenuItem_Click);
 
-            if (mIsGluonMode)
-                return;
+            if (!mIsGluonMode)
+            {
+                AddChangesetsMenuItem(
+                    mRevertToChangesetMenuItemContent,
+                    menu,
+                    operations,
+                    ChangesetMenuOperations.RevertToChangeset,
+                    RevertToChangesetMenuItem_Click);
 
-            AddBackToMenuItem(
-               mRevertToChangesetMenuItemContent,
-               menu,
-               operations,
-               RevertToChangesetMenuItem_Click);
+                menu.AddSeparator(string.Empty);
+
+                AddChangesetsMenuItem(
+                    mMergeChangesetMenuItemContent,
+                    menu,
+                    operations,
+                    ChangesetMenuOperations.MergeChangeset,
+                    MergeChangesetMenuItem_Click);
+            }
 
             menu.AddSeparator(string.Empty);
 
-            AddMergeChangesetMenuItem(
-                mMergeChangesetMenuItemContent,
+            AddChangesetsMenuItem(
+                mCreateCodeReviewMenuItemContent,
                 menu,
                 operations,
-                MergeChangesetMenuItem_Click);
+                ChangesetMenuOperations.CreateCodeReview,
+                CreateCodeReviewMenuItem_Click);
         }
 
         void ProcessMenuOperation(
@@ -186,6 +203,32 @@ namespace Unity.PlasticSCM.Editor.Views.Changesets
                 MergeChangesetMenuItem_Click();
                 return;
             }
+
+            if (operationToExecute == ChangesetMenuOperations.CreateCodeReview)
+            {
+                CreateCodeReviewMenuItem_Click();
+                return;
+            }
+        }
+
+        static void AddChangesetsMenuItem(
+            GUIContent menuItemContent,
+            GenericMenu menu,
+            ChangesetMenuOperations operations,
+            ChangesetMenuOperations operationsToCheck,
+            GenericMenu.MenuFunction menuFunction)
+        {
+            if (operations.HasFlag(operationsToCheck))
+            {
+                menu.AddItem(
+                    menuItemContent,
+                    false,
+                    menuFunction);
+
+                return;
+            }
+
+            menu.AddDisabledItem(menuItemContent);
         }
 
         static void AddDiffChangesetMenuItem(
@@ -219,44 +262,6 @@ namespace Unity.PlasticSCM.Editor.Views.Changesets
                 menuItemContent);
         }
 
-        static void AddDiffSelectedChangesetsMenuItem(
-            GUIContent menuItemContent,
-            GenericMenu menu,
-            ChangesetMenuOperations operations,
-            GenericMenu.MenuFunction menuFunction)
-        {
-            if (operations.HasFlag(ChangesetMenuOperations.DiffSelectedChangesets))
-            {
-                menu.AddItem(
-                    menuItemContent,
-                    false,
-                    menuFunction);
-
-                return;
-            }
-
-            menu.AddDisabledItem(menuItemContent);
-        }
-
-        static void AddBackToMenuItem(
-            GUIContent menuItemContent,
-            GenericMenu menu,
-            ChangesetMenuOperations operations,
-            GenericMenu.MenuFunction menuFunction)
-        {
-            if (operations.HasFlag(ChangesetMenuOperations.RevertToChangeset))
-            {
-                menu.AddItem(
-                menuItemContent,
-                false,
-                menuFunction);
-
-                return;
-            }
-
-            menu.AddDisabledItem(menuItemContent);
-        }
-
         static void AddDiffBranchMenuItem(
             GUIContent menuItemContent,
             GenericMenu menu,
@@ -281,44 +286,6 @@ namespace Unity.PlasticSCM.Editor.Views.Changesets
 
             menu.AddDisabledItem(
                 menuItemContent);
-        }
-
-        static void AddSwitchToChangesetMenuItem(
-            GUIContent menuItemContent,
-            GenericMenu menu,
-            ChangesetMenuOperations operations,
-            GenericMenu.MenuFunction menuFunction)
-        {
-            if (operations.HasFlag(ChangesetMenuOperations.SwitchToChangeset))
-            {
-                menu.AddItem(
-                    menuItemContent,
-                    false,
-                    menuFunction);
-
-                return;
-            }
-
-            menu.AddDisabledItem(menuItemContent);
-        }       
-
-        static void AddMergeChangesetMenuItem(
-            GUIContent menuItemContent,
-            GenericMenu menu,
-            ChangesetMenuOperations operations,
-            GenericMenu.MenuFunction menuFunction)
-        {
-            if (operations.HasFlag(ChangesetMenuOperations.MergeChangeset))
-            {
-                menu.AddItem(
-                    menuItemContent,
-                    false,
-                    menuFunction);
-
-                return;
-            }
-
-            menu.AddDisabledItem(menuItemContent);
         }
 
         static string GetBranchName(ChangesetExtendedInfo changesetInfo)
@@ -374,6 +341,8 @@ namespace Unity.PlasticSCM.Editor.Views.Changesets
             mMergeChangesetMenuItemContent = new GUIContent(string.Format("{0} {1}",
                 PlasticLocalization.GetString(PlasticLocalization.Name.ChangesetMenuItemMergeFromChangeset),
                 GetPlasticShortcut.ForMerge()));
+            mCreateCodeReviewMenuItemContent = new GUIContent(
+                PlasticLocalization.Name.ChangesetMenuCreateANewCodeReview.GetString());
         }
 
         GenericMenu mMenu;
@@ -384,6 +353,7 @@ namespace Unity.PlasticSCM.Editor.Views.Changesets
         GUIContent mSwitchToChangesetMenuItemContent;
         GUIContent mRevertToChangesetMenuItemContent;
         GUIContent mMergeChangesetMenuItemContent;
+        GUIContent mCreateCodeReviewMenuItemContent;
 
         readonly WorkspaceInfo mWkInfo;
         readonly IChangesetMenuOperations mChangesetMenuOperations;

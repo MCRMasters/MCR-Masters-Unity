@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Collections.Generic;
 
@@ -49,6 +49,7 @@ namespace Unity.PlasticSCM.Editor.AssetMenu
             ViewHost viewHost,
             WorkspaceOperationsMonitor workspaceOperationsMonitor,
             NewIncomingChangesUpdater newIncomingChangesUpdater,
+            ShelvedChangesUpdater shelvedChangesUpdater,
             IAssetStatusCache assetStatusCache,
             IMergeViewLauncher mergeViewLauncher,
             IGluonViewSwitcher gluonViewSwitcher,
@@ -63,6 +64,7 @@ namespace Unity.PlasticSCM.Editor.AssetMenu
             mViewHost = viewHost;
             mWorkspaceOperationsMonitor = workspaceOperationsMonitor;
             mNewIncomingChangesUpdater = newIncomingChangesUpdater;
+            mShelvedChangesUpdater = shelvedChangesUpdater;
             mAssetStatusCache = assetStatusCache;
             mMergeViewLauncher = mergeViewLauncher;
             mGluonViewSwitcher = gluonViewSwitcher;
@@ -107,7 +109,7 @@ namespace Unity.PlasticSCM.Editor.AssetMenu
                 selectedPaths,
                 false,
                 mNewIncomingChangesUpdater,
-                null,
+                mShelvedChangesUpdater,
                 RefreshAsset.VersionControlCache);
         }
 
@@ -138,7 +140,7 @@ namespace Unity.PlasticSCM.Editor.AssetMenu
                 mProgressControls,
                 selectedPaths,
                 mNewIncomingChangesUpdater,
-                null,
+                mShelvedChangesUpdater,
                 RefreshAsset.VersionControlCache,
                 mWkInfo);
         }
@@ -176,7 +178,7 @@ namespace Unity.PlasticSCM.Editor.AssetMenu
                 AssetMenuOperations.Undo);
 
             SaveAssets.ForPathsWithoutConfirmation(
-                 selectedPaths, mWorkspaceOperationsMonitor);
+                mWkInfo.ClientPath, selectedPaths, mWorkspaceOperationsMonitor);
 
             if (mIsGluonMode)
             {
@@ -196,7 +198,7 @@ namespace Unity.PlasticSCM.Editor.AssetMenu
                 mProgressControls,
                 selectedPaths,
                 mNewIncomingChangesUpdater,
-                null,
+                mShelvedChangesUpdater,
                 RefreshAsset.UnityAssetDatabase);
         }
 
@@ -303,6 +305,7 @@ namespace Unity.PlasticSCM.Editor.AssetMenu
         readonly ViewHost mViewHost;
         readonly WorkspaceOperationsMonitor mWorkspaceOperationsMonitor;
         readonly NewIncomingChangesUpdater mNewIncomingChangesUpdater;
+        readonly ShelvedChangesUpdater mShelvedChangesUpdater;
         readonly IAssetStatusCache mAssetStatusCache;
         readonly IMergeViewLauncher mMergeViewLauncher;
         readonly IGluonViewSwitcher mGluonViewSwitcher;
