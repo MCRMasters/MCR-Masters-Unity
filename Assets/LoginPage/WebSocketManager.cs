@@ -12,6 +12,7 @@ using System.Net.WebSockets; // PC 환경에서는 ClientWebSocket 사용
 
 public class WebSocketManager : MonoBehaviour
 {
+/*
     public static WebSocketManager Instance;
 
 #if UNITY_WEBGL
@@ -104,4 +105,5 @@ public class WebSocketManager : MonoBehaviour
         }
 #endif
     }
+*/
 }

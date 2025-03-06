@@ -4,6 +4,7 @@ using System.Collections;
 
 public static class GameServerService
 {
+/* 
     public static IEnumerator AuthenticateWithGameServer(string gameServerAuthUrl, string accessToken)
     {
         Debug.Log("🔄 게임 서버 인증 요청 중...");
@@ -28,4 +29,5 @@ public static class GameServerService
             }
         }
     }
+*/
 }
