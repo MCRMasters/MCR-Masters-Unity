@@ -5,9 +5,9 @@ using System.Threading.Tasks;
 using UnityEngine;
 
 #if UNITY_WEBGL
-using NativeWebSocket; // WebGL에서만 NativeWebSocket 사용
+using NativeWebSocket; // WebGL에서는 NativeWebSocket 사용
 #else
-using System.Net.WebSockets; // 로컬 PC 테스트용 ClientWebSocket
+using System.Net.WebSockets; // PC 환경에서는 ClientWebSocket 사용
 #endif
 
 public class WebSocketManager : MonoBehaviour
@@ -23,20 +23,27 @@ public class WebSocketManager : MonoBehaviour
 
     private void Awake()
     {
-        if (Instance == null) Instance = this;
-        else Destroy(gameObject);
+        if (Instance == null)
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject); // 씬 변경 시에도 유지
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
     }
 
     public async void ConnectWebSocket(string token)
     {
-        Debug.Log("🔍 ConnectWebSocket() 실행됨!");
+        Debug.Log("🔍 WebSocketManager: ConnectWebSocket() 실행됨!");
 
-        string wsUrl = "ws://0.0.0.0:8000/ws?token=" + token;
+        string wsUrl = "ws://0.0.0.0:8000/ws?token=" + token; // 게임 서버 WebSocket 주소
 
 #if UNITY_WEBGL
         Debug.Log("🌐 WebGL 환경에서 WebSocket 연결 시도");
         websocket = new WebSocket(wsUrl);
-        websocket.OnOpen += () => Debug.Log("✅ WebSocket Connected!");
+        websocket.OnOpen += () => Debug.Log("✅ WebSocket Connected (WebGL)");
         websocket.OnMessage += (bytes) =>
         {
             string message = Encoding.UTF8.GetString(bytes);
@@ -44,7 +51,7 @@ public class WebSocketManager : MonoBehaviour
         };
         websocket.OnError += (e) => Debug.LogError("❌ WebSocket Error: " + e);
         websocket.OnClose += (e) => Debug.Log("🔌 WebSocket Closed");
-        websocket.Connect();
+        await websocket.Connect();
 #else
         Debug.Log("💻 PC 환경에서 WebSocket 연결 시도");
         websocket = new ClientWebSocket();

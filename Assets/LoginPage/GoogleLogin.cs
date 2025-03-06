@@ -6,69 +6,40 @@ public class GoogleLogin : MonoBehaviour
 {
     private string authUrl = "http://0.0.0.0:8000/api/v1/auth/login/google";
     private string callbackUrl = "http://0.0.0.0:8000/api/v1/auth/login/google/callback?code=";
+    private string gameServerAuthUrl = "http://0.0.0.0:9000/api/v1/game/auth"; // 게임 서버 인증 API
 
     public void StartGoogleLogin()
     {
-        StartCoroutine(GetAuthUrl());
+        StartCoroutine(AuthService.GetAuthUrl(authUrl, OnAuthUrlReceived));
     }
 
-    IEnumerator GetAuthUrl()
+    private void OnAuthUrlReceived(string url)
     {
-        using (UnityWebRequest request = UnityWebRequest.Get(authUrl))
+        if (!string.IsNullOrEmpty(url))
         {
-            yield return request.SendWebRequest();
-
-            if (request.result == UnityWebRequest.Result.Success)
-            {
-                string jsonResponse = request.downloadHandler.text;
-                AuthResponse response = JsonUtility.FromJson<AuthResponse>(jsonResponse);
-                Application.OpenURL(response.auth_url);
-            }
-            else
-            {
-                Debug.LogError("❌ Failed to get Google Auth URL: " + request.error);
-            }
+            Application.OpenURL(url);
+        }
+        else
+        {
+            Debug.LogError("❌ Failed to get Google Auth URL.");
         }
     }
 
     public void OnLoginCallback(string authCode)
     {
-        StartCoroutine(ExchangeCodeForToken(authCode));
+        StartCoroutine(AuthService.ExchangeCodeForToken(callbackUrl, authCode, OnTokenReceived));
     }
 
-    IEnumerator ExchangeCodeForToken(string code)
+    private void OnTokenReceived(string accessToken)
     {
-        Debug.Log("🔄 Google 로그인 완료, Access Token 요청 중..."); // ✅ 로그 추가
-
-        using (UnityWebRequest request = UnityWebRequest.Get(callbackUrl + code))
+        if (!string.IsNullOrEmpty(accessToken))
         {
-            yield return request.SendWebRequest();
-
-            if (request.result == UnityWebRequest.Result.Success)
-            {
-                string jsonResponse = request.downloadHandler.text;
-                TokenResponse response = JsonUtility.FromJson<TokenResponse>(jsonResponse);
-
-                Debug.Log("✅ Access Token Received: " + response.access_token);
-                WebSocketManager.Instance.ConnectWebSocket(response.access_token);
-            }
-            else
-            {
-                Debug.LogError("❌ Access Token 요청 실패: " + request.error);
-            }
+            Debug.Log("✅ Access Token Received: " + accessToken);
+            StartCoroutine(GameServerService.AuthenticateWithGameServer(gameServerAuthUrl, accessToken));
         }
-    }
-
-
-    [System.Serializable]
-    private class AuthResponse
-    {
-        public string auth_url;
-    }
-
-    [System.Serializable]
-    private class TokenResponse
-    {
-        public string access_token;
+        else
+        {
+            Debug.LogError("❌ Failed to receive access token.");
+        }
     }
 }
