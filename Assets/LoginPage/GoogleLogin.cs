@@ -13,6 +13,7 @@ public class GoogleLogin : MonoBehaviour
         StartCoroutine(AuthService.GetAuthUrl(authUrl, OnAuthUrlReceived));
     }
 
+    //Cannot debug the working process.
     private void OnAuthUrlReceived(string url)
     {
         if (!string.IsNullOrEmpty(url))
@@ -24,7 +25,8 @@ public class GoogleLogin : MonoBehaviour
             Debug.LogError("❌ Failed to get Google Auth URL.");
         }
     }
-    
+
+
     public void OnLoginCallback(string authCode)
     {
         StartCoroutine(AuthService.ExchangeCodeForToken(callbackUrl, authCode, OnTokenReceived));
@@ -36,6 +38,7 @@ public class GoogleLogin : MonoBehaviour
         {
             Debug.Log("✅ Access Token Received: " + accessToken);
             //StartCoroutine(GameServerService.AuthenticateWithGameServer(gameServerAuthUrl, accessToken));
+            //Server-side and WebSocket communication
         }
         else
         {
