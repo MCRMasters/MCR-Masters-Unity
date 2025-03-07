@@ -3,7 +3,6 @@ using UnityEngine;
 
 public class NewRoomManager : MonoBehaviour
 {
-    // A simple class to hold room data
     [System.Serializable]
     public class RoomData
     {
@@ -11,50 +10,57 @@ public class NewRoomManager : MonoBehaviour
         public string roomName;
     }
 
-    // List of rooms (can be set in the Inspector or added dynamically)
+    // 방 정보를 저장하는 리스트 (초기엔 비어 있음)
     public List<RoomData> roomList = new List<RoomData>();
 
-    // The prefab for each room item (make sure this prefab has the RoomItem script attached)
+    // RoomItem 프리팹 (RoomItem 스크립트가 붙어 있는 UI 오브젝트)
     public GameObject roomItemPrefab;
 
-    // The parent transform where the room items will be instantiated (e.g., the Content of a Scroll View)
+    // Scroll View의 Content 오브젝트
     public Transform contentParent;
 
-    // Reference to the LobbyRoomChange component, which handles the room joining logic.
+    // 로비 입장 관련 로직 담당 스크립트
     public LobbyRoomChange lobbyRoomChange;
+
+    // 현재까지 생성된 방의 인덱스 (0에서 시작 → 버튼 누를 때 1부터 증가)
+    private int roomIndex = 0;
 
     void Start()
     {
-        // Add temporary test room data
-        roomList.Add(new RoomData { roomId = "Room001", roomName = "Room 1" });
-        roomList.Add(new RoomData { roomId = "Room002", roomName = "Room 2" });
-        roomList.Add(new RoomData { roomId = "Room003", roomName = "Room 3" });
-        roomList.Add(new RoomData { roomId = "Room004", roomName = "Room 4" });
-        roomList.Add(new RoomData { roomId = "Room005", roomName = "Room 5" });
-        // Add more rooms if needed
-
-        GenerateRoomItems();
+        // 초기에는 아무 방도 생성하지 않음
+        // 원하는 시점에만 AddNewRoomNoArg()를 통해 방 생성
+        Debug.Log("초기 방은 없음. roomIndex = 0");
     }
 
-    // Generates room items based on the roomList data
-    public void GenerateRoomItems()
+    // 매개변수 없이 방을 추가: 버튼 OnClick 이벤트에서 호출
+    public void AddNewRoomNoArg()
     {
-        // Remove any existing children (previous room items)
-        foreach (Transform child in contentParent)
-        {
-            Destroy(child.gameObject);
-        }
+        // 방 인덱스를 1 증가 (0 → 1, 1 → 2, ...)
+        roomIndex++;
 
-        // Instantiate a RoomItem prefab for each room in the roomList
-        foreach (RoomData room in roomList)
+        // Room ID, Name 생성 (예: Room001, Room 1)
+        string newId = "Room" + roomIndex.ToString("D3");
+        string newName = "Room " + roomIndex;
+
+        // 새 방 데이터를 리스트에 추가
+        RoomData newRoom = new RoomData { roomId = newId, roomName = newName };
+        roomList.Add(newRoom);
+
+        // 실제 RoomItem 프리팹을 생성하고 UI에 표시
+        CreateRoomItem(newRoom);
+
+        Debug.Log($"새로운 방 생성: {newId} - {newName}");
+    }
+
+    // RoomData를 받아 RoomItem 프리팹을 Content 밑에 생성
+    private void CreateRoomItem(RoomData data)
+    {
+        GameObject itemObj = Instantiate(roomItemPrefab, contentParent);
+        RoomItem roomItem = itemObj.GetComponent<RoomItem>();
+        if (roomItem != null)
         {
-            GameObject itemObj = Instantiate(roomItemPrefab, contentParent);
-            RoomItem roomItem = itemObj.GetComponent<RoomItem>();
-            if (roomItem != null)
-            {
-                // Setup the room item with its roomId, roomName, and the reference to LobbyRoomChange.
-                roomItem.Setup(room.roomId, room.roomName, lobbyRoomChange);
-            }
+            // RoomItem 스크립트에 roomId, roomName, LobbyRoomChange 할당
+            roomItem.Setup(data.roomId, data.roomName, lobbyRoomChange);
         }
     }
 }
