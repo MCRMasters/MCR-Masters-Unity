@@ -2,15 +2,14 @@ using UnityEngine;
 
 public class LobbyRoomChange : MonoBehaviour
 {
-    public GameObject scrollView;   // Scroll View UI for room list
-    public GameObject lobbyPanel;   // Lobby UI
+    public GameObject scrollView;      // Scroll View UI (room list)
+    public GameObject lobbyPanel;      // Lobby UI
+    public GameObject roomSetting;     // RoomSetting panel (contains the two InputFields)
 
     // Called when a room item is clicked
     public void JoinRoom(string roomId)
     {
-        Debug.Log($"JoinRoom() 호출됨. 방 번호: {roomId}");
-
-        // TODO: Add room entry logic here (e.g., network communication, scene change, etc.)
+        Debug.Log($"JoinRoom() called. Room ID: {roomId}");
 
         // Disable the room list (scroll view)
         if (scrollView != null)
@@ -21,7 +20,7 @@ public class LobbyRoomChange : MonoBehaviour
             lobbyPanel.SetActive(true);
     }
 
-    // (Optional) Called to return to the room list from the lobby
+    // Called to return to the room list from the lobby
     public void ShowRoomList()
     {
         if (lobbyPanel != null)
@@ -30,6 +29,26 @@ public class LobbyRoomChange : MonoBehaviour
         if (scrollView != null)
             scrollView.SetActive(true);
 
-        Debug.Log("방 목록으로 돌아옴");
+        // Enable the RoomSetting panel
+        if (roomSetting != null)
+            roomSetting.SetActive(false);
+
+        Debug.Log("Returned to room list");
+    }
+
+    // New: Called by the "MakeRoomSet" button to show the RoomSetting panel
+    public void OnClickMakeRoomSet()
+    {
+        // Disable room list and lobby UI if needed
+        if (scrollView != null)
+            scrollView.SetActive(false);
+        if (lobbyPanel != null)
+            lobbyPanel.SetActive(false);
+
+        // Enable the RoomSetting panel
+        if (roomSetting != null)
+            roomSetting.SetActive(true);
+
+        Debug.Log("MakeRoomSet button clicked → RoomSetting activated");
     }
 }
