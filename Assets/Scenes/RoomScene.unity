@@ -130,13 +130,14 @@ GameObject:
   - component: {fileID: 13154189}
   - component: {fileID: 13154191}
   - component: {fileID: 13154190}
+  - component: {fileID: 13154192}
   m_Layer: 5
   m_Name: RoomSetting
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &13154189
 RectTransform:
   m_ObjectHideFlags: 0
@@ -156,7 +157,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -7.4, y: -35.51}
+  m_AnchoredPosition: {x: -7.4000015, y: -35.509995}
   m_SizeDelta: {x: 1600.87, y: 698.34}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &13154190
@@ -197,6 +198,22 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 13154188}
   m_CullTransparentMesh: 1
+--- !u!114 &13154192
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 13154188}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6883468f59d4845c5926dcf55477ad98, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  roomSettingPanel: {fileID: 13154188}
+  inputFieldTitle: {fileID: 333296083}
+  inputFieldInfo: {fileID: 1505291610}
+  newRoomManager: {fileID: 1311936317}
 --- !u!1 &45042816
 GameObject:
   m_ObjectHideFlags: 0
@@ -1430,6 +1447,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   scrollView: {fileID: 660859918}
   lobbyPanel: {fileID: 2027162990}
+  roomSetting: {fileID: 13154188}
 --- !u!1 &697433269
 GameObject:
   m_ObjectHideFlags: 0
@@ -1715,7 +1733,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 2092472628}
   m_Direction: 2
   m_Value: 0
-  m_Size: 1
+  m_Size: 0.999998
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -1985,6 +2003,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   scrollView: {fileID: 660859918}
   lobbyPanel: {fileID: 2027162990}
+  roomSetting: {fileID: 0}
 --- !u!1 &934133676
 GameObject:
   m_ObjectHideFlags: 0
@@ -2557,6 +2576,8 @@ MonoBehaviour:
   roomItemPrefab: {fileID: 8627749960711116994, guid: f089037df13d741e2abf59399a8a2a26, type: 3}
   contentParent: {fileID: 1417690988}
   lobbyRoomChange: {fileID: 1611829899}
+  roomTitleInput: {fileID: 333296083}
+  roomInfoInput: {fileID: 1505291610}
 --- !u!4 &1311936318
 Transform:
   m_ObjectHideFlags: 0
@@ -2754,7 +2775,9 @@ MonoBehaviour:
   roomList: []
   roomItemPrefab: {fileID: 1857307391}
   contentParent: {fileID: 1417690988}
-  lobbyRoomChange: {fileID: 0}
+  lobbyRoomChange: {fileID: 1611829899}
+  roomTitleInput: {fileID: 333296083}
+  roomInfoInput: {fileID: 0}
 --- !u!1 &1417690987
 GameObject:
   m_ObjectHideFlags: 0
@@ -2789,7 +2812,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0.00050726003}
+  m_AnchoredPosition: {x: 0, y: -0.000022381837}
   m_SizeDelta: {x: 0, y: 300}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &1417690989
@@ -3206,8 +3229,8 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 1494468962}
-        m_TargetAssemblyTypeName: NewRoomManager, Assembly-CSharp
-        m_MethodName: AddNewRoomNoArg
+        m_TargetAssemblyTypeName: LobbyRoomChange, Assembly-CSharp
+        m_MethodName: OnClickMakeRoomSet
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -3264,13 +3287,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 1494468957}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 18cd3f3d413aa4a09905676dfe1b3fd9, type: 3}
+  m_Script: {fileID: 11500000, guid: 10eaffe68887f4a9796fd9085cde4863, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  roomList: []
-  roomItemPrefab: {fileID: 1857307391}
-  contentParent: {fileID: 1417690988}
-  lobbyRoomChange: {fileID: 1611829899}
+  scrollView: {fileID: 660859918}
+  lobbyPanel: {fileID: 2027162990}
+  roomSetting: {fileID: 13154188}
 --- !u!1 &1505291608
 GameObject:
   m_ObjectHideFlags: 0
@@ -3606,6 +3628,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   scrollView: {fileID: 660859918}
   lobbyPanel: {fileID: 2027162990}
+  roomSetting: {fileID: 13154188}
 --- !u!4 &1611829900
 Transform:
   m_ObjectHideFlags: 0
@@ -4075,10 +4098,10 @@ MonoBehaviour:
       m_Calls: []
   m_FontData:
     m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
-    m_FontSize: 14
+    m_FontSize: 40
     m_FontStyle: 0
     m_BestFit: 0
-    m_MinSize: 10
+    m_MinSize: 4
     m_MaxSize: 40
     m_Alignment: 0
     m_AlignByGeometry: 0
@@ -4317,6 +4340,8 @@ GameObject:
   - component: {fileID: 1981428702}
   - component: {fileID: 1981428701}
   - component: {fileID: 1981428700}
+  - component: {fileID: 1981428703}
+  - component: {fileID: 1981428704}
   m_Layer: 5
   m_Name: MakeRoomButton
   m_TagString: Untagged
@@ -4387,7 +4412,31 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1981428701}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 1981428703}
+        m_TargetAssemblyTypeName: NewRoomManager, Assembly-CSharp
+        m_MethodName: CreateRoomFromInput
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 1981428704}
+        m_TargetAssemblyTypeName: LobbyRoomChange, Assembly-CSharp
+        m_MethodName: ShowRoomList
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &1981428701
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4426,6 +4475,39 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1981428698}
   m_CullTransparentMesh: 1
+--- !u!114 &1981428703
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1981428698}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 18cd3f3d413aa4a09905676dfe1b3fd9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  roomList: []
+  roomItemPrefab: {fileID: 1857307391}
+  contentParent: {fileID: 1417690988}
+  lobbyRoomChange: {fileID: 1611829899}
+  roomTitleInput: {fileID: 333296083}
+  roomInfoInput: {fileID: 1505291610}
+--- !u!114 &1981428704
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1981428698}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 10eaffe68887f4a9796fd9085cde4863, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  scrollView: {fileID: 660859918}
+  lobbyPanel: {fileID: 2027162990}
+  roomSetting: {fileID: 13154188}
 --- !u!1 &2027162990
 GameObject:
   m_ObjectHideFlags: 0
@@ -4482,6 +4564,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   scrollView: {fileID: 660859918}
   lobbyPanel: {fileID: 2027162990}
+  roomSetting: {fileID: 0}
 --- !u!1 &2088295857
 GameObject:
   m_ObjectHideFlags: 0
@@ -4889,14 +4972,22 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 6720587718026486538, guid: f089037df13d741e2abf59399a8a2a26, type: 3}
+      propertyPath: lobbyPanel
+      value: 
+      objectReference: {fileID: 2027162990}
+    - target: {fileID: 6720587718026486538, guid: f089037df13d741e2abf59399a8a2a26, type: 3}
+      propertyPath: scrollView
+      value: 
+      objectReference: {fileID: 660859918}
+    - target: {fileID: 6720587718026486538, guid: f089037df13d741e2abf59399a8a2a26, type: 3}
+      propertyPath: roomSetting
+      value: 
+      objectReference: {fileID: 13154188}
     - target: {fileID: 8627749960711116994, guid: f089037df13d741e2abf59399a8a2a26, type: 3}
       propertyPath: m_Name
       value: RoomItem
       objectReference: {fileID: 0}
-    - target: {fileID: 8689938902307863849, guid: f089037df13d741e2abf59399a8a2a26, type: 3}
-      propertyPath: lobbyRoomChange
-      value: 
-      objectReference: {fileID: 1611829899}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

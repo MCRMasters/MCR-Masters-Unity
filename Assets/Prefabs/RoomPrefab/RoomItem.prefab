@@ -171,6 +171,7 @@ GameObject:
   - component: {fileID: 8561652925623518462}
   - component: {fileID: 9198308991492836754}
   - component: {fileID: 8689938902307863849}
+  - component: {fileID: 6720587718026486538}
   m_Layer: 5
   m_Name: RoomItem
   m_TagString: Untagged
@@ -281,9 +282,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 8689938902307863849}
-        m_TargetAssemblyTypeName: RoomItem, Assembly-CSharp
-        m_MethodName: OnClickRoom
+      - m_Target: {fileID: 6720587718026486538}
+        m_TargetAssemblyTypeName: LobbyRoomChange, Assembly-CSharp
+        m_MethodName: JoinRoom
         m_Mode: 5
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -305,5 +306,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9cbde2d95a90e4a96ad60520852c7374, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  roomNameText: {fileID: 0}
-  lobbyRoomChange: {fileID: 0}
+  titleText: {fileID: 3850091803863686320}
+  infoText: {fileID: 7380652930791547639}
+--- !u!114 &6720587718026486538
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8627749960711116994}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 10eaffe68887f4a9796fd9085cde4863, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  scrollView: {fileID: 0}
+  lobbyPanel: {fileID: 0}
+  roomSetting: {fileID: 0}

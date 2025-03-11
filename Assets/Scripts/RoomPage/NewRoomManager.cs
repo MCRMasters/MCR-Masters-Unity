@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class NewRoomManager : MonoBehaviour
 {
@@ -7,60 +8,74 @@ public class NewRoomManager : MonoBehaviour
     public class RoomData
     {
         public string roomId;
-        public string roomName;
+        public string roomTitle;  // 방 제목
+        public string roomInfo;   // 방 설명 등
     }
 
-    // A list that stores room information (initially empty)
+    // 방 목록
     public List<RoomData> roomList = new List<RoomData>();
 
-    // Prefab for the RoomItem (an object with the RoomItem script attached)
+    // RoomItem 프리팹
     public GameObject roomItemPrefab;
 
-    // The Content object in the Scroll View
+    // Scroll View → Content 오브젝트
     public Transform contentParent;
 
-    // A script that handles lobby-related logic (e.g., room joining)
+    // 로비(또는 방) 로직 담당 스크립트
     public LobbyRoomChange lobbyRoomChange;
 
-    // Tracks the number of rooms created (starts at 0 -> increments when the button is pressed)
+    // 방 인덱스 (고유 ID 생성용)
     private int roomIndex = 0;
+
+    // 2개의 InputField (방 제목, 방 설명)
+    public InputField roomTitleInput; // 아까 이미지에서 "RoomTitleInput"로 만드셨다면 Inspector에서 연결
+    public InputField roomInfoInput;  // "RoomInfoInput"에 Inspector에서 연결
 
     void Start()
     {
-        // Initially, no rooms are created
-        // Rooms are only created when AddNewRoomNoArg() is called
         Debug.Log("No initial rooms. roomIndex = 0");
     }
 
-    // Adds a new room without parameters: called by a button OnClick event
-    public void AddNewRoomNoArg()
+    // 버튼 OnClick 이벤트: 2개 InputField로부터 텍스트를 읽어 새 방 생성
+    public void CreateRoomFromInput()
     {
-        // Increase roomIndex by 1 (0 -> 1, 1 -> 2, ...)
+        // InputField에서 텍스트 가져오기
+        string title = roomTitleInput.text;
+        string info = roomInfoInput.text;
+
+        // 인덱스 증가 → 고유 ID 생성
         roomIndex++;
-
-        // Generate a Room ID and Name (e.g., Room001, Room 1)
         string newId = "Room" + roomIndex.ToString("D3");
-        string newName = "Room " + roomIndex;
 
-        // Create new room data and add it to the list
-        RoomData newRoom = new RoomData { roomId = newId, roomName = newName };
+        // RoomData 생성
+        RoomData newRoom = new RoomData
+        {
+            roomId = newId,
+            roomTitle = title,
+            roomInfo = info
+        };
+
         roomList.Add(newRoom);
 
-        // Instantiate the RoomItem prefab and display it in the UI
+        // UI에 표시
         CreateRoomItem(newRoom);
 
-        Debug.Log($"New room created: {newId} - {newName}");
+        Debug.Log($"New room created: ID={newId}, Title={title}, Info={info}");
+
+        // InputField 초기화 (선택)
+        roomTitleInput.text = "";
+        roomInfoInput.text = "";
     }
 
-    // Instantiates a RoomItem prefab under the Content using the given RoomData
+    // RoomItem 프리팹을 Instantiate하고 데이터 세팅
     private void CreateRoomItem(RoomData data)
     {
         GameObject itemObj = Instantiate(roomItemPrefab, contentParent);
         RoomItem roomItem = itemObj.GetComponent<RoomItem>();
         if (roomItem != null)
         {
-            // Assign roomId, roomName, and LobbyRoomChange to the RoomItem script
-            roomItem.Setup(data.roomId, data.roomName, lobbyRoomChange);
+            // roomItem.Setup(...)에서 2개 문자열(제목, 설명) + LobbyRoomChange 전달
+            roomItem.Setup(data.roomId, data.roomTitle, data.roomInfo, lobbyRoomChange);
         }
     }
 }
