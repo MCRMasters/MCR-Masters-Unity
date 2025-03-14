@@ -19,8 +19,8 @@ public class DiscardManager : MonoBehaviour
 
     public GameObject discardTilePrefab;
 
-    public float tileSpacingX = 25f;
-    public float tileSpacingY = 25f;
+    public float tileSpacingX = 25f; // 가로(열) 간격
+    public float tileSpacingZ = 20f; // 세로(행) 간격 (Z축 이동)
     public int maxTilesPerRow = 6;
 
     private Dictionary<PlayerSeat, int> discardCounts = new Dictionary<PlayerSeat, int>();
@@ -38,21 +38,31 @@ public class DiscardManager : MonoBehaviour
         Transform discardOrigin = GetDiscardPosition(seat);
         int index = discardCounts[seat];
 
-        // 행/열 계산
         int row = index / maxTilesPerRow;
         int col = index % maxTilesPerRow;
 
-        // 예: 오른쪽(col) & 위아래(row) 방향으로 오프셋
         Vector3 offset = discardOrigin.right * (col * tileSpacingX)
-                         + -discardOrigin.up * (row * tileSpacingY);
+                         + -discardOrigin.forward * (row * tileSpacingZ);
         Vector3 newPos = discardOrigin.position + offset;
 
+        // 기본적으로 discardOrigin.rotation 사용
+        Quaternion finalRotation = discardOrigin.rotation;
+
+        // E 플레이어인 경우, x:-90, y:+180 적용
+        if (seat == PlayerSeat.E)
+        {
+            // 기존 회전에 추가 회전
+            finalRotation = discardOrigin.rotation * Quaternion.Euler(-90f, 180f, 0f);
+            // 만약 discardOrigin.rotation을 무시하고 완전히 고정 각도(-90, 180, 0)로 하고 싶다면
+            // finalRotation = Quaternion.Euler(-90f, 180f, 0f);
+        }
+
         // 타일 생성
-        GameObject discardObj = Instantiate(discardTilePrefab, newPos, discardOrigin.rotation);
-        // discardObj.GetComponent<DiscardTileController>()?.SetTileData(tileData);
+        GameObject discardObj = Instantiate(discardTilePrefab, newPos, finalRotation);
 
         discardCounts[seat]++;
     }
+
 
     private Transform GetDiscardPosition(PlayerSeat seat)
     {
