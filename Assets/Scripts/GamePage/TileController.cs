@@ -1,26 +1,30 @@
 using UnityEngine;
-using System.Collections.Generic;
+using UnityEngine.UI;
 
 public class TileController : MonoBehaviour
 {
+    public TileData tileData;             // 이 타일의 정보
+    public MainPlayerUIManager uiManager; // 생성 시 MainPlayerUIManager로 할당됨
 
-    /*
-     * 앞으로 구현되어야할 타패 관련 로직예시
-    private TileData tileData;
-    private PlayerHand playerHand;
-
-    public void SetTileData(TileData data, PlayerHand hand)
+    void Start()
     {
-        tileData = data;
-        playerHand = hand;
-        // 여기서 tileData의 suit/value에 따라 모델, 텍스처 등 시각적으로 업데이트
+        // Button 컴포넌트가 있으면 클릭 이벤트 등록
+        Button btn = GetComponent<Button>();
+        if (btn != null)
+        {
+            btn.onClick.AddListener(OnTileClicked);
+        }
     }
 
-    private void OnMouseDown()
+    private void OnTileClicked()
     {
-        // 예: 타일 클릭 시 버리기
-        playerHand.DiscardTile(tileData);
+        if (uiManager != null)
+        {
+            uiManager.OnTileClicked(this);
+        }
+        else
+        {
+            Debug.LogWarning("uiManager가 TileController에 할당되지 않음: " + gameObject.name);
+        }
     }
-
-    */
 }
