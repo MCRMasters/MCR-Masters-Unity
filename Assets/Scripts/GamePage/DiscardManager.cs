@@ -10,11 +10,17 @@ public class DiscardManager : MonoBehaviour
     public Transform discardPosW;
     public Transform discardPosN;
 
-    [Header("3D 타일 매핑")]
-    public Tile3DMapping[] tile3DMappings; // Inspector에 34개 이상 등록
+    [Header("3D 타일 매핑 (Inspector에 34개 이상 등록)")]
+    public Tile3DMapping[] tile3DMappings;
 
-    public float tileSpacingX = 25f; // 가로(열) 간격
-    public float tileSpacingZ = 20f; // 세로(행) 간격 (Z축 이동)
+    [Header("EW (E/W) 타일 간격 (X, Z)")]
+    public float tileSpacingX_EW = 25f;
+    public float tileSpacingZ_EW = 20f;
+
+    [Header("SN (S/N) 타일 간격 (X, Z)")]
+    public float tileSpacingX_SN = 20f;
+    public float tileSpacingZ_SN = 25f;
+
     public int maxTilesPerRow = 6;
 
     private Dictionary<PlayerSeat, int> discardCounts = new Dictionary<PlayerSeat, int>();
@@ -36,14 +42,52 @@ public class DiscardManager : MonoBehaviour
         int row = index / maxTilesPerRow;
         int col = index % maxTilesPerRow;
 
-        Vector3 offset = origin.right * (col * tileSpacingX)
-                       + -origin.forward * (row * tileSpacingZ);
+        Vector3 offset = Vector3.zero;
+        // EW와 SN의 타일 간격을 각 세트로 적용
+        if (seat == PlayerSeat.S)
+        {
+            // S: SN 간격, 6개마다 X(오른쪽) 증가, 각 열은 Z(앞쪽) 증가
+            offset = origin.right * (row * tileSpacingX_SN)
+                   + origin.forward * (col * tileSpacingZ_SN);
+        }
+        else if (seat == PlayerSeat.N)
+        {
+            // N: SN 간격, 6개마다 -X(왼쪽) 감소, 각 열은 -Z(뒤쪽) 감소
+            offset = -origin.right * (row * tileSpacingX_SN)
+                   + -origin.forward * (col * tileSpacingZ_SN);
+        }
+        else if (seat == PlayerSeat.W)
+        {
+            // W: EW 간격, 6개마다 X(오른쪽) 증가, 각 열은 +Z(앞쪽) 감소
+            offset = -origin.right * (col * tileSpacingX_EW)
+                   + origin.forward * (row * tileSpacingZ_EW);
+        }
+        else // PlayerSeat.E
+        {
+            // E: EW 간격, 6개마다 X(오른쪽) 증가, 각 열은 -Z(뒤쪽) 감소
+            offset = origin.right * (col * tileSpacingX_EW)
+                   + -origin.forward * (row * tileSpacingZ_EW);
+        }
         Vector3 newPos = origin.position + offset;
 
+        // 좌석별 회전값 적용
         Quaternion finalRotation = origin.rotation;
-        if (seat == PlayerSeat.E)
+        switch (seat)
         {
-            finalRotation = origin.rotation * Quaternion.Euler(-90f, 180f, 0f);
+            case PlayerSeat.E:
+                finalRotation = origin.rotation * Quaternion.Euler(-90f, 180f, 0f);
+                break;
+            case PlayerSeat.S:
+                finalRotation = origin.rotation * Quaternion.Euler(-90f, 90f, 0f);
+                break;
+            case PlayerSeat.W:
+                finalRotation = origin.rotation * Quaternion.Euler(-90f, 0f, 0f);
+                break;
+            case PlayerSeat.N:
+                finalRotation = origin.rotation * Quaternion.Euler(-90f, 0f, -90f);
+                break;
+            default:
+                break;
         }
 
         // 3D 프리팹 매핑을 통해 타일 데이터에 맞는 3D 프리팹 선택
