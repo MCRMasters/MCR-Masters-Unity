@@ -14,7 +14,8 @@ public class DummyDiscardController : MonoBehaviour
     private PlayerSeat[] seatOrder = { PlayerSeat.S, PlayerSeat.W, PlayerSeat.N };
     private int currentSeatIndex = 0;
 
-    // 자리별 더미 손패 (테스트용으로 만("m") 타일만 사용)
+    // 자리별 더미 손패 (서버에서 수신한 데이터처럼 목업)
+    // 테스트용으로 만("m") 타일만 사용합니다.
     private Dictionary<PlayerSeat, List<TileData>> seatHands = new Dictionary<PlayerSeat, List<TileData>>();
 
     void Start()
@@ -25,7 +26,7 @@ public class DummyDiscardController : MonoBehaviour
             discardButton.onClick.AddListener(OnDiscardButtonClicked);
         }
 
-        // 더미 데이터 초기화 (만("m") 타일만 사용)
+        // 목업 데이터 초기화 (각 자리의 손패를 서버 수신 데이터처럼 미리 준비)
         seatHands[PlayerSeat.S] = new List<TileData>()
         {
             new TileData(){ suit = "m", value = 1 },
@@ -78,24 +79,20 @@ public class DummyDiscardController : MonoBehaviour
         // 현재 차례의 플레이어 (남, 서, 북 순서)
         PlayerSeat seatToDiscard = seatOrder[currentSeatIndex];
 
-        // 해당 자리 손패가 남아있는지 확인
+        // 목업 서버 메시지처럼, 미리 준비한 손패에서 첫 번째 타일을 꺼내 처리합니다.
         if (seatHands.ContainsKey(seatToDiscard) && seatHands[seatToDiscard].Count > 0)
         {
-            // 랜덤으로 한 장 선택
-            var hand = seatHands[seatToDiscard];
-            int randomIndex = Random.Range(0, hand.Count);
-            TileData tileToDiscard = hand[randomIndex];
-
-            // 선택한 타일 제거
-            hand.RemoveAt(randomIndex);
+            // 정해진 순서대로 첫 타일을 꺼냄 (서버에서 받은 데이터처럼)
+            TileData tileToDiscard = seatHands[seatToDiscard][0];
+            seatHands[seatToDiscard].RemoveAt(0);
 
             // DiscardManager를 호출하여 3D 버림패 생성
             discardManager.DiscardTile(seatToDiscard, tileToDiscard);
-            Debug.Log($"[{seatToDiscard}] 버린 패: {tileToDiscard.suit} {tileToDiscard.value}");
+            Debug.Log($"[Server Mock] [{seatToDiscard}] 버림: {tileToDiscard.suit}{tileToDiscard.value}");
         }
         else
         {
-            Debug.LogWarning($"{seatToDiscard} 자리에는 버릴 패가 없습니다!");
+            Debug.LogWarning($"[{seatToDiscard}] 자리에는 버릴 패가 없습니다!");
         }
 
         // 다음 플레이어로 순서 이동 (S → W → N → S ...)
