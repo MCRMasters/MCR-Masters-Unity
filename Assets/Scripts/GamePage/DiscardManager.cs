@@ -10,15 +10,11 @@ public class DiscardManager : MonoBehaviour
     public Transform discardPosW;
     public Transform discardPosN;
 
-    [Header("EW (E/W) 타일 간격 (X, Z)")]
-    public float tileSpacingX_EW = 25f;
-    public float tileSpacingZ_EW = 20f;
-
-    [Header("SN (S/N) 타일 간격 (X, Z)")]
-    public float tileSpacingX_SN = 20f;
-    public float tileSpacingZ_SN = 25f;
-
+    [Header("타일 간격 설정")]
+    public float tileSpacing = 15f;  // 같은 행 내 타일 간격
+    public float rowSpacing = 20f;   // 6개마다 다음 행으로 이동하는 간격
     public int maxTilesPerRow = 6;
+
     private Dictionary<PlayerSeat, int> discardCounts = new Dictionary<PlayerSeat, int>();
 
     void Awake()
@@ -38,29 +34,33 @@ public class DiscardManager : MonoBehaviour
 
         Vector3 offset;
         if (seat == PlayerSeat.S)
-            offset = origin.right * (row * tileSpacingX_SN) + origin.forward * (col * tileSpacingZ_SN);
+        {
+            offset = Vector3.forward * (col * tileSpacing)
+                   + Vector3.right * (row * rowSpacing);
+        }
         else if (seat == PlayerSeat.N)
-            offset = -origin.right * (row * tileSpacingX_SN) + -origin.forward * (col * tileSpacingZ_SN);
+        {
+            offset = Vector3.left * (row * rowSpacing)
+                   + Vector3.back * (col * tileSpacing);
+        }
         else if (seat == PlayerSeat.W)
-            offset = -origin.right * (col * tileSpacingX_EW) + origin.forward * (row * tileSpacingZ_EW);
-        else // E
-            offset = origin.right * (col * tileSpacingX_EW) + -origin.forward * (row * tileSpacingZ_EW);
+        {
+            offset = Vector3.left * (col * tileSpacing)
+                   + Vector3.forward * (row * rowSpacing);
+        }
+        else // PlayerSeat.E
+        {
+            offset = Vector3.right * (col * tileSpacing)
+                   + Vector3.back * (row * rowSpacing);
+        }
 
         Vector3 newPos = origin.position + offset;
         Quaternion finalRotation = origin.rotation;
-        switch (seat)
-        {
-            case PlayerSeat.E: finalRotation *= Quaternion.Euler(-90f, 180f, 0f); break;
-            case PlayerSeat.S: finalRotation *= Quaternion.Euler(-90f, 90f, 0f); break;
-            case PlayerSeat.W: finalRotation *= Quaternion.Euler(-90f, 0f, 0f); break;
-            case PlayerSeat.N: finalRotation *= Quaternion.Euler(-90f, 0f, -90f); break;
-        }
 
-        // TileLoader 사용
         GameObject prefab3D = TileLoader.Instance.Get3DPrefab(tileData.suit, tileData.value);
         if (prefab3D == null)
         {
-            Debug.LogWarning($"3D 프리팹 없음: {tileData.suit}{tileData.value}");
+            Debug.LogWarning($"3D prefab not found: {tileData.suit}{tileData.value}");
             return;
         }
 
@@ -68,15 +68,12 @@ public class DiscardManager : MonoBehaviour
         discardCounts[seat]++;
     }
 
-    private Transform GetDiscardPosition(PlayerSeat seat)
+    private Transform GetDiscardPosition(PlayerSeat seat) => seat switch
     {
-        return seat switch
-        {
-            PlayerSeat.E => discardPosE,
-            PlayerSeat.S => discardPosS,
-            PlayerSeat.W => discardPosW,
-            PlayerSeat.N => discardPosN,
-            _ => null
-        };
-    }
+        PlayerSeat.E => discardPosE,
+        PlayerSeat.S => discardPosS,
+        PlayerSeat.W => discardPosW,
+        PlayerSeat.N => discardPosN,
+        _ => null
+    };
 }
