@@ -30,7 +30,7 @@ public class TileLoader : MonoBehaviour
 
     private void LoadAll()
     {
-        GameObject[] all = Resources.LoadAll<GameObject>("GamePrefabs");
+        GameObject[] all = Resources.LoadAll<GameObject>("GamePrefabs/TilePrefabs");
 
         foreach (var prefab in all)
         {
