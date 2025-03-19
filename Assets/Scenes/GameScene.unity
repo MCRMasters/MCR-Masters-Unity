@@ -813,6 +813,7 @@ Transform:
   - {fileID: 994526682}
   - {fileID: 1781581991}
   - {fileID: 849848557}
+  - {fileID: 1393835955}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &665667694
@@ -1062,7 +1063,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1075158129}
   m_Layer: 0
-  m_Name: ---UIScoreArea
+  m_Name: ---UI-Info-Score-Seat-Area
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1115,8 +1116,8 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 955096232}
-  - {fileID: 1427846889}
   - {fileID: 204941200}
+  - {fileID: 1427846889}
   - {fileID: 1732554149}
   - {fileID: 1275787565}
   - {fileID: 1914367656}
@@ -1318,7 +1319,7 @@ GameObject:
   - component: {fileID: 1275787567}
   - component: {fileID: 1275787566}
   m_Layer: 5
-  m_Name: GameObject
+  m_Name: TilesRemaining
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1461,6 +1462,60 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1323078176}
   m_CullTransparentMesh: 1
+--- !u!1 &1393835954
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1393835955}
+  - component: {fileID: 1393835956}
+  m_Layer: 0
+  m_Name: RoundInfoUIManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1393835955
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1393835954}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 1131.355, y: 694.2278, z: -177.23026}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 646768857}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1393835956
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1393835954}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 80ba28bf3a74440bb912eeb23b0522a4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  textRoundInfo: {fileID: 253960766}
+  textTilesRemaining: {fileID: 1555599385}
+  textSeatE: {fileID: 1254275887}
+  textSeatS: {fileID: 1444593827}
+  textSeatW: {fileID: 1426389795}
+  textSeatN: {fileID: 2145694313}
+  textScoreE: {fileID: 1613068445}
+  textScoreS: {fileID: 2082270203}
+  textScoreW: {fileID: 1323078178}
+  textScoreN: {fileID: 1512968277}
 --- !u!1 &1426389793
 GameObject:
   m_ObjectHideFlags: 0
