@@ -5,12 +5,9 @@ using System.Collections.Generic;
 public class MainPlayerUIManager : MonoBehaviour
 {
     [Header("UI 배치 설정")]
-    public RectTransform handPanel;        // 손패 UI 패널
-    public int tileCount = 13;             // 유지할 손패 개수
-    public float tileSpacing = 25f;        // 타일 간 간격(px)
-
-    [Header("2D 타일 매핑")]
-    public Tile2DMapping[] tile2DMappings; // suit/value -> 2D 프리팹 배열
+    public RectTransform handPanel;    // 손패 UI 패널
+    public int tileCount = 13;         // 유지할 손패 개수
+    public float tileSpacing = 25f;    // 타일 간 간격(px)
 
     [Header("Discard Manager 참조")]
     public DiscardManager discardManager;  // 3D 버림패 매니저
@@ -33,7 +30,8 @@ public class MainPlayerUIManager : MonoBehaviour
     /// </summary>
     public void AddTileToHand(TileData data)
     {
-        GameObject prefab2D = Get2DPrefab(data.suit, data.value);
+        // Tile2DLoader를 통해 suit/value에 해당하는 2D 프리팹을 로드
+        GameObject prefab2D = TileLoader.Instance.Get2DPrefab(data.suit, data.value);
         if (prefab2D == null)
         {
             Debug.LogWarning($"2D 프리팹 없음: suit={data.suit}, value={data.value}");
@@ -72,7 +70,7 @@ public class MainPlayerUIManager : MonoBehaviour
     }
 
     /// <summary>
-    /// 타일 클릭 시 호출되는 함수 (TileController -> uiManager.OnTileClicked(this))
+    /// 타일 클릭 시 호출 (TileController -> uiManager.OnTileClicked)
     /// </summary>
     public void OnTileClicked(TileController tile)
     {
@@ -97,7 +95,6 @@ public class MainPlayerUIManager : MonoBehaviour
         }
 
         // 3) 새 타일 뽑아 손패 유지 (예: 다시 13장 맞추기)
-        //    여기서는 단순히 "한 장" 추가해서 다시 13장 맞추도록
         if (handTiles.Count < tileCount)
         {
             AddTileToHand(CreateRandomTileData());
@@ -108,26 +105,10 @@ public class MainPlayerUIManager : MonoBehaviour
     }
 
     /// <summary>
-    /// suit/value에 해당하는 2D 프리팹을 Tile2DMapping에서 찾는다
-    /// </summary>
-    private GameObject Get2DPrefab(string suit, int value)
-    {
-        foreach (var mapping in tile2DMappings)
-        {
-            if (mapping.suit.ToLower() == suit.ToLower() && mapping.value == value)
-            {
-                return mapping.prefab2D;
-            }
-        }
-        return null;
-    }
-
-    /// <summary>
-    /// 만수(“m”) 1~9만 랜덤 생성 (테스트용)
+    /// 만("m") 1~9만 랜덤 생성 (테스트용)
     /// </summary>
     private TileData CreateRandomTileData()
     {
-        // suit를 "m"으로 고정
         string suit = "m";
         int value = Random.Range(1, 10); // 1~9
         return new TileData { suit = suit, value = value };
