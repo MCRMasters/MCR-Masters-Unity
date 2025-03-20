@@ -4,98 +4,94 @@ using System.Collections.Generic;
 
 public class WinningScreenScoreManager : MonoBehaviour
 {
-    /// <summary>
-    /// 승리화면 전체(---UI---WinningScreen-ScorePanel)를 참조
-    /// </summary>
-    [Header("Score Panel Root (---UI---WinningScreen-ScorePanel)")]
+    [Header("승리 화면 루트 패널")]
     [SerializeField] private GameObject winningScreenRoot;
 
-    /// <summary>
-    /// 13개의 타일을 넣을 부모(WinningHandTile/TilePanel)
-    /// </summary>
-    [Header("Tile Panel")]
+    [Header("타일 패널 (13개 타일)")]
     [SerializeField] private Transform tilePanel;
-    [SerializeField] private GameObject tilePrefab2D;
-    [SerializeField] private Sprite[] tileSprites;
 
-    /// <summary>
-    /// 역 정보 5줄 표시용 텍스트, 총점 텍스트
-    /// </summary>
-    [Header("Score Panel Texts")]
+    [Header("쯔모 패널 (1개 타일)")]
+    [SerializeField] private Transform tsumoPanel;
+
+    [Header("역(役) 정보 표시 패널")]
+    [SerializeField] private Transform scorePanel;
+
+    [Header("사용할 폰트 (선택 사항)")]
+    [SerializeField] private Font existingFont;
+
+    [Header("단일 점수 UI")]
     [SerializeField] private Text singleScoreText;
-    [SerializeField] private Text totalScoreText;
 
-    /// <summary>
-    /// 캐릭터 이미지, 닉네임, 화패 수 텍스트
-    /// </summary>
-    [Header("Other UI Elements")]
+    [Header("승리 쯔모 프리팹 (랜덤)")]
+    [SerializeField] private Transform winnerTsumoParent;
+
+    [Header("기타 UI 요소")]
+    [SerializeField] private Text totalScoreText;
+    [SerializeField] private Sprite[] characterSprites;
     [SerializeField] private Image characterImage;
     [SerializeField] private Text winnerNickName;
     [SerializeField] private Text flowerCountText;
 
-    /// <summary>
-    /// OK 버튼, TEST 버튼
-    /// </summary>
-    [Header("Buttons")]
+    [Header("버튼들")]
     [SerializeField] private Button okButton;
     [SerializeField] private Button testButton;
 
-    // 역(役) 정보 후보 (목업용)
+    // 목업 데이터
     private string[] possibleYaku = { "리치", "도라1", "멘젠칭후", "이페코", "혼일색", "백", "발", "중" };
-    // 닉네임 후보 (목업용)
     private string[] possibleNames = { "Apple", "Banana", "Cherry", "Grape", "Mango", "Peach" };
+    private string[] suits = { "m", "p", "s" }; // 만(m), 삭(p), 통(s)
 
     private void Start()
     {
-        // OK 버튼을 누르면 전체 승리화면 비활성화
         if (okButton != null)
             okButton.onClick.AddListener(HideWinningScreen);
 
-        // TEST 버튼을 누르면 목업 데이터로 화면 표시
         if (testButton != null)
             testButton.onClick.AddListener(ShowRandomData);
 
-        // 시작 시 전체 화면 비활성화
         if (winningScreenRoot != null)
             winningScreenRoot.SetActive(false);
     }
-
-    /// <summary>
-    /// OK 버튼 클릭 시, 승리화면 전체(---UI---WinningScreen-ScorePanel) 비활성화
-    /// </summary>
+    //이곳이 next 누르는 버튼입니다 현재는 단순히 결과창을 닫는데 패산을 초기화하거나 국을 리셋하는 api를 보내야합니다
     private void HideWinningScreen()
     {
-        // 승리화면을 비활성화
         if (winningScreenRoot != null)
             winningScreenRoot.SetActive(false);
     }
 
-    /// <summary>
-    /// TEST 버튼 클릭 시, 승리화면 활성화 + 무작위 데이터 세팅
-    /// </summary>
     public void ShowRandomData()
     {
-        // 승리화면 활성화
         if (winningScreenRoot != null)
             winningScreenRoot.SetActive(true);
 
-        // 13개 타일 생성
+        // 13개 타일 생성 (TileLoader 활용)
         GenerateRandomTiles();
 
-        // 역 정보 5개 표시
-        DisplayRandomYaku();
+        // 역(役) 정보 표시
+        DisplayRandomYakuAsTexts();
 
-        // 총점 무작위
+        // 단일 점수 설정
+        if (singleScoreText != null)
+        {
+            int singleScore = Random.Range(10, 70);
+            singleScoreText.text = singleScore.ToString();
+        }
+
+        // 승리 쯔모 프리팹 생성
+        GenerateRandomWinnerTsumo();
+
+        // 총점 설정
         if (totalScoreText != null)
         {
-            int randScore = Random.Range(1000, 20001);
+            int randScore = Random.Range(10, 201);
             totalScoreText.text = $"Total Score: {randScore}";
         }
 
-        // 캐릭터 이미지, 닉네임, 화패 수 무작위
-        if (characterImage != null && tileSprites.Length > 0)
+        // 캐릭터 이미지, 닉네임, 화패 개수 랜덤 설정
+        if (characterImage != null && characterSprites != null && characterSprites.Length > 0)
         {
-            characterImage.sprite = tileSprites[Random.Range(0, tileSprites.Length)];
+            int randIndex = Random.Range(0, characterSprites.Length);
+            characterImage.sprite = characterSprites[randIndex];
         }
         if (winnerNickName != null)
         {
@@ -106,48 +102,128 @@ public class WinningScreenScoreManager : MonoBehaviour
             int flowerCount = Random.Range(0, 10);
             flowerCountText.text = $"Flower: {flowerCount}";
         }
+
+        // 쯔모 패널에 1개 타일 추가
+        GenerateSingleTsumoTile();
     }
 
     /// <summary>
-    /// TilePanel 내부에 13개의 타일 프리팹을 무작위로 생성
+    /// TilePanel에 13개의 무작위 2D 타일 (만/삭/통, 1~9) 생성
     /// </summary>
     private void GenerateRandomTiles()
     {
         if (tilePanel == null) return;
 
-        // 기존 타일 제거
+        // 기존 자식 오브젝트 제거
         for (int i = tilePanel.childCount - 1; i >= 0; i--)
         {
             Destroy(tilePanel.GetChild(i).gameObject);
         }
 
-        // 13개 생성
+        // 13개 타일 생성
         for (int i = 0; i < 13; i++)
         {
-            GameObject tileObj = Instantiate(tilePrefab2D, tilePanel);
-            Image img = tileObj.GetComponent<Image>();
-            if (img != null && tileSprites.Length > 0)
+            // 무작위 문양 선택 (만, 삭, 통 중 하나)
+            string randomSuit = suits[Random.Range(0, suits.Length)];
+            // 무작위 숫자 선택 (1~9)
+            int randomValue = Random.Range(1, 10);
+
+            // TileLoader에서 2D 타일 프리팹 가져오기
+            GameObject tilePrefab = TileLoader.Instance.Get2DPrefab(randomSuit, randomValue);
+            if (tilePrefab != null)
             {
-                img.sprite = tileSprites[Random.Range(0, tileSprites.Length)];
+                Instantiate(tilePrefab, tilePanel, false);
             }
         }
     }
 
     /// <summary>
-    /// 5개의 역(役) 정보를 무작위로 골라서 singleScoreText에 표시
+    /// ScorePanel 내부에 5개의 역(役) 정보를 Text로 표시
     /// </summary>
-    private void DisplayRandomYaku()
+    private void DisplayRandomYakuAsTexts()
     {
-        if (singleScoreText == null) return;
+        if (scorePanel == null) return;
 
-        List<string> yakuList = new List<string>();
+        // 기존 "YakuText_"로 시작하는 오브젝트 삭제
+        for (int i = scorePanel.childCount - 1; i >= 0; i--)
+        {
+            Transform child = scorePanel.GetChild(i);
+            if (child.name.StartsWith("YakuText_"))
+            {
+                Destroy(child.gameObject);
+            }
+        }
+
+        // 5개의 무작위 역(役) 생성
         for (int i = 0; i < 5; i++)
         {
             string yaku = possibleYaku[Random.Range(0, possibleYaku.Length)];
-            yakuList.Add(yaku);
+
+            GameObject textObj = new GameObject("YakuText_" + i);
+            textObj.transform.SetParent(scorePanel, false);
+
+            Text yakuText = textObj.AddComponent<Text>();
+            Font fontToUse = (existingFont != null) ? existingFont : Resources.GetBuiltinResource<Font>("Arial.ttf");
+            yakuText.font = fontToUse;
+            yakuText.fontSize = 24;
+            yakuText.color = Color.black;
+            yakuText.alignment = TextAnchor.MiddleLeft;
+            yakuText.text = yaku;
+
+            RectTransform rt = textObj.GetComponent<RectTransform>();
+            rt.sizeDelta = new Vector2(200, 30);
+        }
+    }
+
+    /// <summary>
+    /// 승리한 플레이어의 쯔모 패 (WinnerTsumo) 랜덤 생성
+    /// </summary>
+    private void GenerateRandomWinnerTsumo()
+    {
+        if (winnerTsumoParent == null) return;
+
+        // 기존 오브젝트 제거
+        for (int i = winnerTsumoParent.childCount - 1; i >= 0; i--)
+        {
+            Destroy(winnerTsumoParent.GetChild(i).gameObject);
         }
 
-        // 줄바꿈으로 연결
-        singleScoreText.text = string.Join("\n", yakuList);
+        // 무작위 문양 선택 (만, 삭, 통 중 하나)
+        string randomSuit = suits[Random.Range(0, suits.Length)];
+        // 무작위 숫자 선택 (1~9)
+        int randomValue = Random.Range(1, 10);
+
+        // TileLoader에서 2D 타일 프리팹 가져오기
+        GameObject tilePrefab = TileLoader.Instance.Get2DPrefab(randomSuit, randomValue);
+        if (tilePrefab != null)
+        {
+            Instantiate(tilePrefab, winnerTsumoParent, false);
+        }
+    }
+
+    /// <summary>
+    /// 쯔모 패널(TsumoPanel)에 1개의 무작위 2D 타일 생성
+    /// </summary>
+    private void GenerateSingleTsumoTile()
+    {
+        if (tsumoPanel == null) return;
+
+        // 기존 타일 제거
+        for (int i = tsumoPanel.childCount - 1; i >= 0; i--)
+        {
+            Destroy(tsumoPanel.GetChild(i).gameObject);
+        }
+
+        // 무작위 문양 선택 (만, 삭, 통 중 하나)
+        string randomSuit = suits[Random.Range(0, suits.Length)];
+        // 무작위 숫자 선택 (1~9)
+        int randomValue = Random.Range(1, 10);
+
+        // TileLoader에서 2D 타일 프리팹 가져오기
+        GameObject tilePrefab = TileLoader.Instance.Get2DPrefab(randomSuit, randomValue);
+        if (tilePrefab != null)
+        {
+            Instantiate(tilePrefab, tsumoPanel, false);
+        }
     }
 }
