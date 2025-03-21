@@ -288,7 +288,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &42178009
 Transform:
   m_ObjectHideFlags: 0
@@ -2143,7 +2143,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &522875599
 Transform:
   m_ObjectHideFlags: 0
@@ -4644,7 +4644,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &1075158129
 Transform:
   m_ObjectHideFlags: 0
@@ -5168,7 +5168,7 @@ GameObject:
   - component: {fileID: 1180158061}
   - component: {fileID: 1180158060}
   m_Layer: 0
-  m_Name: Text (Legacy)
+  m_Name: GameResultText
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -5226,7 +5226,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: 'ScoreTransferButton '
+  m_Text: 'GameResultButton '
 --- !u!222 &1180158061
 CanvasRenderer:
   m_ObjectHideFlags: 0
