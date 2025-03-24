@@ -204,8 +204,8 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 97203988}
-        m_TargetAssemblyTypeName: GoogleLogin, Assembly-CSharp
-        m_MethodName: start_google_login
+        m_TargetAssemblyTypeName: APIGoogleLogin, Assembly-CSharp
+        m_MethodName: StartGoogleLogin
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -265,6 +265,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 92f9a864ab3ec467fbaf79030e4994cd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  googleAuthUrlEndpoint: http://0.0.0.0:8000/api/v1/auth/login/google
+  loginStatusBaseUrl: http://0.0.0.0:8000/api/v1/auth/login/status
+  userId: actual_user_id
+  checkInterval: 2
+  pollingTimeout: 60
+  nextSceneName: LobbyScene
+  loadingUIText: {fileID: 0}
 --- !u!1 &113318614
 GameObject:
   m_ObjectHideFlags: 0
