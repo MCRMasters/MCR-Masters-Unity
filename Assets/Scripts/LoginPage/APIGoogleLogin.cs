@@ -17,25 +17,25 @@ public class LoginStatusResponse
     public string access_token;
 }
 
-public class APIGoogleLogin : MonoBehaviour
+public class WebGLGoogleLogin : MonoBehaviour
 {
-    // Inspector에서 이 값을 "http://0.0.0.0:8000/api/v1/auth/login/google"로 지정
+    // Google 로그인 URL을 받아오는 엔드포인트
     [SerializeField]
-    private string googleAuthUrlEndpoint = "http://0.0.0.0:8000/api/v1/auth/login/google";
+    private string googleAuthUrlEndpoint = "https://example.com/api/v1/auth/login/google";
 
-    // 로그인 상태를 확인할 베이스 URL (로그인 완료 여부를 반환하는 API)
+    // 로그인 완료 여부를 반환하는 API (예: /api/v1/auth/login/status)
     [SerializeField]
-    private string loginStatusBaseUrl = "http://0.0.0.0:8000/api/v1/auth/login/status";
+    private string loginStatusBaseUrl = "https://example.com/api/v1/auth/login/status";
 
-    // 실제 존재하는 사용자 ID로 업데이트되어야 함 (콜백 처리에서 받아올 값)
+    // 서버 DB에 저장된 user_id (로그인 콜백 처리 후 유효한 값으로 설정 필요)
     [SerializeField]
     private string userId = "actual_user_id";
 
-    // 폴링 간격 (초)
+    // 폴링 간격(초)
     [SerializeField]
     private float checkInterval = 2f;
 
-    // 최대 폴링 시간 (타임아웃, 예: 60초)
+    // 폴링 타임아웃(초)
     [SerializeField]
     private float pollingTimeout = 60f;
 
@@ -50,16 +50,17 @@ public class APIGoogleLogin : MonoBehaviour
     private bool isPolling = false;
 
     /// <summary>
-    /// Google 로그인 프로세스를 시작합니다.
-    /// 1. 서버에서 Google 로그인 URL을 받아 브라우저에서 로그인 페이지를 엽니다.
-    /// 2. 이후 서버에 저장된 로그인 완료 상태를 폴링하여 로그인 성공 시 다음 씬으로 전환합니다.
+    /// WebGL 환경에서 Google 로그인 프로세스를 시작합니다.
+    /// 1. 서버에서 Google 로그인 URL을 받아 새 탭(또는 현재 탭)에서 로그인 페이지 열기
+    /// 2. 이후 폴링을 통해 로그인 완료 시 씬 전환
     /// </summary>
     public void StartGoogleLogin()
     {
         // 1. Google 로그인 URL 요청 및 브라우저 열기
         StartCoroutine(GetAndOpenAuthUrl());
 
-        // 2. 로그인 상태 폴링 시작 (실제 userId가 업데이트된 후에 호출해야 함)
+        // 2. 로그인 상태 폴링 (userId가 이미 유효하다고 가정하거나,
+        //    실제 콜백 처리 후 userId를 업데이트한 뒤에 시작)
         if (!isPolling)
         {
             isPolling = true;
@@ -68,7 +69,8 @@ public class APIGoogleLogin : MonoBehaviour
     }
 
     /// <summary>
-    /// 서버에서 Google 로그인 URL을 받아 브라우저에서 열어줍니다.
+    /// 서버에서 Google 로그인 URL을 받아,
+    /// WebGL 환경에서 새 탭을 열어 로그인 페이지로 이동
     /// </summary>
     private IEnumerator GetAndOpenAuthUrl()
     {
@@ -85,7 +87,10 @@ public class APIGoogleLogin : MonoBehaviour
                 AuthUrlResponse responseData = JsonUtility.FromJson<AuthUrlResponse>(request.downloadHandler.text);
                 if (!string.IsNullOrEmpty(responseData.auth_url))
                 {
-                    Debug.Log("[Auth] Opening URL: " + responseData.auth_url);
+                    Debug.Log("[WebGL] Opening URL in browser: " + responseData.auth_url);
+
+                    // WebGL 환경에서 새 탭/창 열기
+                    // Application.OpenURL(...)는 WebGL 빌드에서 window.open() 형태로 동작
                     Application.OpenURL(responseData.auth_url);
                 }
                 else
@@ -97,22 +102,22 @@ public class APIGoogleLogin : MonoBehaviour
     }
 
     /// <summary>
-    /// 서버의 로그인 상태 API를 폴링하여 로그인 완료 여부를 확인합니다.
-    /// 로그인 완료 시, 다음 씬으로 전환합니다.
+    /// 서버의 로그인 상태 API를 폴링하여 로그인 완료 여부 확인
     /// </summary>
     private IEnumerator PollLoginStatusWithTimeout()
     {
         float elapsedTime = 0f;
         while (elapsedTime < pollingTimeout)
         {
+            // 로딩 UI 갱신
             if (loadingUIText != null)
             {
                 loadingUIText.text = $"로그인 처리 중... {Mathf.FloorToInt(pollingTimeout - elapsedTime)}초 남음";
             }
 
-            // 실제 호출할 URL: 예: http://0.0.0.0:8000/api/v1/auth/login/status?user_id=actual_user_id
+            // 실제 호출할 URL (예: https://example.com/api/v1/auth/login/status?user_id=actual_user_id)
             string pollUrl = $"{loginStatusBaseUrl}?user_id={UnityWebRequest.EscapeURL(userId)}";
-            Debug.Log("[Polling] Sending request to: " + pollUrl);
+            Debug.Log("[WebGL Polling] Sending request to: " + pollUrl);
 
             using (UnityWebRequest request = UnityWebRequest.Get(pollUrl))
             {
@@ -120,17 +125,22 @@ public class APIGoogleLogin : MonoBehaviour
 
                 if (request.result != UnityWebRequest.Result.Success)
                 {
-                    Debug.LogError("[Polling] Request failed: " + request.error);
+                    Debug.LogError("[WebGL Polling] Request failed: " + request.error);
                 }
                 else if (request.responseCode == 200)
                 {
                     string json = request.downloadHandler.text;
-                    Debug.Log("[Polling] Response JSON: " + json);
+                    Debug.Log("[WebGL Polling] Response JSON: " + json);
                     LoginStatusResponse status = JsonUtility.FromJson<LoginStatusResponse>(json);
+
                     if (status.logged_in)
                     {
                         Debug.Log("✅ Login completed. Access token: " + status.access_token);
+
+                        // 로딩 UI 초기화
                         if (loadingUIText != null) loadingUIText.text = "";
+
+                        // 씬 전환
                         SceneManager.LoadScene(nextSceneName);
                         yield break;
                     }
@@ -141,8 +151,8 @@ public class APIGoogleLogin : MonoBehaviour
                 }
                 else
                 {
-                    Debug.LogError("[Polling] Unexpected response code: " + request.responseCode);
-                    Debug.LogError("[Polling] Response: " + request.downloadHandler.text);
+                    Debug.LogError("[WebGL Polling] Unexpected response code: " + request.responseCode);
+                    Debug.LogError("[WebGL Polling] Response: " + request.downloadHandler.text);
                 }
             }
 
@@ -150,6 +160,7 @@ public class APIGoogleLogin : MonoBehaviour
             elapsedTime += checkInterval;
         }
 
+        // 타임아웃
         Debug.LogError("❌ Login polling timed out.");
         if (loadingUIText != null)
         {
