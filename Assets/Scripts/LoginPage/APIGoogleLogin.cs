@@ -4,6 +4,7 @@ using UnityEngine.SceneManagement;
 using System.Collections;
 using UnityEngine.UI;
 
+
 [System.Serializable]
 public class AuthUrlResponse
 {
@@ -19,6 +20,9 @@ public class LoginStatusResponse
 
 public class WebGLGoogleLogin : MonoBehaviour
 {
+
+
+    /*
     // Google 로그인 URL을 받아오는 엔드포인트
     [SerializeField]
     private string googleAuthUrlEndpoint = "https://example.com/api/v1/auth/login/google";
@@ -168,4 +172,5 @@ public class WebGLGoogleLogin : MonoBehaviour
         }
         isPolling = false;
     }
+    */
 }
