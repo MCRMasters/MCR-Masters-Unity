@@ -1,29 +1,25 @@
 using UnityEngine;
 using UnityEngine.UI;
-using System.Collections.Generic;
+using UnityEngine.Networking;
+using System.Collections;
 
 public class NicknameCheckManager : MonoBehaviour
 {
     [Header("UI References")]
-    public InputField nicknameInputField;      // 닉네임 입력창
-    public Button nickNameCheckButton;         // "Check" 버튼
+    public InputField nicknameInputField; // 닉네임 입력창
+    public Button nickNameCheckButton;    // "Check" or "Make!" 버튼
 
-    // 더미 데이터 (서버 닉네임 목록이라 가정)
-    // 나중엔 서버에 요청해서 같은값이 있는지 확인하는 api 필요
-    private List<string> dummyNicknameList = new List<string>
-    {
-        "www", "aaa", "bbb", "ccc"
-    };
+    // 서버 URL (필요 시 실제 도메인/포트로 수정)
+    private string putNicknameUrl = "http://localhost:8000/api/v1/user/me/nickname";
 
     private void Start()
     {
-        // 닉네임 체크 버튼에 리스너 연결
         if (nickNameCheckButton != null)
             nickNameCheckButton.onClick.AddListener(OnClickNicknameCheckButton);
     }
 
     /// <summary>
-    /// "Check" 버튼을 눌렀을 때 호출되는 함수
+    /// "Make!" 버튼(또는 "Check")을 눌렀을 때 호출되는 함수
     /// </summary>
     private void OnClickNicknameCheckButton()
     {
@@ -35,17 +31,43 @@ public class NicknameCheckManager : MonoBehaviour
             return;
         }
 
-        // 대소문자 구분 여부를 결정(소문자로 비교 예시)
-        string lowerNick = nickname.ToLower();
+        // PUT 요청을 보내 닉네임 업데이트
+        StartCoroutine(PutNicknameToServer(nickname));
+    }
 
-        // 더미 데이터에 이미 있는지 확인
-        if (dummyNicknameList.Contains(lowerNick))
+    /// <summary>
+    /// 서버에 PUT 요청을 보내 닉네임을 업데이트하는 코루틴
+    /// </summary>
+    private IEnumerator PutNicknameToServer(string newNickname)
+    {
+        // JSON 데이터 생성
+        string jsonBody = $"{{\"nickname\":\"{newNickname}\"}}";
+        byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonBody);
+
+        // UnityWebRequest 설정
+        using (UnityWebRequest request = new UnityWebRequest(putNicknameUrl, "PUT"))
         {
-            Debug.Log($"중복된 닉네임입니다: {nickname}");
-        }
-        else
-        {
-            Debug.Log($"사용 가능한 닉네임입니다: {nickname}");
+            request.uploadHandler = new UploadHandlerRaw(bodyRaw);
+            request.downloadHandler = new DownloadHandlerBuffer();
+            request.SetRequestHeader("Content-Type", "application/json");
+
+            // 만약 인증 토큰이 필요하다면 (로그인 시스템과 연동 시)
+            // request.SetRequestHeader("Authorization", "Bearer " + PlayerDataManager.Instance.AccessToken);
+
+            // 요청 전송
+            yield return request.SendWebRequest();
+
+            // 응답 처리
+            if (request.result == UnityWebRequest.Result.Success)
+            {
+                Debug.Log($"[NicknameCheckManager] 닉네임 업데이트 성공: {request.downloadHandler.text}");
+                // 서버가 {"message":"..."} 형태로 응답한다면 파싱 가능
+                // 닉네임 업데이트 후 로컬 변수나 UI 갱신도 가능
+            }
+            else
+            {
+                Debug.LogError($"[NicknameCheckManager] 닉네임 업데이트 실패: {request.error}");
+            }
         }
     }
 }
