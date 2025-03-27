@@ -3,90 +3,67 @@ using UnityEngine.UI;
 using UnityEngine.Networking;
 using System.Collections;
 
+// 서버에서 반환하는 방 정보 모델
+[System.Serializable]
+public class AvailableRoomResponse
+{
+    public string name;
+    public int room_number;
+    public int max_users;
+    public int current_users;
+    public string host_nickname;
+    // 필요에 따라 users 배열 등 추가 가능
+}
+
+// 래퍼 클래스: JsonUtility로 배열을 파싱하기 위해 사용합니다.
+[System.Serializable]
+public class AvailableRoomResponseList
+{
+    public AvailableRoomResponse[] rooms;
+}
+
+// 로컬 UI에 표시할 방 데이터 모델 (RoomItem에 전달)
+[System.Serializable]
+public class RoomData
+{
+    public string roomId;      // 여기서는 room_number를 문자열로 사용
+    public string roomTitle;   // 방 제목 (name)
+    public string roomInfo;    // 추가 정보 (예: 호스트와 인원 정보)
+}
+
 public class RoomRefreshManager : MonoBehaviour
 {
-    // API 전송용 페이로드 클래스: API에서는 "name"과 "room_number" 두 값이 필요합니다.
-    [System.Serializable]
-    public class RoomPayload
-    {
-        public string name;
-        public int room_number;
-    }
-
     [Header("UI References")]
-    [SerializeField] private Button refreshButton; // 테스트용 버튼
+    [SerializeField] private Button refreshButton; // 방 새로고침(리프레쉬) 버튼
+    [SerializeField] private Transform contentParent; // 스크롤뷰 Content 오브젝트
+    [SerializeField] private GameObject roomItemPrefab; // RoomItem 프리팹
 
-    // 서버 URL (POST /api/v1/room) 및 GET /api/v1/room
-    private string createRoomUrl = "http://0.0.0.0:8000/api/v1/room";
+    // 서버 URL (GET /api/v1/room)
+    private string getRoomsUrl = "http://0.0.0.0:8000/api/v1/room";
 
     private void Start()
     {
         if (refreshButton != null)
-            refreshButton.onClick.AddListener(OnClickRefresh);
+            refreshButton.onClick.AddListener(RefreshRoomList);
     }
 
     /// <summary>
-    /// 버튼 클릭 시, 하드코딩된 값으로 방 생성 API를 호출한 후 GET 요청으로 방 목록을 가져옵니다.
+    /// 버튼 클릭 시, GET 요청으로 현재 방 정보를 가져와 스크롤뷰를 갱신합니다.
     /// </summary>
-    private void OnClickRefresh()
+    public void RefreshRoomList()
     {
-        StartCoroutine(CreateRoomAndGetRooms());
+        StartCoroutine(GetRoomsAndPopulate());
     }
 
-    /// <summary>
-    /// POST와 GET 요청을 순차적으로 실행하는 코루틴
-    /// </summary>
-    private IEnumerator CreateRoomAndGetRooms()
+    private IEnumerator GetRoomsAndPopulate()
     {
-        yield return StartCoroutine(CreateRoomRequest());
-        yield return StartCoroutine(GetRoomsRequest());
-    }
-
-    /// <summary>
-    /// 서버에 POST 요청으로 방을 생성합니다.
-    /// JSON 바디로 { "name": "wooro", "room_number": 1557 } 값을 전송합니다.
-    /// </summary>
-    private IEnumerator CreateRoomRequest()
-    {
-        // 하드코딩된 값으로 페이로드 생성
-        RoomPayload payload = new RoomPayload
+        // 이전에 생성된 방 아이템 모두 제거 (옵션)
+        foreach (Transform child in contentParent)
         {
-            name = "wooro",
-            room_number = 1557
-        };
-
-        string jsonData = JsonUtility.ToJson(payload);
-        Debug.Log("Sending JSON: " + jsonData);
-
-        using (UnityWebRequest request = new UnityWebRequest(createRoomUrl, "POST"))
-        {
-            byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonData);
-            request.uploadHandler = new UploadHandlerRaw(bodyRaw);
-            request.downloadHandler = new DownloadHandlerBuffer();
-
-            // 헤더 설정: JSON 타입과 인증 토큰 포함
-            request.SetRequestHeader("Content-Type", "application/json");
-            request.SetRequestHeader("Authorization", $"Bearer {PlayerDataManager.Instance.AccessToken}");
-
-            yield return request.SendWebRequest();
-
-            if (request.result == UnityWebRequest.Result.Success)
-            {
-                Debug.Log("[RoomRefreshManager] POST 방 생성 성공: " + request.downloadHandler.text);
-            }
-            else
-            {
-                Debug.LogError("[RoomRefreshManager] POST 방 생성 실패: " + request.error);
-            }
+            Destroy(child.gameObject);
         }
-    }
 
-    /// <summary>
-    /// 서버에 GET 요청으로 이용 가능한 방 목록을 가져옵니다.
-    /// </summary>
-    private IEnumerator GetRoomsRequest()
-    {
-        using (UnityWebRequest getRequest = UnityWebRequest.Get(createRoomUrl))
+        using (UnityWebRequest getRequest = UnityWebRequest.Get(getRoomsUrl))
         {
             getRequest.SetRequestHeader("Content-Type", "application/json");
             getRequest.SetRequestHeader("Authorization", $"Bearer {PlayerDataManager.Instance.AccessToken}");
@@ -95,12 +72,45 @@ public class RoomRefreshManager : MonoBehaviour
 
             if (getRequest.result == UnityWebRequest.Result.Success)
             {
-                Debug.Log("[RoomRefreshManager] GET available rooms: " + getRequest.downloadHandler.text);
+                string jsonResponse = getRequest.downloadHandler.text;
+                Debug.Log("[RoomRefreshManager] GET available rooms: " + jsonResponse);
+
+                // JsonUtility는 배열을 직접 파싱할 수 없으므로, 래퍼 객체로 감싸줍니다.
+                string wrappedJson = "{\"rooms\":" + jsonResponse + "}";
+                AvailableRoomResponseList roomListResponse = JsonUtility.FromJson<AvailableRoomResponseList>(wrappedJson);
+
+                if (roomListResponse.rooms != null)
+                {
+                    foreach (var room in roomListResponse.rooms)
+                    {
+                        // room_number를 문자열로 변환하여 RoomItem의 id로 사용하고,
+                        // name은 방 제목, 추가 정보는 호스트와 인원 수 정보로 구성
+                        string roomId = room.room_number.ToString();
+                        string title = room.name;
+                        string info = "Host: " + room.host_nickname + " | Users: " + room.current_users + "/" + room.max_users;
+                        RoomData newRoom = new RoomData { roomId = roomId, roomTitle = title, roomInfo = info };
+                        CreateRoomItem(newRoom);
+                    }
+                }
             }
             else
             {
                 Debug.LogError("[RoomRefreshManager] GET request failed: " + getRequest.error);
             }
+        }
+    }
+
+    /// <summary>
+    /// 스크롤뷰에 새로운 RoomItem을 생성하여 추가합니다.
+    /// </summary>
+    private void CreateRoomItem(RoomData data)
+    {
+        GameObject itemObj = Instantiate(roomItemPrefab, contentParent);
+        RoomItem roomItem = itemObj.GetComponent<RoomItem>();
+        if (roomItem != null)
+        {
+            // LobbyRoomChange가 있다면 전달, 없으면 null 전달
+            roomItem.Setup(data.roomId, data.roomTitle, data.roomInfo, null);
         }
     }
 }
