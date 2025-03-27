@@ -362,6 +362,51 @@ MonoBehaviour:
   startSprite: {fileID: 7028616704906629411, guid: 60c0cdcc458944b9a939a0e0ef334e2d, type: 3}
   readySprite: {fileID: -855298285791758126, guid: 4912d2669cbab45989710133cdef9042, type: 3}
   readyCheckedSprite: {fileID: -5099292496197868168, guid: 6d4764ec9690b4fbc99e19eceaf8e355, type: 3}
+--- !u!1 &90328047
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 90328048}
+  - component: {fileID: 90328049}
+  m_Layer: 0
+  m_Name: JoinRoomManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &90328048
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 90328047}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1253919508}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &90328049
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 90328047}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4bf47bdd30a3f437983c919fa8d9bfd8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  baseRoomUrl: http://0.0.0.0:8000/api/v1/room
 --- !u!1 &92411843
 GameObject:
   m_ObjectHideFlags: 0
@@ -1358,7 +1403,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   scrollView: {fileID: 660859918}
-  lobbyPanel: {fileID: 2027162990}
+  RoomPanel: {fileID: 0}
   roomSetting: {fileID: 13154188}
   roomNumberText: {fileID: 0}
   roomTitleText: {fileID: 0}
@@ -1566,7 +1611,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 2092472628}
   m_Direction: 2
   m_Value: 0
-  m_Size: 0.9999649
+  m_Size: 0.99999845
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -1735,6 +1780,8 @@ MonoBehaviour:
   refreshButton: {fileID: 101557531}
   contentParent: {fileID: 1417690988}
   roomItemPrefab: {fileID: 8627749960711116994, guid: f089037df13d741e2abf59399a8a2a26, type: 3}
+  joinRoomManager: {fileID: 90328049}
+  lobbyRoomChange: {fileID: 1611829899}
 --- !u!1 &859526346
 GameObject:
   m_ObjectHideFlags: 0
@@ -1882,7 +1929,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   scrollView: {fileID: 660859918}
-  lobbyPanel: {fileID: 2027162990}
+  RoomPanel: {fileID: 0}
   roomSetting: {fileID: 0}
   roomNumberText: {fileID: 0}
   roomTitleText: {fileID: 0}
@@ -2195,6 +2242,7 @@ Transform:
   - {fileID: 1611829900}
   - {fileID: 1311936318}
   - {fileID: 842766566}
+  - {fileID: 90328048}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1287315891
@@ -2552,7 +2600,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0.00003080009}
+  m_AnchoredPosition: {x: 0, y: 0.000010478195}
   m_SizeDelta: {x: 0, y: 300}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &1417690989
@@ -2960,7 +3008,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   scrollView: {fileID: 660859918}
-  lobbyPanel: {fileID: 2027162990}
+  RoomPanel: {fileID: 0}
   roomSetting: {fileID: 13154188}
   roomNumberText: {fileID: 0}
   roomTitleText: {fileID: 0}
@@ -3298,7 +3346,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   scrollView: {fileID: 660859918}
-  lobbyPanel: {fileID: 2027162990}
+  RoomPanel: {fileID: 2027162990}
   roomSetting: {fileID: 13154188}
   roomNumberText: {fileID: 353229884}
   roomTitleText: {fileID: 1832802649}
@@ -4022,7 +4070,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   scrollView: {fileID: 660859918}
-  lobbyPanel: {fileID: 2027162990}
+  RoomPanel: {fileID: 0}
   roomSetting: {fileID: 13154188}
   roomNumberText: {fileID: 0}
   roomTitleText: {fileID: 0}

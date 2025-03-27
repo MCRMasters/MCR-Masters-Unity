@@ -12,10 +12,9 @@ public class AvailableRoomResponse
     public int max_users;
     public int current_users;
     public string host_nickname;
-    // 필요에 따라 users 배열 등 추가 가능
 }
 
-// 래퍼 클래스: JsonUtility로 배열을 파싱하기 위해 사용합니다.
+// 배열 파싱용 래퍼 클래스
 [System.Serializable]
 public class AvailableRoomResponseList
 {
@@ -34,9 +33,14 @@ public class RoomData
 public class RoomRefreshManager : MonoBehaviour
 {
     [Header("UI References")]
-    [SerializeField] private Button refreshButton; // 방 새로고침(리프레쉬) 버튼
-    [SerializeField] private Transform contentParent; // 스크롤뷰 Content 오브젝트
+    [SerializeField] private Button refreshButton;    // 방 새로고침 버튼
+    [SerializeField] private Transform contentParent; // 스크롤뷰 Content
     [SerializeField] private GameObject roomItemPrefab; // RoomItem 프리팹
+
+    // **씬 오브젝트**를 Inspector에서 드래그하여 할당
+    [Header("Scene References")]
+    [SerializeField] private JoinRoomManager joinRoomManager;  // 방 참가 API 담당
+    [SerializeField] private LobbyRoomChange lobbyRoomChange;  // 로비 UI 전환 담당
 
     // 서버 URL (GET /api/v1/room)
     private string getRoomsUrl = "http://0.0.0.0:8000/api/v1/room";
@@ -48,7 +52,7 @@ public class RoomRefreshManager : MonoBehaviour
     }
 
     /// <summary>
-    /// 버튼 클릭 시, GET 요청으로 현재 방 정보를 가져와 스크롤뷰를 갱신합니다.
+    /// 리프레시 버튼 클릭 시, GET 요청으로 방 목록을 가져와 스크롤뷰를 갱신
     /// </summary>
     public void RefreshRoomList()
     {
@@ -57,7 +61,7 @@ public class RoomRefreshManager : MonoBehaviour
 
     private IEnumerator GetRoomsAndPopulate()
     {
-        // 이전에 생성된 방 아이템 모두 제거 (옵션)
+        // 기존에 생성된 방 아이템 모두 제거 (옵션)
         foreach (Transform child in contentParent)
         {
             Destroy(child.gameObject);
@@ -75,22 +79,34 @@ public class RoomRefreshManager : MonoBehaviour
                 string jsonResponse = getRequest.downloadHandler.text;
                 Debug.Log("[RoomRefreshManager] GET available rooms: " + jsonResponse);
 
-                // JsonUtility는 배열을 직접 파싱할 수 없으므로, 래퍼 객체로 감싸줍니다.
+                // JsonUtility는 배열을 직접 파싱할 수 없으므로, 래퍼 객체로 감싼 후 파싱
                 string wrappedJson = "{\"rooms\":" + jsonResponse + "}";
                 AvailableRoomResponseList roomListResponse = JsonUtility.FromJson<AvailableRoomResponseList>(wrappedJson);
 
-                if (roomListResponse.rooms != null)
+                if (roomListResponse != null && roomListResponse.rooms != null)
                 {
                     foreach (var room in roomListResponse.rooms)
                     {
-                        // room_number를 문자열로 변환하여 RoomItem의 id로 사용하고,
-                        // name은 방 제목, 추가 정보는 호스트와 인원 수 정보로 구성
+                        // room_number를 문자열로 변환하여 RoomItem의 roomId로 사용
                         string roomId = room.room_number.ToString();
                         string title = room.name;
-                        string info = "Host: " + room.host_nickname + " | Users: " + room.current_users + "/" + room.max_users;
-                        RoomData newRoom = new RoomData { roomId = roomId, roomTitle = title, roomInfo = info };
+                        string info = $"Host: {room.host_nickname} | Users: {room.current_users}/{room.max_users}";
+
+                        // 로컬 RoomData 생성
+                        RoomData newRoom = new RoomData
+                        {
+                            roomId = roomId,
+                            roomTitle = title,
+                            roomInfo = info
+                        };
+
+                        // 스크롤뷰에 RoomItem을 생성
                         CreateRoomItem(newRoom);
                     }
+                }
+                else
+                {
+                    Debug.LogWarning("[RoomRefreshManager] No rooms found in response.");
                 }
             }
             else
@@ -101,16 +117,25 @@ public class RoomRefreshManager : MonoBehaviour
     }
 
     /// <summary>
-    /// 스크롤뷰에 새로운 RoomItem을 생성하여 추가합니다.
+    /// RoomItem 프리팹을 Instantiate하고 데이터를 설정
     /// </summary>
     private void CreateRoomItem(RoomData data)
     {
         GameObject itemObj = Instantiate(roomItemPrefab, contentParent);
         RoomItem roomItem = itemObj.GetComponent<RoomItem>();
+
         if (roomItem != null)
         {
-            // LobbyRoomChange가 있다면 전달, 없으면 null 전달
-            roomItem.Setup(data.roomId, data.roomTitle, data.roomInfo, null);
+            // **씬 오브젝트**(JoinRoomManager, LobbyRoomChange)를 런타임에 할당
+            roomItem.joinRoomManager = joinRoomManager;
+            roomItem.lobbyRoomChange = lobbyRoomChange;
+
+            // 데이터 세팅 (Room ID, Title, Info, LobbyRoomChange)
+            roomItem.Setup(data.roomId, data.roomTitle, data.roomInfo, lobbyRoomChange);
+        }
+        else
+        {
+            Debug.LogError("[RoomRefreshManager] RoomItem component not found on prefab.");
         }
     }
 }
