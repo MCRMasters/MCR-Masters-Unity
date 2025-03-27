@@ -1,81 +1,55 @@
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Networking;
+using System.Collections;
 
-public class NewRoomManager : MonoBehaviour
+public class MakeRoomManager : MonoBehaviour
 {
-    [System.Serializable]
-    public class RoomData
+    [Header("UI References")]
+    [SerializeField] private Button makeRoomButton; // Make 버튼
+
+    // 서버 URL (POST /api/v1/room)
+    private string createRoomUrl = "http://0.0.0.0:8000/api/v1/room";
+
+    private void Start()
     {
-        public string roomId;
-        public string roomTitle;  // 방 제목
-        public string roomInfo;   // 방 설명 등
+        if (makeRoomButton != null)
+            makeRoomButton.onClick.AddListener(OnClickMakeRoom);
     }
 
-    // 방 목록
-    public List<RoomData> roomList = new List<RoomData>();
-
-    // RoomItem 프리팹
-    public GameObject roomItemPrefab;
-
-    // Scroll View → Content 오브젝트
-    public Transform contentParent;
-
-    // 로비(또는 방) 로직 담당 스크립트
-    public LobbyRoomChange lobbyRoomChange;
-
-    // 방 인덱스 (고유 ID 생성용)
-    private int roomIndex = 0;
-
-    // 2개의 InputField (방 제목, 방 설명)
-    public InputField roomTitleInput; // 아까 이미지에서 "RoomTitleInput"로 만드셨다면 Inspector에서 연결
-    public InputField roomInfoInput;  // "RoomInfoInput"에 Inspector에서 연결
-
-    void Start()
+    /// <summary>
+    /// Make 버튼 클릭 시, 파라미터 없이 POST 요청을 보내 방 생성을 요청합니다.
+    /// </summary>
+    private void OnClickMakeRoom()
     {
-        Debug.Log("No initial rooms. roomIndex = 0");
+        StartCoroutine(SendPostRequest());
     }
 
-    // 버튼 OnClick 이벤트: 2개 InputField로부터 텍스트를 읽어 새 방 생성
-    public void CreateRoomFromInput()
+    /// <summary>
+    /// 빈 바디로 POST 요청을 보내, 서버가 자동으로 방을 생성하도록 합니다.
+    /// </summary>
+    private IEnumerator SendPostRequest()
     {
-        // InputField에서 텍스트 가져오기
-        string title = roomTitleInput.text;
-        string info = roomInfoInput.text;
-
-        // 인덱스 증가 → 고유 ID 생성
-        roomIndex++;
-        string newId = "Room" + roomIndex.ToString("D3");
-
-        // RoomData 생성
-        RoomData newRoom = new RoomData
+        using (UnityWebRequest request = new UnityWebRequest(createRoomUrl, "POST"))
         {
-            roomId = newId,
-            roomTitle = title,
-            roomInfo = info
-        };
+            // 빈 바디 전송: API 스펙 상 파라미터 없이 요청하는 경우
+            request.uploadHandler = new UploadHandlerRaw(new byte[0]);
+            request.downloadHandler = new DownloadHandlerBuffer();
 
-        roomList.Add(newRoom);
+            // 헤더 설정: Content-Type 및 인증 헤더 추가
+            request.SetRequestHeader("Content-Type", "application/json");
+            request.SetRequestHeader("Authorization", $"Bearer {PlayerDataManager.Instance.AccessToken}");
 
-        // UI에 표시
-        CreateRoomItem(newRoom);
+            yield return request.SendWebRequest();
 
-        Debug.Log($"New room created: ID={newId}, Title={title}, Info={info}");
-
-        // InputField 초기화 (선택)
-        roomTitleInput.text = "";
-        roomInfoInput.text = "";
-    }
-
-    // RoomItem 프리팹을 Instantiate하고 데이터 세팅
-    private void CreateRoomItem(RoomData data)
-    {
-        GameObject itemObj = Instantiate(roomItemPrefab, contentParent);
-        RoomItem roomItem = itemObj.GetComponent<RoomItem>();
-        if (roomItem != null)
-        {
-            // roomItem.Setup(...)에서 2개 문자열(제목, 설명) + LobbyRoomChange 전달
-            roomItem.Setup(data.roomId, data.roomTitle, data.roomInfo, lobbyRoomChange);
+            if (request.result == UnityWebRequest.Result.Success)
+            {
+                Debug.Log("[MakeRoomManager] Room created successfully: " + request.downloadHandler.text);
+            }
+            else
+            {
+                Debug.LogError("[MakeRoomManager] Room creation failed: " + request.error);
+            }
         }
     }
 }

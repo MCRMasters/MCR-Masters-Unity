@@ -137,7 +137,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &13154189
 RectTransform:
   m_ObjectHideFlags: 0
@@ -213,7 +213,7 @@ MonoBehaviour:
   roomSettingPanel: {fileID: 13154188}
   inputFieldTitle: {fileID: 333296083}
   inputFieldInfo: {fileID: 1505291610}
-  newRoomManager: {fileID: 1311936317}
+  MakeRoomManager: {fileID: 0}
 --- !u!1 &72760365
 GameObject:
   m_ObjectHideFlags: 0
@@ -605,11 +605,11 @@ Transform:
   m_GameObject: {fileID: 267987709}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.77873725, y: -1.8435712, z: -1.7293203}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 1253919508}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &333296081
 GameObject:
@@ -1692,6 +1692,51 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 798231551}
   m_CullTransparentMesh: 1
+--- !u!1 &842766565
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 842766566}
+  - component: {fileID: 842766567}
+  m_Layer: 0
+  m_Name: RoomRefreshManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &842766566
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 842766565}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1253919508}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &842766567
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 842766565}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e0304390e5ab24b4689a16d93eaac42d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  refreshButton: {fileID: 101557531}
 --- !u!1 &859526346
 GameObject:
   m_ObjectHideFlags: 0
@@ -2119,6 +2164,41 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1232793154}
   m_CullTransparentMesh: 1
+--- !u!1 &1253919507
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1253919508}
+  m_Layer: 0
+  m_Name: RoomManagers
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1253919508
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1253919507}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -0.77873725, y: -1.8435712, z: -1.7293203}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 267987711}
+  - {fileID: 1611829900}
+  - {fileID: 1311936318}
+  - {fileID: 842766566}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1287315891
 GameObject:
   m_ObjectHideFlags: 0
@@ -2312,7 +2392,7 @@ GameObject:
   - component: {fileID: 1311936318}
   - component: {fileID: 1311936317}
   m_Layer: 0
-  m_Name: MakeRoommanager
+  m_Name: MakeRoomManager
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2330,12 +2410,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 18cd3f3d413aa4a09905676dfe1b3fd9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  roomList: []
-  roomItemPrefab: {fileID: 8627749960711116994, guid: f089037df13d741e2abf59399a8a2a26, type: 3}
-  contentParent: {fileID: 1417690988}
-  lobbyRoomChange: {fileID: 1611829899}
-  roomTitleInput: {fileID: 333296083}
-  roomInfoInput: {fileID: 1505291610}
+  makeRoomButton: {fileID: 1981428700}
 --- !u!4 &1311936318
 Transform:
   m_ObjectHideFlags: 0
@@ -2344,12 +2419,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1311936316}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 3.7549558, y: 2.2026556, z: 75.34284}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 4.533693, y: 4.0462265, z: 77.07216}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 1253919508}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!224 &1352275344 stripped
 RectTransform:
@@ -2459,12 +2534,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 18cd3f3d413aa4a09905676dfe1b3fd9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  roomList: []
-  roomItemPrefab: {fileID: 1857307391}
-  contentParent: {fileID: 1417690988}
-  lobbyRoomChange: {fileID: 1611829899}
-  roomTitleInput: {fileID: 333296083}
-  roomInfoInput: {fileID: 0}
+  makeRoomButton: {fileID: 0}
 --- !u!1 &1417690987
 GameObject:
   m_ObjectHideFlags: 0
@@ -3257,12 +3327,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1611829898}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.77873725, y: -1.8435712, z: -1.7293203}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 1253919508}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1626533662
 GameObject:
@@ -3675,11 +3745,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1832802647}
   m_CullTransparentMesh: 1
---- !u!1 &1857307391 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 8627749960711116994, guid: f089037df13d741e2abf59399a8a2a26, type: 3}
-  m_PrefabInstance: {fileID: 2300247384180555019}
-  m_PrefabAsset: {fileID: 0}
 --- !u!224 &1857307392 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 6698805419526237369, guid: f089037df13d741e2abf59399a8a2a26, type: 3}
@@ -3965,12 +4030,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 18cd3f3d413aa4a09905676dfe1b3fd9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  roomList: []
-  roomItemPrefab: {fileID: 1857307391}
-  contentParent: {fileID: 1417690988}
-  lobbyRoomChange: {fileID: 1611829899}
-  roomTitleInput: {fileID: 333296083}
-  roomInfoInput: {fileID: 1505291610}
+  makeRoomButton: {fileID: 0}
 --- !u!114 &1981428704
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4003,7 +4063,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &2027162991
 RectTransform:
   m_ObjectHideFlags: 0
@@ -4856,6 +4916,4 @@ SceneRoots:
   - {fileID: 1652120871}
   - {fileID: 1301432985}
   - {fileID: 1099003546}
-  - {fileID: 267987711}
-  - {fileID: 1611829900}
-  - {fileID: 1311936318}
+  - {fileID: 1253919508}

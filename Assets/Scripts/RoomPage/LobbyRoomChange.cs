@@ -3,41 +3,43 @@ using UnityEngine.UI;
 
 public class LobbyRoomChange : MonoBehaviour
 {
-    public GameObject scrollView;     // Scroll View (방 목록)
-    public GameObject lobbyPanel;     // Lobby UI
-    public GameObject roomSetting;    // RoomSetting (인풋필드 패널)
+    public GameObject scrollView;    // 방 목록이 담긴 Scroll View
+    public GameObject lobbyPanel;    // 로비 UI 패널 (방 입장 후 표시)
+    public GameObject roomSetting;   // 방 설정(생성) 패널
 
-    // 새로 추가: 방 번호를 표시할 Text
+    // 방 번호와 제목을 표시할 UI 텍스트
     public Text roomNumberText;
-
-    // 기존: 방 제목을 표시할 Text (예: roomTitleText)
     public Text roomTitleText;
 
-    // 방 아이템을 클릭하면 (ID, Title) 둘 다 전달받음
+    /// <summary>
+    /// 방 아이템 클릭 시 호출되며, 선택한 방의 번호와 제목을 로비 UI에 표시합니다.
+    /// </summary>
     public void JoinRoom(string roomId, string roomTitle)
     {
         Debug.Log($"JoinRoom() called. Room ID: {roomId}, Title: {roomTitle}");
 
-        // 1) 로비에 방 번호, 방 제목 표시
         if (roomNumberText != null)
         {
-            roomNumberText.text = roomId;    // 예: "Room001"
+            roomNumberText.text = roomId;    // 예: "1" 또는 "Room001"
         }
         if (roomTitleText != null)
         {
             roomTitleText.text = roomTitle;  // 예: "My Awesome Room"
         }
 
-        // 2) Scroll View 비활성화
+        // 방 목록(Scroll View) 비활성화 후 로비 패널 활성화
         if (scrollView != null)
             scrollView.SetActive(false);
 
-        // 3) 로비 패널 활성화
         if (lobbyPanel != null)
             lobbyPanel.SetActive(true);
+
+        // (필요하다면, 실제 방 입장 API 호출 로직 추가)
     }
 
-    // 로비에서 방 목록으로 돌아가기
+    /// <summary>
+    /// 로비에서 방 목록으로 돌아갑니다.
+    /// </summary>
     public void ShowRoomList()
     {
         if (lobbyPanel != null)
@@ -52,7 +54,9 @@ public class LobbyRoomChange : MonoBehaviour
         Debug.Log("Returned to room list");
     }
 
-    // MakeRoomSet 버튼 클릭 시 RoomSetting 패널 열기
+    /// <summary>
+    /// 방 생성 버튼 클릭 시, 방 설정 패널(RoomSetting)을 엽니다.
+    /// </summary>
     public void OnClickMakeRoomSet()
     {
         if (scrollView != null) scrollView.SetActive(false);
