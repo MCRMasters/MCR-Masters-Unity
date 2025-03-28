@@ -21,7 +21,7 @@ public class MakeRoomManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Make 버튼 클릭 시, 서버에 방 생성 요청 → 성공 시 UI에서 해당 방에 들어간 것처럼 전환
+    /// Make 버튼 클릭 시, 서버에 방 생성 요청 → 성공 시 UI 전환 (이미 호스트로 등록됨)
     /// </summary>
     private void OnClickMakeRoom()
     {
@@ -32,11 +32,11 @@ public class MakeRoomManager : MonoBehaviour
     {
         using (UnityWebRequest request = new UnityWebRequest(createRoomUrl, "POST"))
         {
-            // 파라미터 없이 요청 (API가 자동 생성)
+            // 파라미터 없이 요청 (서버가 자동으로 방을 생성하고, 생성자에게 방에 참가시킵니다)
             request.uploadHandler = new UploadHandlerRaw(new byte[0]);
             request.downloadHandler = new DownloadHandlerBuffer();
 
-            // 헤더: Content-Type, Authorization
+            // 헤더 설정: Content-Type 및 인증 토큰
             request.SetRequestHeader("Content-Type", "application/json");
             request.SetRequestHeader("Authorization", $"Bearer {PlayerDataManager.Instance.AccessToken}");
 
@@ -46,18 +46,14 @@ public class MakeRoomManager : MonoBehaviour
             {
                 Debug.Log("[MakeRoomManager] Room created successfully: " + request.downloadHandler.text);
 
-                // 서버가 {"name":"새로운방","room_number":123,"message":"Room created"} 등으로 응답한다고 가정
+                // 서버 응답 예시:
+                // {"name":"새로운방","room_number":123,"message":"Room created"}
                 CreateRoomResponse response = JsonUtility.FromJson<CreateRoomResponse>(request.downloadHandler.text);
 
-                // 이미 서버가 "이 사용자는 새로 만든 방의 호스트"로 처리하므로,
-                // 굳이 JoinRoom API를 다시 호출할 필요 없음 → UI 전환만 하면 됨
-
-                // 방 번호/제목 추출
+                // 이미 서버에서 생성 시 호스트로 등록하므로, 바로 UI 전환
                 string roomId = response.room_number.ToString();
                 string roomTitle = response.name;
 
-                // LobbyRoomChange의 JoinRoom(...) 메서드 호출로
-                // “방에 들어간 것과 동일한” UI 전환
                 if (lobbyRoomChange != null)
                 {
                     lobbyRoomChange.JoinRoom(roomId, roomTitle);
@@ -75,11 +71,10 @@ public class MakeRoomManager : MonoBehaviour
     }
 }
 
-// 서버 응답 파싱용 예시 클래스
 [System.Serializable]
 public class CreateRoomResponse
 {
     public string name;         // 방 이름
     public int room_number;     // 방 번호
-    public string message;      // "Room created" 등
+    public string message;      // 예: "Room created"
 }
