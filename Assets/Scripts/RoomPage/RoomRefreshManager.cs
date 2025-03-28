@@ -1,119 +1,117 @@
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.Networking;
 using System.Collections;
-
-// 서버에서 반환하는 방 정보 모델
-[System.Serializable]
-public class AvailableRoomResponse
-{
-    public string name;
-    public int room_number;
-    public int max_users;
-    public int current_users;
-    public string host_nickname;
-}
-
-// 배열 파싱용 래퍼 클래스
-[System.Serializable]
-public class AvailableRoomResponseList
-{
-    public AvailableRoomResponse[] rooms;
-}
-
-// 로컬 UI에 표시할 방 데이터 모델 (RoomItem에 전달)
-[System.Serializable]
-public class RoomData
-{
-    public string roomId;      // 여기서는 room_number를 문자열로 사용
-    public string roomTitle;   // 방 제목 (name)
-    public string roomInfo;    // 추가 정보 (예: 호스트와 인원 정보)
-}
 
 public class RoomRefreshManager : MonoBehaviour
 {
     [Header("UI References")]
-    [SerializeField] private Button refreshButton;    // 방 새로고침 버튼
-    [SerializeField] private Transform contentParent; // 스크롤뷰 Content
-    [SerializeField] private GameObject roomItemPrefab; // RoomItem 프리팹
+    [SerializeField] private Button refreshButton;
+    [SerializeField] private Transform contentParent;
+    [SerializeField] private GameObject roomItemPrefab;
 
-    // **씬 오브젝트**를 Inspector에서 드래그하여 할당
+    // 씬 오브젝트
     [Header("Scene References")]
-    [SerializeField] private JoinRoomManager joinRoomManager;  // 방 참가 API 담당
-    [SerializeField] private LobbyRoomChange lobbyRoomChange;  // 로비 UI 전환 담당
+    [SerializeField] private JoinRoomManager joinRoomManager;
+    [SerializeField] private LobbyRoomChange lobbyRoomChange;
 
-    // 서버 URL (GET /api/v1/room)
-    private string getRoomsUrl = "http://0.0.0.0:8000/api/v1/room";
+    // GetRoomList 스크립트를 Inspector에서 할당
+    [SerializeField] private GetRoomList getRoomList;
+
+    private bool hasRefreshedOnce = false; // 한 번만 자동 호출하기 위한 플래그
 
     private void Start()
     {
         if (refreshButton != null)
             refreshButton.onClick.AddListener(RefreshRoomList);
+
+        // 씬 전환 직후(또는 게임 오브젝트 활성화 시) 한 번 자동 호출
+        // 필요에 따라 Start가 아닌 OnEnable에서 처리해도 됩니다.
+        RefreshRoomListOnce();
     }
 
     /// <summary>
-    /// 리프레시 버튼 클릭 시, GET 요청으로 방 목록을 가져와 스크롤뷰를 갱신
+    /// 씬 전환 시점에 한 번만 방 목록을 가져옵니다.
+    /// </summary>
+    private void RefreshRoomListOnce()
+    {
+        if (!hasRefreshedOnce)
+        {
+            hasRefreshedOnce = true;
+            RefreshRoomList();
+        }
+    }
+
+    /// <summary>
+    /// "Refresh" 버튼 클릭 시, 또는 자동 호출 시 방 목록을 가져옵니다.
     /// </summary>
     public void RefreshRoomList()
     {
-        StartCoroutine(GetRoomsAndPopulate());
+        // GetRoomList.cs의 FetchRooms 호출
+        StartCoroutine(getRoomList.FetchRooms(OnRoomsFetched, OnFetchError));
     }
 
-    private IEnumerator GetRoomsAndPopulate()
+    /// <summary>
+    /// 방 목록 요청이 성공했을 때 호출되는 콜백
+    /// </summary>
+    private void OnRoomsFetched(AvailableRoomResponseList roomListResponse)
     {
-        // 기존에 생성된 방 아이템 모두 제거 (옵션)
+        // 기존 방 아이템 제거
         foreach (Transform child in contentParent)
         {
             Destroy(child.gameObject);
         }
 
-        using (UnityWebRequest getRequest = UnityWebRequest.Get(getRoomsUrl))
+        bool autoJoined = false;
+        string currentNickname = PlayerDataManager.Instance.Nickname;
+
+        if (roomListResponse != null && roomListResponse.rooms != null)
         {
-            getRequest.SetRequestHeader("Content-Type", "application/json");
-            getRequest.SetRequestHeader("Authorization", $"Bearer {PlayerDataManager.Instance.AccessToken}");
-
-            yield return getRequest.SendWebRequest();
-
-            if (getRequest.result == UnityWebRequest.Result.Success)
+            foreach (var room in roomListResponse.rooms)
             {
-                string jsonResponse = getRequest.downloadHandler.text;
-                Debug.Log("[RoomRefreshManager] GET available rooms: " + jsonResponse);
+                string roomId = room.room_number.ToString();
+                string title = room.name;
+                string info = $"Host: {room.host_nickname} | Users: {room.current_users}/{room.max_users}";
 
-                // JsonUtility는 배열을 직접 파싱할 수 없으므로, 래퍼 객체로 감싼 후 파싱
-                string wrappedJson = "{\"rooms\":" + jsonResponse + "}";
-                AvailableRoomResponseList roomListResponse = JsonUtility.FromJson<AvailableRoomResponseList>(wrappedJson);
-
-                if (roomListResponse != null && roomListResponse.rooms != null)
+                RoomData newRoom = new RoomData
                 {
-                    foreach (var room in roomListResponse.rooms)
+                    roomId = roomId,
+                    roomTitle = title,
+                    roomInfo = info
+                };
+
+                CreateRoomItem(newRoom);
+
+                // 자동 참가 로직
+                if (!autoJoined && room.users != null && !string.IsNullOrEmpty(currentNickname))
+                {
+                    foreach (var user in room.users)
                     {
-                        // room_number를 문자열로 변환하여 RoomItem의 roomId로 사용
-                        string roomId = room.room_number.ToString();
-                        string title = room.name;
-                        string info = $"Host: {room.host_nickname} | Users: {room.current_users}/{room.max_users}";
-
-                        // 로컬 RoomData 생성
-                        RoomData newRoom = new RoomData
+                        if (user.nickname == currentNickname)
                         {
-                            roomId = roomId,
-                            roomTitle = title,
-                            roomInfo = info
-                        };
+                            autoJoined = true;
+                            Debug.Log($"[RoomRefreshManager] Auto-joining room {roomId} (already in room).");
+                            if (lobbyRoomChange != null)
+                                lobbyRoomChange.JoinRoom(roomId, title);
 
-                        // 스크롤뷰에 RoomItem을 생성
-                        CreateRoomItem(newRoom);
+                            // 메서드를 즉시 종료 (한 번만 자동 전환)
+                            return;
+                        }
                     }
                 }
-                else
-                {
-                    Debug.LogWarning("[RoomRefreshManager] No rooms found in response.");
-                }
-            }
-            else
-            {
-                Debug.LogError("[RoomRefreshManager] GET request failed: " + getRequest.error);
             }
         }
+        else
+        {
+            Debug.LogWarning("[RoomRefreshManager] No rooms found in response.");
+        }
+    }
+
+    /// <summary>
+    /// 방 목록 요청이 실패했을 때 호출되는 콜백
+    /// </summary>
+    private void OnFetchError(string error)
+    {
+        Debug.LogError("[RoomRefreshManager] GET request failed: " + error);
     }
 
     /// <summary>
@@ -126,11 +124,8 @@ public class RoomRefreshManager : MonoBehaviour
 
         if (roomItem != null)
         {
-            // **씬 오브젝트**(JoinRoomManager, LobbyRoomChange)를 런타임에 할당
             roomItem.joinRoomManager = joinRoomManager;
             roomItem.lobbyRoomChange = lobbyRoomChange;
-
-            // 데이터 세팅 (Room ID, Title, Info, LobbyRoomChange)
             roomItem.Setup(data.roomId, data.roomTitle, data.roomInfo, lobbyRoomChange);
         }
         else

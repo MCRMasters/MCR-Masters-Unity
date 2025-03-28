@@ -1782,6 +1782,7 @@ MonoBehaviour:
   roomItemPrefab: {fileID: 8627749960711116994, guid: f089037df13d741e2abf59399a8a2a26, type: 3}
   joinRoomManager: {fileID: 90328049}
   lobbyRoomChange: {fileID: 1611829899}
+  getRoomList: {fileID: 1526875395}
 --- !u!1 &859526346
 GameObject:
   m_ObjectHideFlags: 0
@@ -2243,6 +2244,7 @@ Transform:
   - {fileID: 1311936318}
   - {fileID: 842766566}
   - {fileID: 90328048}
+  - {fileID: 1526875394}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1287315891
@@ -2601,7 +2603,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0.0004879181}
+  m_AnchoredPosition: {x: 0, y: -0.000032060063}
   m_SizeDelta: {x: 0, y: 300}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &1417690989
@@ -3159,6 +3161,51 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1505291608}
   m_CullTransparentMesh: 1
+--- !u!1 &1526875393
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1526875394}
+  - component: {fileID: 1526875395}
+  m_Layer: 0
+  m_Name: GetRoomList
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1526875394
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1526875393}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -0.16352755, y: 0.6666168, z: 3.346168}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1253919508}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1526875395
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1526875393}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c93a32921a20e4e48ab0cc75db19322a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  getRoomsUrl: http://0.0.0.0:8000/api/v1/room
 --- !u!1 &1558072037
 GameObject:
   m_ObjectHideFlags: 0
