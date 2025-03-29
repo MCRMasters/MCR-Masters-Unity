@@ -9,7 +9,7 @@ namespace MCRGame
 
         private string tile_images_path = "Images/TileImages";
 
-        private Dictionary<string, Sprite> tile_name_to_sprite;
+        public Dictionary<string, Sprite> tile_name_to_sprite;
 
         private void Awake()
         {
