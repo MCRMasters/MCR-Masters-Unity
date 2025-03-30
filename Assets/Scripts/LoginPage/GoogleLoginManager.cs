@@ -1,46 +1,40 @@
 using UnityEngine;
-using UnityEngine.Networking;
-using System.Collections;
 using UnityEngine.SceneManagement;
+using System.Collections;
 
 public class GoogleLoginManager : MonoBehaviour
 {
     [SerializeField] private WebViewController webViewController;
-    private string backendLoginUrl = "http://localhost:8000/api/v1/auth/login/google";
+    [SerializeField] private GetLoginApi getLogin; // GetLogin 컴포넌트를 에디터에서 할당하세요.
 
     /// <summary>
     /// 구글 로그인 버튼 클릭 시 호출됩니다.
     /// </summary>
     public void OnGoogleLoginClick()
     {
-        StartCoroutine(RequestGoogleAuthUrl());
+        StartCoroutine(getLogin.RequestGoogleAuthUrl(OnAuthUrlReceived, OnRequestError));
     }
 
     /// <summary>
-    /// 백엔드에서 auth_url을 GET 요청으로 받아와 WebViewController에 전달합니다.
+    /// auth_url을 성공적으로 받아왔을 때 호출됩니다.
     /// </summary>
-    private IEnumerator RequestGoogleAuthUrl()
+    /// <param name="authUrl">백엔드에서 받아온 auth_url</param>
+    private void OnAuthUrlReceived(string authUrl)
     {
-        using (UnityWebRequest www = UnityWebRequest.Get(backendLoginUrl))
-        {
-            yield return www.SendWebRequest();
+        // WebViewController를 통해 auth_url 로드
+        webViewController.OpenUrl(authUrl);
 
-            if (www.result == UnityWebRequest.Result.Success)
-            {
-                string json = www.downloadHandler.text;
-                var authData = JsonUtility.FromJson<AuthUrlResponse>(json);
+        // 토큰 수신 시 처리할 콜백 등록
+        webViewController.OnTokenReceived = OnGoogleAuthCallbackReceived;
+    }
 
-                // WebViewController를 통해 auth_url 로드
-                webViewController.OpenUrl(authData.auth_url);
-
-                // 토큰 수신 시 처리할 콜백 등록
-                webViewController.OnTokenReceived = OnGoogleAuthCallbackReceived;
-            }
-            else
-            {
-                Debug.LogError("로그인 URL 요청 실패: " + www.error);
-            }
-        }
+    /// <summary>
+    /// auth_url 요청 실패 시 호출됩니다.
+    /// </summary>
+    /// <param name="error">에러 메시지</param>
+    private void OnRequestError(string error)
+    {
+        Debug.LogError("로그인 URL 요청 실패: " + error);
     }
 
     /// <summary>
@@ -57,12 +51,6 @@ public class GoogleLoginManager : MonoBehaviour
 
         // 로그인 완료 처리 (예: 씬 전환 등)
         SceneManager.LoadScene("LobbyScene");
-    }
-
-    [System.Serializable]
-    private class AuthUrlResponse
-    {
-        public string auth_url;
     }
 }
 

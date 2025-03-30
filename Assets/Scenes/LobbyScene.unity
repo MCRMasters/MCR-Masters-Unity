@@ -444,6 +444,51 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 141582137}
   m_CullTransparentMesh: 1
+--- !u!1 &141584634
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 141584635}
+  - component: {fileID: 141584636}
+  m_Layer: 0
+  m_Name: PutNicknameApi
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &141584635
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 141584634}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1582585613}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &141584636
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 141584634}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3ecf47ebd27c547f58929107c952fccf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  putNicknameUrl: http://localhost:8000/api/v1/user/me/nickname
 --- !u!1 &186620332
 GameObject:
   m_ObjectHideFlags: 0
@@ -2604,6 +2649,7 @@ Transform:
   - {fileID: 647758672}
   - {fileID: 1943434485}
   - {fileID: 18649930}
+  - {fileID: 141584635}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1625091465
@@ -3522,6 +3568,7 @@ MonoBehaviour:
   nicknameInputField: {fileID: 2122054930}
   nameMakeButton: {fileID: 1294678610}
   nicknameButton: {fileID: 807621327}
+  putNicknameApi: {fileID: 141584636}
 --- !u!4 &1943434485
 Transform:
   m_ObjectHideFlags: 0
