@@ -11,8 +11,8 @@ namespace MCRGame
     /// </summary>
     public class JoinRoomManager : MonoBehaviour
     {
-        // 예: "http://0.0.0.0:8000/api/v1/room"
-        [SerializeField] private string baseRoomUrl = "http://0.0.0.0:8000/api/v1/room";
+        // 예: "http://localhost:8000/api/v1/room"
+        [SerializeField] private string baseRoomUrl = "http://localhost:8000/api/v1/room";
 
         /// <summary>
         /// 외부(예: RoomItem)에서 호출되는 메서드.

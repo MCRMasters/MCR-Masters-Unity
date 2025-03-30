@@ -403,4 +403,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4bf47bdd30a3f437983c919fa8d9bfd8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  baseRoomUrl: http://0.0.0.0:8000/api/v1/room
+  baseRoomUrl: http://localhost:8000/api/v1/room

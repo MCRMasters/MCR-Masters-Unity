@@ -14,7 +14,7 @@ namespace MCRGame
         [SerializeField] private LobbyRoomChange lobbyRoomChange;
 
         // 서버 URL (POST /api/v1/room)
-        private string createRoomUrl = "http://0.0.0.0:8000/api/v1/room";
+        private string createRoomUrl = "http://localhost:8000/api/v1/room";
 
         private void Start()
         {
