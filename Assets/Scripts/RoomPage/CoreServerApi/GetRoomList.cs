@@ -12,7 +12,7 @@ namespace MCRGame
     public class GetRoomList : MonoBehaviour
     {
         // 서버 URL (GET /api/v1/room)
-        [SerializeField] private string getRoomsUrl = "http://0.0.0.0:8000/api/v1/room";
+        [SerializeField] private string getRoomsUrl = "http://localhost:8000/api/v1/room";
 
         /// <summary>
         /// 서버에서 방 목록을 가져옵니다.

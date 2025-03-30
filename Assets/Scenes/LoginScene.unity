@@ -131,7 +131,6 @@ GameObject:
   - component: {fileID: 97203987}
   - component: {fileID: 97203986}
   - component: {fileID: 97203985}
-  - component: {fileID: 97203988}
   m_Layer: 5
   m_Name: GoogleLogin
   m_TagString: Untagged
@@ -203,8 +202,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 97203988}
-        m_TargetAssemblyTypeName: GoogleLoginManager, Assembly-CSharp
+      - m_Target: {fileID: 2051703630}
+        m_TargetAssemblyTypeName: MCRGame.GoogleLoginManager, Assembly-CSharp
         m_MethodName: OnGoogleLoginClick
         m_Mode: 1
         m_Arguments:
@@ -253,20 +252,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 97203983}
   m_CullTransparentMesh: 1
---- !u!114 &97203988
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 97203983}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 382c6a6cab1b14c3db22a37387e44c90, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  webViewController: {fileID: 644508285}
-  getLogin: {fileID: 2051703630}
 --- !u!1 &113318614
 GameObject:
   m_ObjectHideFlags: 0
@@ -596,17 +581,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0cd44c1031e13a943bb63640046fad76, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_UiScaleMode: 0
+  m_UiScaleMode: 1
   m_ReferencePixelsPerUnit: 100
   m_ScaleFactor: 1
-  m_ReferenceResolution: {x: 800, y: 600}
+  m_ReferenceResolution: {x: 1920, y: 1080}
   m_ScreenMatchMode: 0
-  m_MatchWidthOrHeight: 0
+  m_MatchWidthOrHeight: 0.5
   m_PhysicalUnit: 3
   m_FallbackScreenDPI: 96
   m_DefaultSpriteDPI: 96
   m_DynamicPixelsPerUnit: 1
-  m_PresetInfoIsWorld: 1
+  m_PresetInfoIsWorld: 0
 --- !u!223 &263944970
 Canvas:
   m_ObjectHideFlags: 0
@@ -616,7 +601,7 @@ Canvas:
   m_GameObject: {fileID: 263944967}
   m_Enabled: 1
   serializedVersion: 3
-  m_RenderMode: 2
+  m_RenderMode: 0
   m_Camera: {fileID: 519420031}
   m_PlaneDistance: 100
   m_PixelPerfect: 0
@@ -638,8 +623,8 @@ RectTransform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 263944967}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 90}
-  m_LocalScale: {x: 0.009259259, y: 0.009259259, z: 0.009259259}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 0, y: 0, z: 0}
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 1275254962}
@@ -648,8 +633,8 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 1920, y: 1080}
-  m_Pivot: {x: 0.5, y: 0.5}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0, y: 0}
 --- !u!114 &263944972
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1218,9 +1203,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d4d2b188f50df4b299eb714ef4360ee9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  canvas: {fileID: 263944967}
-  bitmapRefreshCycle: 1
-  devicePixelRatio: 1
 --- !u!4 &644508284
 Transform:
   m_ObjectHideFlags: 0
@@ -1667,7 +1649,7 @@ Transform:
   m_GameObject: {fileID: 1275254961}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -217.63306, y: -135.54149, z: -10793.469}
+  m_LocalPosition: {x: -217.6331, y: -135.54147, z: -10793.469}
   m_LocalScale: {x: 108, y: 108, z: 108}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -1994,7 +1976,7 @@ GameObject:
   - component: {fileID: 2051703629}
   - component: {fileID: 2051703630}
   m_Layer: 0
-  m_Name: GetLoginApi
+  m_Name: GoogleLoginManager
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2024,9 +2006,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 2051703628}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e7d90d11c181e49a29c053516d4637db, type: 3}
+  m_Script: {fileID: 11500000, guid: 382c6a6cab1b14c3db22a37387e44c90, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  coreServerUrl: http://localhost:8000/
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
