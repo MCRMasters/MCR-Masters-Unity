@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 90842740ec2e80045bece6d482c8313d
+guid: e083a38218c8eca4f9683f9dc199b5c1
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -5418907068945087255
-    second: 9p_0
+      213: 1489183967259495373
+    second: 999p_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -46,7 +46,7 @@ TextureImporter:
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
-  spriteMode: 2
+  spriteMode: 1
   spriteExtrude: 1
   spriteMeshType: 1
   alignment: 0
@@ -109,17 +109,30 @@ TextureImporter:
     ignorePlatformSupport: 0
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: iOS
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
   spriteSheet:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: 9p_0
+      name: 999p_0
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 82
-        height: 131
+        width: 230
+        height: 311
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -128,8 +141,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 9e4ccac3bbc2cc4b0800000000000000
-      internalID: -5418907068945087255
+      spriteID: dcb85bd9de4aaa410800000000000000
+      internalID: 1489183967259495373
       vertices: []
       indices: 
       edges: []
@@ -138,7 +151,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 
+    spriteID: 5e97eb03825dee720800000000000000
     internalID: 0
     vertices: []
     indices: 
@@ -148,7 +161,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      9p_0: -5418907068945087255
+      999p_0: 1489183967259495373
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

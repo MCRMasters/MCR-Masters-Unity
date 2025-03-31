@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: edbdc8bdb874a064b849f685cd13e1cd
+guid: c0117238bd44c8247b691d2b9dfa2a7f
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -4615243401168589897
-    second: 8p_0
+      213: 9209321552183884654
+    second: 88p_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -46,7 +46,7 @@ TextureImporter:
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
-  spriteMode: 2
+  spriteMode: 1
   spriteExtrude: 1
   spriteMeshType: 1
   alignment: 0
@@ -109,17 +109,30 @@ TextureImporter:
     ignorePlatformSupport: 0
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: iOS
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
   spriteSheet:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: 8p_0
+      name: 88p_0
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 82
-        height: 131
+        width: 504
+        height: 664
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -128,8 +141,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 7bb6169449c53ffb0800000000000000
-      internalID: -4615243401168589897
+      spriteID: e6bf44c98251ecf70800000000000000
+      internalID: 9209321552183884654
       vertices: []
       indices: 
       edges: []
@@ -138,7 +151,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 
+    spriteID: 5e97eb03825dee720800000000000000
     internalID: 0
     vertices: []
     indices: 
@@ -148,7 +161,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      8p_0: -4615243401168589897
+      88p_0: 9209321552183884654
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

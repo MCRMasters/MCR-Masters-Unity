@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 937b97b7a9b990e46883e26a649e2dae
+guid: ece9a0572023f354c9c9faec1688c19e
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -8229626440477590725
-    second: 9m_0
+      213: 8514053984300525790
+    second: 99m_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -46,7 +46,7 @@ TextureImporter:
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
-  spriteMode: 2
+  spriteMode: 1
   spriteExtrude: 1
   spriteMeshType: 1
   alignment: 0
@@ -109,17 +109,30 @@ TextureImporter:
     ignorePlatformSupport: 0
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: iOS
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
   spriteSheet:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: 9m_0
+      name: 99m_0
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 82
-        height: 130
+        width: 504
+        height: 664
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -128,8 +141,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: b3bbb25da5e7acd80800000000000000
-      internalID: -8229626440477590725
+      spriteID: ed86bb44dfef72670800000000000000
+      internalID: 8514053984300525790
       vertices: []
       indices: 
       edges: []
@@ -138,7 +151,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 
+    spriteID: 5e97eb03825dee720800000000000000
     internalID: 0
     vertices: []
     indices: 
@@ -148,7 +161,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      9m_0: -8229626440477590725
+      99m_0: 8514053984300525790
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

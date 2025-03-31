@@ -80,7 +80,7 @@ namespace MCRGame
         }
         void initTestHaipai()
         {
-            List<string> tileNames = TileImageManager.Instance.tile_name_to_sprite.Keys.ToList();
+            List<string> tileNames = Tile2DManager.Instance.tile_name_to_sprite.Keys.ToList();
             for(int i = 0; i < 14; ++i){
                 int index = Random.Range(0, tileNames.Count);
                 addTile(tileNames[index]);

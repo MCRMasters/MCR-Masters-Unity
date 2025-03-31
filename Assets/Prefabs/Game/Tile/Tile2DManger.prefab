@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 816350700579689959}
   - component: {fileID: 7401203749253484571}
   m_Layer: 0
-  m_Name: TileImageManger
+  m_Name: Tile2DManger
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -44,3 +44,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 33cea7a2ff2079b4b9fb0339258f97de, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  baseTilePrefab: {fileID: 3215235023283546736, guid: 1a22291d86d33d94fb04d9e372db7f4f, type: 3}
