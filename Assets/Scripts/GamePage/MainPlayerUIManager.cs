@@ -33,7 +33,7 @@ namespace MCRGame
         public void AddTileToHand(TileData data)
         {
             // Tile2DLoader를 통해 suit/value에 해당하는 2D 프리팹을 로드
-            GameObject prefab2D = TileLoader.Instance.Get2DPrefab(data.suit, data.value);
+            GameObject prefab2D = Tile2DManager.Instance.baseTilePrefab;
             if (prefab2D == null)
             {
                 Debug.LogWarning($"2D 프리팹 없음: suit={data.suit}, value={data.value}");
@@ -42,7 +42,11 @@ namespace MCRGame
 
             // 손패 패널 아래에 프리팹 생성
             GameObject newTile = Instantiate(prefab2D, handPanel);
-
+            TileManager tileManager = newTile.GetComponent<TileManager>();
+            if (tileManager != null){
+                tileManager.SetTileName(data.ToString());
+            }
+            
             // TileController에 TileData와 uiManager 할당
             TileController tc = newTile.GetComponent<TileController>();
             if (tc != null)
@@ -106,14 +110,32 @@ namespace MCRGame
             UpdateHandDisplay();
         }
 
-        /// <summary>
-        /// 만("m") 1~9만 랜덤 생성 (테스트용)
-        /// </summary>
-        private TileData CreateRandomTileData()
+        public static TileData CreateRandomTileData()
         {
-            string suit = "m";
-            int value = Random.Range(1, 10); // 1~9
-            return new TileData { suit = suit, value = value };
+            int randomIndex = Random.Range(0, 34); // 0 이상 34 미만 → 총 34가지 경우
+
+            TileData tileData = new TileData();
+            if (randomIndex < 9)
+            {
+                tileData.value = randomIndex + 1;
+                tileData.suit = "m";
+            }
+            else if (randomIndex < 18)
+            {
+                tileData.value = randomIndex - 9 + 1;
+                tileData.suit = "s";
+            }
+            else if (randomIndex < 27)
+            {
+                tileData.value = randomIndex - 18 + 1;
+                tileData.suit = "p";
+            }
+            else
+            {
+                tileData.value = randomIndex - 27 + 1;
+                tileData.suit = "z";
+            }
+            return tileData;
         }
     }
 }

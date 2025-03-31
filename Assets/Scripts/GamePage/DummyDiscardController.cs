@@ -77,6 +77,35 @@ namespace MCRGame
             };
         }
 
+        
+        public static TileData CreateRandomTileData()
+        {
+            int randomIndex = Random.Range(0, 34); // 0 이상 34 미만 → 총 34가지 경우
+
+            TileData tileData = new TileData();
+            if (randomIndex < 9)
+            {
+                tileData.value = randomIndex + 1;
+                tileData.suit = "m";
+            }
+            else if (randomIndex < 18)
+            {
+                tileData.value = randomIndex - 9 + 1;
+                tileData.suit = "s";
+            }
+            else if (randomIndex < 27)
+            {
+                tileData.value = randomIndex - 18 + 1;
+                tileData.suit = "p";
+            }
+            else
+            {
+                tileData.value = randomIndex - 27 + 1;
+                tileData.suit = "z";
+            }
+            return tileData;
+        }
+
         private void OnDiscardButtonClicked()
         {
             // 현재 차례의 플레이어 (남, 서, 북 순서)
@@ -86,8 +115,7 @@ namespace MCRGame
             if (seatHands.ContainsKey(seatToDiscard) && seatHands[seatToDiscard].Count > 0)
             {
                 // 정해진 순서대로 첫 타일을 꺼냄 (서버에서 받은 데이터처럼)
-                TileData tileToDiscard = seatHands[seatToDiscard][0];
-                seatHands[seatToDiscard].RemoveAt(0);
+                TileData tileToDiscard = CreateRandomTileData();
 
                 // DiscardManager를 호출하여 3D 버림패 생성
                 discardManager.DiscardTile(seatToDiscard, tileToDiscard);

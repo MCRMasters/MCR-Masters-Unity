@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 6e56148105c365f4697a56de12046ec6
+guid: 5d1595cdb8470ab4a8743f4f22f638b2
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -3412147746315143720
-    second: 4z_0
+      213: 3074477810652800317
+    second: 44z_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -46,7 +46,7 @@ TextureImporter:
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
-  spriteMode: 2
+  spriteMode: 1
   spriteExtrude: 1
   spriteMeshType: 1
   alignment: 0
@@ -109,17 +109,30 @@ TextureImporter:
     ignorePlatformSupport: 0
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: iOS
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
   spriteSheet:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: 4z_0
+      name: 44z_0
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 82
-        height: 130
+        width: 504
+        height: 664
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -128,8 +141,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 8d57cbbf3bd95a0d0800000000000000
-      internalID: -3412147746315143720
+      spriteID: d35e7cd874dbaaa20800000000000000
+      internalID: 3074477810652800317
       vertices: []
       indices: 
       edges: []
@@ -138,7 +151,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 
+    spriteID: 5e97eb03825dee720800000000000000
     internalID: 0
     vertices: []
     indices: 
@@ -148,7 +161,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      4z_0: -3412147746315143720
+      44z_0: 3074477810652800317
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

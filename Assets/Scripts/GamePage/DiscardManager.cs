@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
+using UnityEngine.Tilemaps;
 
 
 namespace MCRGame
@@ -60,7 +61,7 @@ namespace MCRGame
             Vector3 newPos = origin.position + offset;
             Quaternion finalRotation = origin.rotation;
 
-            GameObject prefab3D = TileLoader.Instance.Get3DPrefab(tileData.suit, tileData.value);
+            GameObject prefab3D = Tile3DManager.Instance.Make3DTile(tileName:tileData.ToString());
             if (prefab3D == null)
             {
                 Debug.LogWarning($"3D prefab not found: {tileData.suit}{tileData.value}");

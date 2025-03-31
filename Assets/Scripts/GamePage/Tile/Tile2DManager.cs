@@ -3,13 +3,15 @@ using UnityEngine;
 
 namespace MCRGame
 {
-    public class TileImageManager : MonoBehaviour
+    public class Tile2DManager : MonoBehaviour
     {
-        public static TileImageManager Instance { get; private set; }
+        public static Tile2DManager Instance { get; private set; }
 
         private string tile_images_path = "Images/TileImages";
 
         public Dictionary<string, Sprite> tile_name_to_sprite;
+
+        [SerializeField] public GameObject baseTilePrefab;
 
         private void Awake()
         {

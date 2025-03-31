@@ -57,13 +57,13 @@ namespace MCRGame
                 return;
             }
 
-            if (TileImageManager.Instance == null)
+            if (Tile2DManager.Instance == null)
             {
                 Debug.LogWarning("[TileManager] TileImageManager.Instance가 없습니다.");
                 return;
             }
 
-            Sprite foundSprite = TileImageManager.Instance.get_sprite_by_name(tileName);
+            Sprite foundSprite = Tile2DManager.Instance.get_sprite_by_name(tileName);
             if (foundSprite == null)
             {
                 Debug.LogWarning($"[TileManager] '{tileName}' 스프라이트를 찾을 수 없습니다.");
