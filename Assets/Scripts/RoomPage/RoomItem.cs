@@ -9,17 +9,17 @@ namespace MCRGame
         public Text infoText;    // 방 정보
         public Text idText;      // 방 번호 (문자열)
 
-        private string roomId;      // 방 번호 (API에는 int 변환해서 보냄)
+        private string roomId;      // API 전송 시 사용될 방 번호 (문자열)
         private string roomTitle;   // 방 제목
 
         // 기존 UI 전환 담당 (로비 이동 등)
         public LobbyRoomChange lobbyRoomChange;
 
-        // 새로운 JoinRoomManager (API 호출 담당)
+        // 기존 방 참가 API 담당
         public JoinRoomManager joinRoomManager;
 
         /// <summary>
-        /// RoomItem 초기화
+        /// RoomItem 초기화: 방 ID, 제목, 정보, 그리고 로비 전환 담당 객체 할당
         /// </summary>
         public void Setup(string id, string title, string info, LobbyRoomChange manager)
         {
@@ -36,20 +36,27 @@ namespace MCRGame
         }
 
         /// <summary>
-        /// RoomItem 클릭 시 (Button OnClick)
+        /// RoomItem 클릭 시 호출됨.
+        /// 웹소켓 연결(Connect) 후, joinRoomManager를 통해 방 참가 요청을 보내고,
+        /// 성공 시 lobbyRoomChange를 통해 UI 전환합니다.
         /// </summary>
         public void OnClickRoom()
         {
             Debug.Log($"[RoomItem] Clicked room: {roomId} - {roomTitle}");
 
+            // 웹소켓 연결이 필요한 경우, 아직 연결되지 않았다면 연결 시도
+            if (RoomWebsocketManager.Instance != null && !RoomWebsocketManager.Instance.IsConnected)
+            {
+                Debug.Log("[RoomItem] WebSocket is not connected. Initiating connection...");
+                RoomWebsocketManager.Instance.Connect();
+            }
+
             if (joinRoomManager != null)
             {
-                // 1) JoinRoomManager를 통해 API 호출
                 joinRoomManager.JoinRoom(roomId, (bool success) =>
                 {
                     if (success)
                     {
-                        // 2) 성공 시 LobbyRoomChange에서 UI 전환
                         if (lobbyRoomChange != null)
                         {
                             lobbyRoomChange.JoinRoom(roomId, roomTitle);

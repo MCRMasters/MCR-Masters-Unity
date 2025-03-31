@@ -19,8 +19,9 @@ namespace MCRGame
 
         public bool IsConnected { get; private set; }  // 내부에서만 변경 가능
 
-        private async void Awake()
+        private void Start()
         {
+            // 싱글턴 초기화 및 필요한 객체 생성은 Start()에서 수행
             if (Instance == null)
             {
                 Instance = this;
@@ -85,7 +86,7 @@ namespace MCRGame
                     {
                         string message = System.Text.Encoding.UTF8.GetString(buffer, 0, result.Count);
                         Debug.Log("[RoomWebsocketManager] Received message: " + message);
-                        // 필요시 추가 메시지 처리 로직 구현
+                        // 필요에 따라 추가 메시지 처리 로직 구현
                     }
                 }
                 catch (Exception ex)
