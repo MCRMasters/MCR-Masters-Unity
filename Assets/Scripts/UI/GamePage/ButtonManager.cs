@@ -123,6 +123,7 @@ namespace MCRGame.UI
                     }
 
                     btn.onClick.RemoveAllListeners();
+                    // 클릭 시 해당 액션을 처리하고 모든 버튼을 비활성화
                     btn.onClick.AddListener(() => OnActionButtonClicked(action));
                 }
                 else
@@ -141,6 +142,22 @@ namespace MCRGame.UI
         {
             Debug.Log("Action button clicked: " + action);
             // TODO: 실제 액션 로직 구현
+
+            // 액션 수행 후 모든 액션 버튼을 비활성화 (숨김)
+            HideAllActionButtons();
+        }
+
+        /// <summary>
+        /// 모든 액션 버튼을 비활성화합니다.
+        /// </summary>
+        private void HideAllActionButtons()
+        {
+            foreach (var btn in actionButtons)
+            {
+                btn.gameObject.SetActive(false);
+                btn.interactable = false;
+                btn.onClick.RemoveAllListeners();
+            }
         }
 
         /// <summary>
