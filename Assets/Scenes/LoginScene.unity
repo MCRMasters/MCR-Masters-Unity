@@ -1203,6 +1203,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d4d2b188f50df4b299eb714ef4360ee9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  canvas: {fileID: 0}
+  bitmapRefreshCycle: 1
+  devicePixelRatio: 1
 --- !u!4 &644508284
 Transform:
   m_ObjectHideFlags: 0
