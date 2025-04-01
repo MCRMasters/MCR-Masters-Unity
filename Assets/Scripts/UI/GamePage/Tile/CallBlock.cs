@@ -30,8 +30,7 @@ namespace MCRGame.UI
             // CHII, PUNG는 3개, 그 외(KONG)는 4개
             int tileCount = (type == CallBlockType.CHII || type == CallBlockType.PUNG) ? 3 : 4;
 
-            List<int> chiiIndex = new List<int>();
-            chiiIndex.Add(sourceTileIndex);
+            List<int> chiiIndex = new List<int> { sourceTileIndex };
             for (int i = 0; i < 3; ++i)
             {
                 if (i == sourceTileIndex)
