@@ -30,43 +30,52 @@ namespace MCRGame.UI
             PositionNewCallBlock(callBlockObj);
         }
 
-        /// <summary>
-        /// 새로운 CallBlock을 부모의 로컬 좌표계에서 
-        /// 이전 블록 옆에 gap만큼 띄워서 배치.
-        /// </summary>
         private void PositionNewCallBlock(GameObject newCallBlock)
         {
-            float gap = 0f;
-            newCallBlock.transform.localRotation = transform.localRotation;
+            // 회전은 그대로 둠
+            newCallBlock.transform.localRotation = Quaternion.identity;
 
-            // 첫 블록은 (0,0,0)에 두고 끝
+            // 첫 블록이면 (0,0,0)에 배치
             if (callBlocks.Count == 1)
             {
                 newCallBlock.transform.localPosition = Vector3.zero;
                 return;
             }
 
-            // ----- 이전 블록의 로컬 경계 박스 구하기 -----
+            // gap을 tile 너비의 일정 비율로 설정 (예: 20%)
+            float gapRatio = 0.1f;
+
+            // 이전 블록 가져오기 및 유효성 검사
             GameObject prevCallBlockObj = callBlocks[callBlocks.Count - 2];
+            CallBlock prevCallBlock = prevCallBlockObj.GetComponent<CallBlock>();
+            if (prevCallBlock == null || prevCallBlock.tiles.Count == 0)
+                return;
+
+            // 이전 블록의 첫 타일을 기준으로 너비 측정
+            Renderer prevTileRenderer = prevCallBlock.tiles[0].GetComponent<Renderer>();
+            if (prevTileRenderer == null)
+                return;
+            float tileWidth = prevTileRenderer.bounds.size.x;
+            float gap = tileWidth * gapRatio;
+
+            // ----- 이전 블록의 로컬 경계 구하기 -----
             var (prevMin, prevMax) = GetLocalBounds(prevCallBlockObj);
 
-            // ----- 새 블록을 일단 (0,0,0)에 두고, 로컬 경계 박스 구하기 -----
+            // ----- 새 블록을 일단 (0,0,0)에 두고, 로컬 경계 구하기 -----
             newCallBlock.transform.localPosition = Vector3.zero;
             var (newMin, newMax) = GetLocalBounds(newCallBlock);
 
-            // 원하는 방향(예: 왼쪽으로 쌓기 / 오른쪽으로 쌓기)에 따라 계산 달라짐.
-            // 여기서는 "새 블록을 이전 블록의 오른쪽에 놓는다"고 가정:
-            // "새 블록의 min.x = 이전 블록의 max.x + gap"
+            // "새 블록의 왼쪽(newMin.x)"이 "이전 블록의 오른쪽(prevMax.x)" + gap이 되도록 배치
             float desiredX = prevMax.x + gap;
             float offsetX = desiredX - newMin.x;
 
-            // 새 블록의 localPosition에 offset 적용
             newCallBlock.transform.localPosition += new Vector3(offsetX, 0f, 0f);
         }
 
         /// <summary>
         /// 해당 CallBlock 오브젝트(및 그 자식 타일들)의
-        /// "부모 로컬 좌표" 기준 최소/최대 경계점을 구함
+        /// 부모 로컬 좌표 기준 최소/최대 경계점을 구함.
+        /// 각 타일의 8개 모서리를 변환하여 보다 정확한 값을 구함.
         /// </summary>
         private (Vector3 min, Vector3 max) GetLocalBounds(GameObject callBlockObj)
         {
@@ -74,30 +83,36 @@ namespace MCRGame.UI
             if (cb == null || cb.tiles.Count == 0)
                 return (Vector3.zero, Vector3.zero);
 
-            Vector3 minVec = new Vector3(float.MaxValue, float.MaxValue, float.MaxValue);
-            Vector3 maxVec = new Vector3(float.MinValue, float.MinValue, float.MinValue);
+            Vector3 overallMin = new Vector3(float.MaxValue, float.MaxValue, float.MaxValue);
+            Vector3 overallMax = new Vector3(float.MinValue, float.MinValue, float.MinValue);
 
-            // 각 타일의 Renderer.bounds를 월드좌표 -> 로컬좌표로 변환해
-            // 전체 최소/최대값을 갱신
             foreach (var tile in cb.tiles)
             {
                 Renderer rend = tile.GetComponent<Renderer>();
-                if (rend == null) continue;
+                if (rend == null)
+                    continue;
 
-                Vector3 localMin = transform.InverseTransformPoint(rend.bounds.min);
-                Vector3 localMax = transform.InverseTransformPoint(rend.bounds.max);
+                Bounds b = rend.bounds;
+                // 8개의 모서리 좌표 (월드 좌표)
+                Vector3[] corners = new Vector3[8];
+                corners[0] = new Vector3(b.min.x, b.min.y, b.min.z);
+                corners[1] = new Vector3(b.min.x, b.min.y, b.max.z);
+                corners[2] = new Vector3(b.min.x, b.max.y, b.min.z);
+                corners[3] = new Vector3(b.min.x, b.max.y, b.max.z);
+                corners[4] = new Vector3(b.max.x, b.min.y, b.min.z);
+                corners[5] = new Vector3(b.max.x, b.min.y, b.max.z);
+                corners[6] = new Vector3(b.max.x, b.max.y, b.min.z);
+                corners[7] = new Vector3(b.max.x, b.max.y, b.max.z);
 
-                // 최소값 갱신
-                if (localMin.x < minVec.x) minVec.x = localMin.x;
-                if (localMin.y < minVec.y) minVec.y = localMin.y;
-                if (localMin.z < minVec.z) minVec.z = localMin.z;
-
-                // 최대값 갱신
-                if (localMax.x > maxVec.x) maxVec.x = localMax.x;
-                if (localMax.y > maxVec.y) maxVec.y = localMax.y;
-                if (localMax.z > maxVec.z) maxVec.z = localMax.z;
+                // 각 모서리를 부모의 로컬 좌표로 변환한 후 최소/최대값 갱신
+                foreach (var corner in corners)
+                {
+                    Vector3 localCorner = transform.InverseTransformPoint(corner);
+                    overallMin = Vector3.Min(overallMin, localCorner);
+                    overallMax = Vector3.Max(overallMax, localCorner);
+                }
             }
-            return (minVec, maxVec);
+            return (overallMin, overallMax);
         }
 
         public void ClearAllCallBlocks()
