@@ -20,128 +20,160 @@ namespace MCRGame.UI
         /// </summary>
         public void InitializeCallBlock()
         {
+            ClearExistingTiles();
+            CreateTiles();
+            RotateSourceTile();
+            ArrangeTiles();
+        }
+
+        private void ClearExistingTiles()
+        {
             // 기존 자식 타일 제거
             foreach (Transform child in transform)
             {
                 Destroy(child.gameObject);
             }
             tiles.Clear();
+        }
 
-            // CHII, PUNG는 3개, 그 외(KONG)는 4개
-            int tileCount = (type == CallBlockType.CHII || type == CallBlockType.PUNG) ? 3 : 4;
+        private void CreateTiles()
+        {
+            int tileCount = GetTileCount();
+            List<int> chiiIndices = GetChiiIndices();
 
-            List<int> chiiIndex = new List<int> { sourceTileIndex };
-            for (int i = 0; i < 3; ++i)
-            {
-                if (i == sourceTileIndex)
-                {
-                    continue;
-                }
-                chiiIndex.Add(i);
-            }
-
-            // 1) 타일 생성 (기본 회전 없음)
             for (int i = 0; i < tileCount; i++)
             {
-                GameTile tileValue = firstTile;
-                if (type == CallBlockType.CHII)
+                GameTile tileValue = GetTileValueForIndex(i, chiiIndices);
+                GameObject tileObj = Create3DTile(tileValue);
+                if (tileObj != null)
                 {
-                    tileValue = (GameTile)((int)firstTile + chiiIndex[i]);
+                    tileObj.transform.localPosition = Vector3.zero;
+                    tileObj.transform.localRotation = Quaternion.identity;
+                    tiles.Add(tileObj);
                 }
-
-                if (Tile3DManager.Instance == null)
-                {
-                    Debug.LogError("Tile3DManager 인스턴스가 없습니다.");
-                    return;
-                }
-
-                // 3D 타일 생성
-                GameObject tileObj = Tile3DManager.Instance.Make3DTile(tileValue.ToCustomString(), transform);
-                if (tileObj == null)
-                {
-                    Debug.LogError($"타일 생성 실패: {tileValue.ToCustomString()}");
-                    continue;
-                }
-
-                // 우선 (0,0,0)에 두고, 회전은 나중에 결정
-                tileObj.transform.localPosition = Vector3.zero;
-                tileObj.transform.localRotation = Quaternion.identity;
-
-                tiles.Add(tileObj);
             }
             tiles.Reverse();
-            // 2) 회전할 타일 인덱스 결정 후 90도 회전
-            int rotateIndex = -1;
-            switch (sourceSeat)
+        }
+
+        private int GetTileCount()
+        {
+            return (type == CallBlockType.CHII || type == CallBlockType.PUNG) ? 3 : 4;
+        }
+
+        private List<int> GetChiiIndices()
+        {
+            List<int> chiiIndices = new List<int> { sourceTileIndex };
+            for (int i = 0; i < 3; ++i)
             {
-                case RelativeSeat.KAMI:
-                    rotateIndex = tiles.Count - 1;
-                    break;
-                case RelativeSeat.TOI:
-                    rotateIndex = tiles.Count - 2;
-                    break;
-                case RelativeSeat.SHIMO:
-                    rotateIndex = 0;
-                    break;
-                case RelativeSeat.SELF:
-                    rotateIndex = -1;
-                    break;
+                if (i == sourceTileIndex) continue;
+                chiiIndices.Add(i);
             }
+            return chiiIndices;
+        }
+
+        private GameTile GetTileValueForIndex(int index, List<int> chiiIndices)
+        {
+            if (type == CallBlockType.CHII)
+            {
+                return (GameTile)((int)firstTile + chiiIndices[index]);
+            }
+            return firstTile;
+        }
+
+        private GameObject Create3DTile(GameTile tileValue)
+        {
+            if (Tile3DManager.Instance == null)
+            {
+                Debug.LogError("Tile3DManager 인스턴스가 없습니다.");
+                return null;
+            }
+
+            GameObject tileObj = Tile3DManager.Instance.Make3DTile(tileValue.ToCustomString(), transform);
+            if (tileObj == null)
+            {
+                Debug.LogError($"타일 생성 실패: {tileValue.ToCustomString()}");
+            }
+            return tileObj;
+        }
+
+        private void RotateSourceTile()
+        {
+            int rotateIndex = GetRotateIndex();
             if (rotateIndex >= 0 && rotateIndex < tiles.Count)
             {
                 tiles[rotateIndex].transform.localRotation = Quaternion.Euler(0f, 0f, 90f);
             }
+        }
 
-            // 3) 오른쪽에서 왼쪽 순으로 배치
-            //    (offsetX에 '오른쪽 모서리'를 맞추고, 아래쪽(minLocal.y)을 y=0으로 정렬)
-            float offsetX = 0f;
-
-            for (int i = 0; i < tileCount; i++)
+        private int GetRotateIndex()
+        {
+            switch (sourceSeat)
             {
-                GameObject tile = tiles[i];
-                if (tile == null) continue;
-
-                // 일단 대략 offsetX 근처에 둔다 (정확 위치는 Renderer 측정 후 조정)
-                tile.transform.localPosition = new Vector3(offsetX, 0f, 0f);
-
-                // Renderer로부터 bounding box 가져오기
-                Renderer rend = tile.GetComponent<Renderer>();
-                if (rend == null)
-                {
-                    // Renderer가 없으면 대충 1만큼 폭 가정
-                    offsetX -= 1f;
-                    continue;
-                }
-
-                // ---- [A] 오른쪽 모서리 맞추기 ----
-                // (1) 현재 월드 좌표의 min, max
-                Vector3 minWorld = rend.bounds.min;
-                Vector3 maxWorld = rend.bounds.max;
-                // (2) 부모 기준 local 좌표로 변환
-                Vector3 minLocal = transform.InverseTransformPoint(minWorld);
-                Vector3 maxLocal = transform.InverseTransformPoint(maxWorld);
-                // (3) 타일의 '오른쪽'이 offsetX에 맞도록 x축 이동
-                float deltaX = offsetX - maxLocal.x;
-                tile.transform.localPosition += new Vector3(deltaX, 0f, 0f);
-
-                // ---- [B] 아래쪽 바닥 맞추기 ----
-                // 다시 minWorld/minLocal 갱신
-                minWorld = rend.bounds.min;
-                minLocal = transform.InverseTransformPoint(minWorld);
-                // 바닥(y=0)에 맞추기
-                float deltaY = 0f - minLocal.y;
-                tile.transform.localPosition += new Vector3(0f, deltaY, 0f);
-
-                // ---- [C] 폭만큼 offsetX 이동 (왼쪽으로 -=)
-                // 마지막으로 bounding box 갱신 후 폭 계산
-                minWorld = rend.bounds.min;
-                maxWorld = rend.bounds.max;
-                minLocal = transform.InverseTransformPoint(minWorld);
-                maxLocal = transform.InverseTransformPoint(maxWorld);
-
-                float widthLocal = maxLocal.x - minLocal.x;
-                offsetX -= widthLocal;
+                case RelativeSeat.KAMI: return tiles.Count - 1;
+                case RelativeSeat.TOI: return tiles.Count - 2;
+                case RelativeSeat.SHIMO: return 0;
+                case RelativeSeat.SELF: return -1;
+                default: return -1;
             }
+        }
+
+        private void ArrangeTiles()
+        {
+            float offsetX = 0f;
+            for (int i = 0; i < tiles.Count; i++)
+            {
+                if (tiles[i] == null) continue;
+
+                PositionTile(tiles[i], ref offsetX);
+            }
+        }
+
+        private void PositionTile(GameObject tile, ref float offsetX)
+        {
+            // 초기 위치 설정
+            tile.transform.localPosition = new Vector3(offsetX, 0f, 0f);
+
+            Renderer rend = tile.GetComponent<Renderer>();
+            if (rend == null)
+            {
+                offsetX -= 1f;
+                return;
+            }
+
+            AdjustRightEdge(tile, rend, ref offsetX);
+            AdjustBottom(tile, rend);
+            UpdateOffsetX(tile, rend, ref offsetX);
+        }
+
+        private void AdjustRightEdge(GameObject tile, Renderer rend, ref float offsetX)
+        {
+            Vector3 minWorld = rend.bounds.min;
+            Vector3 maxWorld = rend.bounds.max;
+            Vector3 minLocal = transform.InverseTransformPoint(minWorld);
+            Vector3 maxLocal = transform.InverseTransformPoint(maxWorld);
+
+            float deltaX = offsetX - maxLocal.x;
+            tile.transform.localPosition += new Vector3(deltaX, 0f, 0f);
+        }
+
+        private void AdjustBottom(GameObject tile, Renderer rend)
+        {
+            Vector3 minWorld = rend.bounds.min;
+            Vector3 minLocal = transform.InverseTransformPoint(minWorld);
+
+            float deltaY = 0f - minLocal.y;
+            tile.transform.localPosition += new Vector3(0f, deltaY, 0f);
+        }
+
+        private void UpdateOffsetX(GameObject tile, Renderer rend, ref float offsetX)
+        {
+            Vector3 minWorld = rend.bounds.min;
+            Vector3 maxWorld = rend.bounds.max;
+            Vector3 minLocal = transform.InverseTransformPoint(minWorld);
+            Vector3 maxLocal = transform.InverseTransformPoint(maxWorld);
+
+            float widthLocal = maxLocal.x - minLocal.x;
+            offsetX -= widthLocal;
         }
     }
 }
