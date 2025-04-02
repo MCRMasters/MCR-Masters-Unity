@@ -11,7 +11,7 @@ namespace MCRGame.UI
         [SerializeField] private Button testRandomTimeButton; // 테스트 버튼
         [SerializeField] private ButtonManager buttonManager; // ButtonManager와 연계
 
-        private int remainingTime;      // 남은 시간 (초 단위)
+        private float remainingTime;      // 남은 시간 (초 단위)
         private Coroutine countdownCo;  // 카운트다운 코루틴 추적
 
         private void Start()
@@ -32,7 +32,8 @@ namespace MCRGame.UI
             {
                 StopCoroutine(countdownCo);
             }
-            remainingTime = Random.Range(1, 61);
+            // float 타입으로 1~60초 사이 랜덤 시간 설정
+            remainingTime = Random.Range(1f, 61f);
             // UI가 꺼져있다면 활성화
             if (remainingTimeText != null)
             {
@@ -41,28 +42,25 @@ namespace MCRGame.UI
             countdownCo = StartCoroutine(CountdownRoutine());
         }
 
+
         /// <summary>
         /// 매 초마다 1초씩 줄어드는 카운트다운 코루틴
         /// </summary>
         private IEnumerator CountdownRoutine()
         {
-            while (remainingTime > 0)
+            while (remainingTime > 0f)
             {
                 UpdateRemainingTimeText();
                 yield return new WaitForSeconds(1f);
-                remainingTime--;
+                remainingTime -= 1f;
             }
             // 마지막 0초 업데이트
             UpdateRemainingTimeText();
-
-            // 시간이 0초가 되면 타임아웃 처리: 서버 전송(디버그로그) 및 자동 스킵
             Debug.Log("Timeout, sending server signal: timeout");
-            // UI 숨김 처리
             if (remainingTimeText != null)
             {
                 remainingTimeText.gameObject.SetActive(false);
             }
-            // ButtonManager를 통해 자동 스킵 실행
             if (buttonManager != null)
             {
                 buttonManager.AutoSkip();
@@ -70,14 +68,15 @@ namespace MCRGame.UI
             countdownCo = null;
         }
 
+
         /// <summary>
-        /// 남은 시간을 숫자만 UI Text에 표시합니다.
+        /// 남은 시간을 정수 형태로 UI Text에 표시합니다.
         /// </summary>
         private void UpdateRemainingTimeText()
         {
             if (remainingTimeText != null)
             {
-                remainingTimeText.text = remainingTime.ToString();
+                remainingTimeText.text = Mathf.CeilToInt(remainingTime).ToString();
             }
         }
 
