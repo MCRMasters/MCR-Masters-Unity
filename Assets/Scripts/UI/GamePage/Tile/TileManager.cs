@@ -84,7 +84,7 @@ namespace MCRGame.UI
             float moveUp = imageFieldRect.rect.height / 3f;
             imageFieldRect.anchoredPosition = originalPos + new Vector2(0, moveUp);
 
-            Debug.Log($"[TileManager] 마우스가 '{tileName}' 위로 올라감 -> ImageField 이동");
+            //Debug.Log($"[TileManager] 마우스가 '{tileName}' 위로 올라감 -> ImageField 이동");
         }
 
         public void OnPointerExit(PointerEventData eventData)
@@ -93,13 +93,13 @@ namespace MCRGame.UI
 
             imageFieldRect.anchoredPosition = originalPos;
 
-            Debug.Log($"[TileManager] 마우스가 '{tileName}' 영역에서 벗어남 -> ImageField 원위치");
+            //Debug.Log($"[TileManager] 마우스가 '{tileName}' 영역에서 벗어남 -> ImageField 원위치");
         }
         private bool flag = false;
         // TODO need to add discard logic
         public void OnPointerClick(PointerEventData eventData)
         {
-            Debug.Log($"[TileManager] '{tileName}' 클릭됨. (마우스 버튼: {eventData.button})");
+            //Debug.Log($"[TileManager] '{tileName}' 클릭됨. (마우스 버튼: {eventData.button})");
             if (eventData.button != PointerEventData.InputButton.Left){
                 return;
             }
