@@ -13,6 +13,7 @@ namespace MCRGame.UI
         public int sourceTileIndex;
         public List<GameObject> tiles = new List<GameObject>();
 
+
         /// <summary>
         /// CallBlock을 초기화하여 타일들을 생성 및 배치합니다.
         /// 타일을 오른쪽에서 왼쪽 순서로 놓되, 각 타일의 '오른쪽 모서리'를 기준으로 배치합니다.
