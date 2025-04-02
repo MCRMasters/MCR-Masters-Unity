@@ -747,14 +747,14 @@ MonoBehaviour:
       m_Calls: []
   m_FontData:
     m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
-    m_FontSize: 14
+    m_FontSize: 30
     m_FontStyle: 0
     m_BestFit: 0
-    m_MinSize: 10
+    m_MinSize: 3
     m_MaxSize: 40
     m_Alignment: 4
     m_AlignByGeometry: 0
-    m_RichText: 1
+    m_RichText: 0
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
@@ -1996,7 +1996,7 @@ GameObject:
   - component: {fileID: 362724885}
   - component: {fileID: 362724886}
   m_Layer: 0
-  m_Name: ButtonManager
+  m_Name: EtcButtonManager
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2049,7 +2049,8 @@ MonoBehaviour:
     sprite: {fileID: 381035312, guid: 241f81c4182b84994be36d1f5bd7afe0, type: 3}
   - actionType: flower
     sprite: {fileID: 3227129927260279833, guid: fcee6971272ce4908a55bf233fc85fea, type: 3}
-  testDummyButton: {fileID: 0}
+  testDummyButton: {fileID: 1981325766}
+  playerTimer: {fileID: 1809140460}
 --- !u!1 &381490329
 GameObject:
   m_ObjectHideFlags: 0
@@ -4968,7 +4969,7 @@ GameObject:
   - component: {fileID: 981310316}
   - component: {fileID: 981310315}
   m_Layer: 5
-  m_Name: Timer
+  m_Name: PlayerTimer
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -10020,8 +10021,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cacbc9387d3bf4e7c8be33c1384f99e0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  remainingTimeText: {fileID: 0}
-  testRandomTimeButton: {fileID: 0}
+  remainingTimeText: {fileID: 2123852926}
+  testRandomTimeButton: {fileID: 1252753518}
+  buttonManager: {fileID: 362724886}
 --- !u!1 &1827532292
 GameObject:
   m_ObjectHideFlags: 0
