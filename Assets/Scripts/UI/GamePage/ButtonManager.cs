@@ -29,6 +29,9 @@ namespace MCRGame.UI
         [Header("테스트용 버튼 (더미데이터 호출)")]
         [SerializeField] private Button testDummyButton;
 
+        [Header("통합용 - 남은 시간 관리")]
+        [SerializeField] private PlayerTimer playerTimer;
+
         // 우선순위 사전
         private Dictionary<string, int> priorityDict = new Dictionary<string, int> {
             {"skip", 0},
@@ -123,7 +126,7 @@ namespace MCRGame.UI
                     }
 
                     btn.onClick.RemoveAllListeners();
-                    // 클릭 시 해당 액션을 처리하고 모든 버튼을 비활성화
+                    // 버튼 클릭 시 액션 처리 후, 남은 시간을 전송하고 UI 숨김 처리
                     btn.onClick.AddListener(() => OnActionButtonClicked(action));
                 }
                 else
@@ -141,8 +144,11 @@ namespace MCRGame.UI
         private void OnActionButtonClicked(string action)
         {
             Debug.Log("Action button clicked: " + action);
-            // TODO: 실제 액션 로직 구현
-
+            // 남은 시간을 서버로 전송 (디버그로그로 대체)
+            if (playerTimer != null)
+            {
+                playerTimer.SubmitRemainingTime();
+            }
             // 액션 수행 후 모든 액션 버튼을 비활성화 (숨김)
             HideAllActionButtons();
         }
@@ -177,6 +183,15 @@ namespace MCRGame.UI
             {
                 Debug.LogWarning("dummyJsonList가 비어 있습니다.");
             }
+        }
+
+        /// <summary>
+        /// PlayerTimer에서 시간이 0초가 되었을 때 자동 스킵 처리.
+        /// </summary>
+        public void AutoSkip()
+        {
+            Debug.Log("Auto skip triggered by timeout");
+            OnActionButtonClicked("skip");
         }
     }
 }
