@@ -23,12 +23,9 @@ namespace MCRGame.Net
 
     public class GoogleLoginManager : MonoBehaviour
     {
-        // CORE_SERVER_URL을 인스펙터에서 설정 (예: http://localhost:8000/)
-        [SerializeField] private string coreServerUrl = "http://localhost:8000/";
+        private string backendLoginUrl = CoreServerConfig.GetHttpUrl("/auth/login/google");
+        private string backendStatusUrl = CoreServerConfig.GetHttpUrl("/auth/login/status");
 
-        // CORE_SERVER_URL을 기반으로 backend URL을 구성합니다.
-        private string backendLoginUrl => coreServerUrl + "api/v1/auth/login/google";
-        private string backendStatusUrl => coreServerUrl + "api/v1/auth/login/status";
 
         private string sessionId;
 

@@ -8,7 +8,7 @@ namespace MCRGame.Net
 {
     public class PutNicknameApi : MonoBehaviour
     {
-        [SerializeField] private string putNicknameUrl = "http://localhost:8000/api/v1/user/me/nickname";
+        private string putNicknameUrl = CoreServerConfig.GetHttpUrl("/user/me/nickname");
 
         /// <summary>
         /// 닉네임 업데이트 PUT 요청을 보냅니다.
