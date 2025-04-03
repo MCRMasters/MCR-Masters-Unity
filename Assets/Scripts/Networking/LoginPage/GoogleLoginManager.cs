@@ -23,8 +23,8 @@ namespace MCRGame.Net
 
     public class GoogleLoginManager : MonoBehaviour
     {
-        private string backendLoginUrl => CoreServerConfig.GetHttpUrl("/auth/login/google");
-        private string backendStatusUrl => CoreServerConfig.GetHttpUrl("/auth/login/status");
+        private string backendLoginUrl = CoreServerConfig.GetHttpUrl("/auth/login/google");
+        private string backendStatusUrl = CoreServerConfig.GetHttpUrl("/auth/login/status");
 
 
         private string sessionId;
