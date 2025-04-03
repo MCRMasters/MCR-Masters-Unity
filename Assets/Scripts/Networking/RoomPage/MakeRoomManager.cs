@@ -14,8 +14,7 @@ namespace MCRGame.Net
         // 이미 씬에 존재하는 LobbyRoomChange를 Inspector에서 할당
         [SerializeField] private LobbyRoomChange lobbyRoomChange;
 
-        // 서버 URL (POST /api/v1/room)
-        private string createRoomUrl = "http://localhost:8000/api/v1/room";
+        private string createRoomUrl = CoreServerConfig.GetHttpUrl("/room");
 
         private void Start()
         {

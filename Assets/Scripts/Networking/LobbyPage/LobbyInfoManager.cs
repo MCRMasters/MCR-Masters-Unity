@@ -10,8 +10,7 @@ namespace MCRGame.Net
         [Header("UI References")]
         [SerializeField] private Text nicknameText; // 닉네임을 표시할 Text
 
-        private string getUserInfoUrl = "http://localhost:8000/api/v1/user/me";
-
+        private string getUserInfoUrl = CoreServerConfig.GetHttpUrl("/user/me");
         private void Start()
         {
             // 로비씬에 들어오면 유저 정보를 요청

@@ -3,7 +3,6 @@ using UnityEngine.Networking;
 using System;
 using System.Collections;
 
-
 namespace MCRGame.Net
 {
     /// <summary>
@@ -11,8 +10,7 @@ namespace MCRGame.Net
     /// </summary>
     public class JoinRoomManager : MonoBehaviour
     {
-        // 예: "http://localhost:8000/api/v1/room"
-        [SerializeField] private string baseRoomUrl = "http://localhost:8000/api/v1/room";
+        private string baseRoomUrl = CoreServerConfig.GetHttpUrl("/room");
 
         /// <summary>
         /// 외부(예: RoomItem)에서 호출되는 메서드.
