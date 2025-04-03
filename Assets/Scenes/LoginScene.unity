@@ -1203,9 +1203,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d4d2b188f50df4b299eb714ef4360ee9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  canvas: {fileID: 0}
-  bitmapRefreshCycle: 1
-  devicePixelRatio: 1
 --- !u!4 &644508284
 Transform:
   m_ObjectHideFlags: 0
@@ -1239,39 +1236,6 @@ MonoBehaviour:
   TopMargin: 30
   BottomMargin: 30
   webViewObject: {fileID: 644508283}
---- !u!1 &735380222
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 735380223}
-  m_Layer: 0
-  m_Name: LoginManagers
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &735380223
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 735380222}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 1158.5411, y: 920.1496, z: -1.9995033}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 1194848957}
-  - {fileID: 2051703629}
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &794076492
 GameObject:
   m_ObjectHideFlags: 0
@@ -1621,11 +1585,11 @@ Transform:
   m_GameObject: {fileID: 1194848955}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 1158.5411, y: 920.1496, z: -1.9995033}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 735380223}
+  m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1275254961
 GameObject:
@@ -1993,12 +1957,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2051703628}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 1158.5411, y: 920.1496, z: -1.9995033}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 735380223}
+  m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &2051703630
 MonoBehaviour:
@@ -2012,7 +1976,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 382c6a6cab1b14c3db22a37387e44c90, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  coreServerUrl: http://localhost:8000/
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -2022,4 +1985,5 @@ SceneRoots:
   - {fileID: 263944971}
   - {fileID: 2026736746}
   - {fileID: 644508284}
-  - {fileID: 735380223}
+  - {fileID: 1194848957}
+  - {fileID: 2051703629}

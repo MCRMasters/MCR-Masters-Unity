@@ -11,7 +11,7 @@ namespace MCRGame.Net
         public bool IsNewUser { get; private set; }
 
         // 새로 추가: 서버에서 가져온 유저 정보
-        public string Uid { get; private set; }
+        public string Uid { get; private set; } // 고유 사용자 ID (문자열)
         public string Nickname { get; private set; }
         public string Email { get; private set; }
 
@@ -34,6 +34,7 @@ namespace MCRGame.Net
             RefreshToken = refreshToken;
             IsNewUser = isNewUser;
             Debug.Log("[PlayerDataManager] 토큰 저장 완료");
+            Debug.Log($"[PlayerDataManager] AccessToken: {AccessToken}");
         }
 
         /// <summary>

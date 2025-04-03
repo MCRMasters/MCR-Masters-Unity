@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
-using System.Collections;
 using MCRGame.Net;
+using System.Collections;
 
 namespace MCRGame.UI
 {
@@ -28,9 +28,8 @@ namespace MCRGame.UI
             if (nameMakeButton != null)
                 nameMakeButton.onClick.AddListener(OnClickNameMakeButton);
 
-            // PlayerDataManager의 닉네임이 빈 문자열이거나 정확히 ':'일 경우 팝업을 자동으로 띄웁니다.
-            if (PlayerDataManager.Instance != null &&
-                (string.IsNullOrEmpty(PlayerDataManager.Instance.Nickname) || PlayerDataManager.Instance.Nickname == ":"))
+            // new user인 경우에만 팝업을 자동으로 띄웁니다.
+            if (PlayerDataManager.Instance != null && PlayerDataManager.Instance.IsNewUser)
             {
                 nickNamePopup.SetActive(true);
             }
