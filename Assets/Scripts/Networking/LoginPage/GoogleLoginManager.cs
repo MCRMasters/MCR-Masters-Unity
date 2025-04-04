@@ -92,7 +92,7 @@ namespace MCRGame.Net
                     }
                     else
                     {
-                        Debug.LogError("토큰 폴링 실패: " + www.error);
+                        Debug.Log("토큰 폴링 실패: " + www.error);
                     }
                 }
                 yield return new WaitForSeconds(2f); // 2초 간격 폴링

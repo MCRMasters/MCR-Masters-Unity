@@ -250,7 +250,6 @@ GameObject:
   - component: {fileID: 8561652925623518462}
   - component: {fileID: 9198308991492836754}
   - component: {fileID: 8689938902307863849}
-  - component: {fileID: 1310057632993519953}
   m_Layer: 5
   m_Name: RoomItem
   m_TagString: Untagged
@@ -389,18 +388,4 @@ MonoBehaviour:
   titleText: {fileID: 3850091803863686320}
   infoText: {fileID: 7380652930791547639}
   idText: {fileID: 7732223084891492836}
-  joinRoomManager: {fileID: 0}
-  lobbyRoomChange: {fileID: 0}
---- !u!114 &1310057632993519953
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8627749960711116994}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4bf47bdd30a3f437983c919fa8d9bfd8, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  baseRoomUrl: http://localhost:8000/api/v1/room
+  roomApiManager: {fileID: 2012876586303323705, guid: 7a43d3ee7e69ee140a328e5c22b5c84a, type: 3}
