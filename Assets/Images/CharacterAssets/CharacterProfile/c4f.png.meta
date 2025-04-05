@@ -1,11 +1,10 @@
 fileFormatVersion: 2
-guid: d11972fc99e0542bb9bd7b3e404d01ed
+guid: 1692a8fb9bb7f471399f59ee9bbebc13
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 7510733855304777853
-    second: 1girl, full body, standing, silver hair, twintails, green eyes, elf ears,
-      forest s-819499309_0
+      213: 4584917162045408621
+    second: Adobe Express - file (34)_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -114,14 +113,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: 1girl, full body, standing, silver hair, twintails, green eyes, elf ears,
-        forest s-819499309_0
+      name: Adobe Express - file (34)_0
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 832
-        height: 1216
+        width: 277
+        height: 277
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -130,8 +128,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: d7001f7d5ac7b3860800000000000000
-      internalID: 7510733855304777853
+      spriteID: d650f40fdd5e0af30800000000000000
+      internalID: 4584917162045408621
       vertices: []
       indices: 
       edges: []
@@ -150,7 +148,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      1girl, full body, standing, silver hair, twintails, green eyes, elf ears, forest s-819499309_0: 7510733855304777853
+      Adobe Express - file (34)_0: 4584917162045408621
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

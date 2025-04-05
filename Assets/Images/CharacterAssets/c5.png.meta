@@ -1,11 +1,11 @@
 fileFormatVersion: 2
-guid: 3de0262d56d664ee09ba7f0d7330e8ef
+guid: 5b3933b0b588c4a169ac30a400012482
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 615942202320509040
-    second: 1girl, full body, standing, silver hair, twintails, green eyes, elf ears,
-      forest s-191231317_0
+      213: -6886565131277691357
+    second: 1girl, full body, standing, white hair, long hair, curly hair, single
+      ahoge, blu s-3009587629_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -114,8 +114,8 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: 1girl, full body, standing, silver hair, twintails, green eyes, elf ears,
-        forest s-191231317_0
+      name: 1girl, full body, standing, white hair, long hair, curly hair, single
+        ahoge, blu s-3009587629_0
       rect:
         serializedVersion: 2
         x: 0
@@ -130,8 +130,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 0785c7b6b244c8800800000000000000
-      internalID: 615942202320509040
+      spriteID: 3261a9bef710e60a0800000000000000
+      internalID: -6886565131277691357
       vertices: []
       indices: 
       edges: []
@@ -150,7 +150,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      1girl, full body, standing, silver hair, twintails, green eyes, elf ears, forest s-191231317_0: 615942202320509040
+      1girl, full body, standing, white hair, long hair, curly hair, single ahoge, blu s-3009587629_0: -6886565131277691357
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

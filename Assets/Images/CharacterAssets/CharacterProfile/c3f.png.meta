@@ -1,11 +1,10 @@
 fileFormatVersion: 2
-guid: 5b3933b0b588c4a169ac30a400012482
+guid: 0f4bf19ed1af9449b862bea17311ebdb
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -6886565131277691357
-    second: 1girl, full body, standing, white hair, long hair, curly hair, single
-      ahoge, blu s-3009587629_0
+      213: -3355332485978317212
+    second: Adobe Express - file (32)_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -114,14 +113,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: 1girl, full body, standing, white hair, long hair, curly hair, single
-        ahoge, blu s-3009587629_0
+      name: Adobe Express - file (32)_0
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 832
-        height: 1216
+        width: 271
+        height: 271
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -130,8 +128,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 3261a9bef710e60a0800000000000000
-      internalID: -6886565131277691357
+      spriteID: 46e1fed91e67f61d0800000000000000
+      internalID: -3355332485978317212
       vertices: []
       indices: 
       edges: []
@@ -150,7 +148,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      1girl, full body, standing, white hair, long hair, curly hair, single ahoge, blu s-3009587629_0: -6886565131277691357
+      Adobe Express - file (32)_0: -3355332485978317212
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

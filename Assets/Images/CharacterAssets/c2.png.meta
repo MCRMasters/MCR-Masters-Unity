@@ -1,11 +1,11 @@
 fileFormatVersion: 2
-guid: c503eb235fc894c2f85b24696e5c0686
+guid: f1ee5fbc2fdb94c079073f98ce50ab0e
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 6221702690802018727
-    second: 1girl, full body, standing, orange hair, long hair, side ponytail, cat
-      ears, ani s-2265913247_0
+      213: -544286124437547326
+    second: 1girl, full body, standing, purple hair, long hair, braid, hair ornament,
+      purple s-3664717387_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -114,8 +114,8 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: 1girl, full body, standing, orange hair, long hair, side ponytail, cat
-        ears, ani s-2265913247_0
+      name: 1girl, full body, standing, purple hair, long hair, braid, hair ornament,
+        purple s-3664717387_0
       rect:
         serializedVersion: 2
         x: 0
@@ -130,8 +130,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 7a9a85f12ade75650800000000000000
-      internalID: 6221702690802018727
+      spriteID: 2c6d9b057ae4278f0800000000000000
+      internalID: -544286124437547326
       vertices: []
       indices: 
       edges: []
@@ -150,7 +150,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      1girl, full body, standing, orange hair, long hair, side ponytail, cat ears, ani s-2265913247_0: 6221702690802018727
+      1girl, full body, standing, purple hair, long hair, braid, hair ornament, purple s-3664717387_0: -544286124437547326
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
