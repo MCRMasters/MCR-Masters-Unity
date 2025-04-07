@@ -2,8 +2,8 @@ using System.Linq;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.Networking;
 using UnityEngine.SceneManagement;
+using UnityEngine.Networking;
 
 namespace MCRGame.Net
 {
@@ -31,6 +31,11 @@ namespace MCRGame.Net
         private bool isReady = false;
         // 자신의 슬롯 번호 (호스트: 0, 게스트: 1~3)
         private int mySlotIndex = 0;
+
+        // WebSocket 연결 전 버튼 클릭 상태 저장 변수
+        private bool clickedReadyBeforeWS = false;
+        // WebSocket 연결 완료 여부
+        private bool wsConnected = false;
 
         void Start()
         {
@@ -124,6 +129,12 @@ namespace MCRGame.Net
                 }
                 actionButton.onClick.AddListener(OnActionButtonClicked);
             }
+
+            // WebSocket 연결 콜백 등록
+            if (roomWS != null)
+            {
+                roomWS.OnWebSocketConnected = OnWebSocketConnected;
+            }
         }
 
         /// <summary>
@@ -148,10 +159,31 @@ namespace MCRGame.Net
                 {
                     actionButton.GetComponentInChildren<Text>().text = isReady ? "Ready ✔" : "Ready";
                 }
-                if (roomWS != null)
+
+                // WS 연결 상태에 따라 바로 신호 전송하거나 대기
+                if (wsConnected && roomWS != null)
                 {
                     roomWS.SendReadyStatus(isReady);
                 }
+                else
+                {
+                    clickedReadyBeforeWS = true;
+                }
+            }
+        }
+
+        /// <summary>
+        /// WebSocket 연결 완료 후 호출되는 콜백 함수
+        /// </summary>
+        private void OnWebSocketConnected()
+        {
+            wsConnected = true;
+            Debug.Log("[RoomManager] WebSocket 연결됨 - 대기 중이던 Ready 상태 처리");
+
+            if (!isHost && clickedReadyBeforeWS && roomWS != null)
+            {
+                roomWS.SendReadyStatus(isReady);
+                Debug.Log("[RoomManager] 연결 후 Ready 상태 전송됨: " + isReady);
             }
         }
 
@@ -162,16 +194,15 @@ namespace MCRGame.Net
         public void OnHostStartGame()
         {
             if (roomWS != null)
-                {
-                    roomWS.SendReadyStatus(isReady);
-                }
+            {
+                roomWS.SendReadyStatus(isReady);
+            }
             int readyCount = playerReady.Count(r => r);
             Debug.Log($"[RoomManager] 호스트 Start 버튼 클릭됨. {readyCount}/4 플레이어가 Ready 상태.");
 
             if (readyCount == playerReady.Length)
             {
                 Debug.Log("모든 플레이어가 Ready! → 게임 시작 API 호출");
-                // 백엔드 start game API 호출
                 StartCoroutine(CallStartGameApi());
             }
             else
@@ -185,15 +216,12 @@ namespace MCRGame.Net
         /// </summary>
         private IEnumerator CallStartGameApi()
         {
-            // RoomDataManager에 저장된 방 번호 사용 (예: RoomId)
             string roomNumber = RoomDataManager.Instance.RoomId;
-            // API 엔드포인트: /room/{roomNumber}/game-start
             string url = CoreServerConfig.GetHttpUrl($"/room/{roomNumber}/game-start");
             Debug.Log("[RoomManager] 호출 URL: " + url);
 
             using (UnityWebRequest request = new UnityWebRequest(url, "POST"))
             {
-                // 빈 POST 데이터를 보내기 위한 설정
                 request.uploadHandler = new UploadHandlerRaw(new byte[0]);
                 request.downloadHandler = new DownloadHandlerBuffer();
                 request.SetRequestHeader("Content-Type", "application/json");
@@ -230,9 +258,7 @@ namespace MCRGame.Net
                 // 호스트 업데이트 (항상 슬롯 0)
                 playerReady[0] = isReady;
                 if (readyIndicators != null && readyIndicators.Length > 0)
-                {
                     readyIndicators[0].color = isReady ? Color.green : Color.red;
-                }
                 Debug.Log($"[RoomManager] Host 준비 상태 업데이트: {isReady}");
             }
             else
@@ -246,7 +272,7 @@ namespace MCRGame.Net
                     {
                         if (guestNicknames[i] == nickname)
                         {
-                            guestSlot = i + 1; // 게스트 슬롯은 1부터 시작
+                            guestSlot = i + 1;
                             break;
                         }
                     }
@@ -265,9 +291,7 @@ namespace MCRGame.Net
                     }
                 }
                 if (guestSlot == -1)
-                {
                     guestSlot = 1;
-                }
                 playerReady[guestSlot] = isReady;
                 if (readyIndicators != null && readyIndicators.Length > guestSlot)
                 {

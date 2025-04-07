@@ -15,6 +15,9 @@ namespace MCRGame.Net
         private ClientWebSocket webSocket;
         private CancellationTokenSource cancellation;
 
+        // 연결 완료시 호출할 콜백 (클라이언트 내부용, 서버와는 무관)
+        public Action OnWebSocketConnected;
+
         async void Start()
         {
             // RoomDataManager에 저장된 방 번호 업데이트
@@ -60,6 +63,10 @@ namespace MCRGame.Net
             {
                 await webSocket.ConnectAsync(uri, cancellation.Token);
                 Debug.Log("WebSocket 연결 성공!");
+
+                // 연결 성공 시 등록된 콜백 호출
+                OnWebSocketConnected?.Invoke();
+
                 _ = ReceiveLoop();
             }
             catch (Exception ex)
@@ -134,7 +141,6 @@ namespace MCRGame.Net
                             }
                         }
                         break;
-
                     case WSActionType.USER_LEFT:
                         {
                             WSUserLeftData leftData = JsonConvert.DeserializeObject<WSUserLeftData>(response.data?.ToString() ?? "{}");
@@ -154,7 +160,6 @@ namespace MCRGame.Net
                             UnityEngine.SceneManagement.SceneManager.LoadScene("GameScene");
                         }
                         break;
-
                     default:
                         Debug.Log("알 수 없는 액션: " + response.action);
                         break;
