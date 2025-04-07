@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.Networking;
+using MCRGame.Net;
 
 namespace MCRGame.Net
 {
@@ -34,7 +35,7 @@ namespace MCRGame.Net
                     string jsonResponse = request.downloadHandler.text;
                     Debug.Log("[RoomApiManager] Fetched rooms: " + jsonResponse);
 
-                    // 서버 응답이 JSON 배열일 경우, JsonUtility로 파싱하려면 래퍼 객체로 감싸야 합니다.
+                    // 서버 응답이 JSON 배열일 경우, JsonUtility로 파싱하려면 래퍼 객체로 감쌉니다.
                     string wrappedJson = "{\"rooms\":" + jsonResponse + "}";
                     AvailableRoomResponseList roomList = JsonUtility.FromJson<AvailableRoomResponseList>(wrappedJson);
 
@@ -50,16 +51,16 @@ namespace MCRGame.Net
 
         /// <summary>
         /// 지정된 방 ID로 방 참가 API를 호출합니다.
-        /// roomId는 문자열(내부적으로 int로 변환)이며, 성공 여부를 callback으로 반환합니다.
+        /// roomId는 문자열(내부적으로 int로 변환)이며, 성공 시 RoomResponse 객체를 callback으로 반환합니다.
         /// </summary>
         /// <param name="roomId">방 ID (문자열)</param>
-        /// <param name="callback">성공 여부 콜백</param>
-        public IEnumerator JoinRoom(string roomId, Action<bool> callback)
+        /// <param name="callback">성공 시 RoomResponse를 반환, 실패하면 null</param>
+        public IEnumerator JoinRoom(string roomId, Action<RoomResponse> callback)
         {
             if (!int.TryParse(roomId, out int roomNumber))
             {
                 Debug.LogError("[RoomApiManager] Invalid roomId (cannot parse to int).");
-                callback?.Invoke(false);
+                callback?.Invoke(null);
                 yield break;
             }
 
@@ -79,19 +80,20 @@ namespace MCRGame.Net
                 if (request.result == UnityWebRequest.Result.Success)
                 {
                     Debug.Log($"[RoomApiManager] Successfully joined room {roomId}. Response: {request.downloadHandler.text}");
-                    callback?.Invoke(true);
+                    RoomResponse response = JsonUtility.FromJson<RoomResponse>(request.downloadHandler.text);
+                    callback?.Invoke(response);
                 }
                 else
                 {
                     Debug.LogError($"[RoomApiManager] Failed to join room {roomId}. Error: {request.error}");
-                    callback?.Invoke(false);
+                    callback?.Invoke(null);
                 }
             }
         }
 
         /// <summary>
         /// 방 생성 API를 호출하여 새 방을 생성합니다.
-        /// 생성 성공 시, CreateRoomResponse를 반환합니다.
+        /// 생성 성공 시, CreateRoomResponse 객체를 반환합니다.
         /// </summary>
         /// <param name="onSuccess">성공 시 CreateRoomResponse 반환</param>
         /// <param name="onError">실패 시 오류 메시지 반환</param>
