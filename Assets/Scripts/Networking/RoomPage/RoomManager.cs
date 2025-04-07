@@ -1,7 +1,9 @@
-using UnityEngine;
 using System.Linq;
+using System.Collections;
+using UnityEngine;
 using UnityEngine.UI;
-using MCRGame.Net; // RoomDataManager, PlayerDataManager 등이 포함된 네임스페이스
+using UnityEngine.Networking;
+using UnityEngine.SceneManagement;
 
 namespace MCRGame.Net
 {
@@ -66,6 +68,7 @@ namespace MCRGame.Net
                 if (isHost)
                 {
                     mySlotIndex = 0;
+                    isReady = true;
                 }
                 else
                 {
@@ -111,11 +114,6 @@ namespace MCRGame.Net
                 if (isHost)
                 {
                     actionButton.GetComponentInChildren<Text>().text = "Start";
-                    // 호스트는 자신의 상태가 이미 Ready이므로 서버에 전송
-                    if (roomWS != null)
-                    {
-                        roomWS.SendReadyStatus(true);
-                    }
                     // 호스트의 Start 버튼은 초기엔 비활성화; 모든 플레이어가 준비되면 UpdateHostStartButtonState()에서 활성화
                     actionButton.interactable = false;
                 }
@@ -163,17 +161,54 @@ namespace MCRGame.Net
         /// </summary>
         public void OnHostStartGame()
         {
+            if (roomWS != null)
+                {
+                    roomWS.SendReadyStatus(isReady);
+                }
             int readyCount = playerReady.Count(r => r);
             Debug.Log($"[RoomManager] 호스트 Start 버튼 클릭됨. {readyCount}/4 플레이어가 Ready 상태.");
 
             if (readyCount == playerReady.Length)
             {
-                Debug.Log("모든 플레이어가 Ready! → 게임 시작!!");
-                // 여기에 실제 게임 씬 전환 또는 서버 통신 등 게임 시작 로직 추가
+                Debug.Log("모든 플레이어가 Ready! → 게임 시작 API 호출");
+                // 백엔드 start game API 호출
+                StartCoroutine(CallStartGameApi());
             }
             else
             {
                 Debug.LogWarning("아직 준비되지 않은 플레이어가 있습니다!");
+            }
+        }
+
+        /// <summary>
+        /// CoreServerConfig를 사용하여 start game API를 호출하는 저수준 UnityWebRequest 코드입니다.
+        /// </summary>
+        private IEnumerator CallStartGameApi()
+        {
+            // RoomDataManager에 저장된 방 번호 사용 (예: RoomId)
+            string roomNumber = RoomDataManager.Instance.RoomId;
+            // API 엔드포인트: /room/{roomNumber}/game-start
+            string url = CoreServerConfig.GetHttpUrl($"/room/{roomNumber}/game-start");
+            Debug.Log("[RoomManager] 호출 URL: " + url);
+
+            using (UnityWebRequest request = new UnityWebRequest(url, "POST"))
+            {
+                // 빈 POST 데이터를 보내기 위한 설정
+                request.uploadHandler = new UploadHandlerRaw(new byte[0]);
+                request.downloadHandler = new DownloadHandlerBuffer();
+                request.SetRequestHeader("Content-Type", "application/json");
+                request.SetRequestHeader("Authorization", $"Bearer {PlayerDataManager.Instance.AccessToken}");
+
+                yield return request.SendWebRequest();
+
+                if (request.result == UnityWebRequest.Result.Success)
+                {
+                    Debug.Log("게임 시작 API 호출 성공: " + request.downloadHandler.text);
+                }
+                else
+                {
+                    Debug.LogError("게임 시작 API 호출 실패: " + request.error);
+                }
             }
         }
 

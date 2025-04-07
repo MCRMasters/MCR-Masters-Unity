@@ -34,10 +34,6 @@ namespace MCRGame.Net
                 infoText.text = $"{roomResponse.current_users}/{roomResponse.max_users} | Host: {roomResponse.host_nickname}";
         }
 
-        /// <summary>
-        /// RoomItem 클릭 시 호출됩니다.
-        /// 방 참가 API를 호출한 후, 성공하면 RoomDataManager에 데이터를 저장하고 RoomScene으로 전환합니다.
-        /// </summary>
         public void OnClickRoom()
         {
             Debug.Log($"[RoomItem] Clicked room: {roomData.room_number} - {roomData.name}");
@@ -49,17 +45,36 @@ namespace MCRGame.Net
                 {
                     if (success)
                     {
-                        Debug.Log("[RoomItem] 방 참가 성공, RoomScene으로 전환합니다.");
+                        Debug.Log("[RoomItem] 방 참가 API 호출 성공.");
+
+                        // 추가 검증: roomData에 필수 정보가 모두 있는지 확인
+                        if (roomData == null ||
+                            string.IsNullOrEmpty(roomData.name) ||
+                            string.IsNullOrEmpty(roomData.host_nickname))
+                        {
+                            Debug.LogError("[RoomItem] 방 정보가 유효하지 않습니다. 방 참가 후 검증 실패.");
+                            return;
+                        }
+
+                        // 추가 검증: 방에 참가한 유저 정보(예: 게스트 닉네임)가 유효한지 체크 (옵션)
+                        if (roomData.users == null || roomData.users.Length == 0)
+                        {
+                            Debug.LogWarning("[RoomItem] 참가한 유저 정보가 비어 있습니다.");
+                            // 필요에 따라 기본값이나 추가 API 호출로 보완할 수 있습니다.
+                        }
+
                         // RoomDataManager에 방 정보 저장 (게스트 닉네임 배열은 각 RoomUserResponse의 닉네임으로 설정)
-                        string[] guestNicknames = roomData.users != null 
-                            ? roomData.users.Select(u => u.nickname).ToArray() 
+                        string[] guestNicknames = roomData.users != null
+                            ? roomData.users.Select(u => u.nickname).ToArray()
                             : new string[3]; // 기본 길이 3의 배열
                         RoomDataManager.Instance.SetRoomInfo(
-                            roomData.room_number.ToString(), 
-                            roomData.name, 
-                            roomData.host_nickname, 
+                            roomData.room_number.ToString(),
+                            roomData.name,
+                            roomData.host_nickname,
                             guestNicknames
                         );
+
+                        Debug.Log("[RoomItem] 방 정보 검증 완료. RoomScene으로 전환합니다.");
                         // RoomScene으로 씬 전환
                         SceneManager.LoadScene("RoomScene");
                     }
