@@ -131,7 +131,7 @@ namespace MCRGame.Net
                             if (roomManagerInstance != null)
                             {
                                 roomManagerInstance.UpdatePlayerReadyState(readyData.nickname, readyData.is_ready);
-                            } 
+                            }
                         }
                         break;
 
@@ -151,8 +151,10 @@ namespace MCRGame.Net
                         {
                             WSGameStartedData gameData = JsonConvert.DeserializeObject<WSGameStartedData>(response.data?.ToString() ?? "{}");
                             Debug.Log("게임 시작! game_url: " + gameData.game_url);
+                            UnityEngine.SceneManagement.SceneManager.LoadScene("GameScene");
                         }
                         break;
+
                     default:
                         Debug.Log("알 수 없는 액션: " + response.action);
                         break;
