@@ -51,7 +51,6 @@ namespace MCRGame.Net
             webSocket.Options.SetRequestHeader("authorization", authHeader);
             Debug.Log("[DEBUG] 설정된 Authorization 헤더: " + authHeader);
 
-            // "/ws/room" 프리픽스를 추가합니다.
             string endpoint = $"/ws/room/{roomNumber}";
             Uri uri = new Uri(CoreServerConfig.GetWebSocketUrl(endpoint));
             Debug.Log("[DEBUG] WebSocket 연결 URL: " + uri);
@@ -126,27 +125,52 @@ namespace MCRGame.Net
                     case WSActionType.USER_READY_CHANGED:
                         {
                             WSUserReadyData readyData = JsonConvert.DeserializeObject<WSUserReadyData>(response.data?.ToString() ?? "{}");
-                            Debug.Log($"유저 준비 상태 변경: {readyData.user_id} -> {readyData.is_ready}");
+                            Debug.Log($"유저 준비 상태 변경: {readyData.user_uid} -> {readyData.is_ready}");
                             RoomManager roomManagerInstance = FindFirstObjectByType<RoomManager>();
                             if (roomManagerInstance != null)
                             {
-                                roomManagerInstance.UpdatePlayerReadyState(readyData.nickname, readyData.is_ready);
+                                roomManagerInstance.UpdatePlayerReadyState(readyData.user_uid, readyData.is_ready);
                             }
                         }
                         break;
-
                     case WSActionType.USER_LEFT:
                         {
                             WSUserLeftData leftData = JsonConvert.DeserializeObject<WSUserLeftData>(response.data?.ToString() ?? "{}");
-                            Debug.Log($"유저 퇴장: {leftData.user_id}");
+                            Debug.Log($"유저 퇴장: {leftData.user_uid}");
                         }
                         break;
                     case WSActionType.USER_JOINED:
                         {
                             WSUserJoinedData joinedData = JsonConvert.DeserializeObject<WSUserJoinedData>(response.data?.ToString() ?? "{}");
-                            Debug.Log($"유저 입장: {joinedData.user_id} - 닉네임: {joinedData.nickname}");
+                            Debug.Log($"유저 입장: {joinedData.user_uid} - 닉네임: {joinedData.nickname}, slot_index: {joinedData.slot_index}");
+
+                            // RoomDataManager 업데이트: Players 배열에 새 사용자 정보 추가/갱신
+                            if (RoomDataManager.Instance != null)
+                            {
+                                RoomUserData newUser = new RoomUserData
+                                {
+                                    uid = joinedData.user_uid,
+                                    nickname = joinedData.nickname,
+                                    isReady = joinedData.is_ready,
+                                    slot_index = joinedData.slot_index
+                                };
+                                RoomDataManager.Instance.AddOrUpdateUser(newUser);
+                            }
+                            else
+                            {
+                                Debug.LogWarning("[RoomWS] RoomDataManager 인스턴스가 없습니다.");
+                            }
+
+                            // RoomManager UI 업데이트 (예: 플레이어 목록 갱신)
+                            RoomManager roomManagerInstance = FindFirstObjectByType<RoomManager>();
+
+                            if (roomManagerInstance != null)
+                            {
+                                roomManagerInstance.UpdatePlayerUI();
+                            }
+                            break;
                         }
-                        break;
+
                     case WSActionType.GAME_STARTED:
                         {
                             WSGameStartedData gameData = JsonConvert.DeserializeObject<WSGameStartedData>(response.data?.ToString() ?? "{}");
@@ -154,7 +178,6 @@ namespace MCRGame.Net
                             UnityEngine.SceneManagement.SceneManager.LoadScene("GameScene");
                         }
                         break;
-
                     default:
                         Debug.Log("알 수 없는 액션: " + response.action);
                         break;

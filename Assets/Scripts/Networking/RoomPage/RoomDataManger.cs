@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 namespace MCRGame.Net
@@ -8,9 +9,13 @@ namespace MCRGame.Net
 
         public string RoomId { get; private set; }
         public string RoomTitle { get; private set; }
-        public string HostNickname { get; private set; }
-        // 기본 게스트 닉네임 배열 길이를 3으로 설정 (게스트 3명)
-        public string[] GuestNicknames { get; private set; } = new string[3];
+
+        public RoomUserData HostUser { get; private set; }
+        public int HostSlotIndex { get; private set; }  // 호스트의 슬롯 인덱스 (0~3)
+
+        // 총 플레이어 배열 (호스트 포함, 길이 4)
+        public RoomUserData[] Players { get; private set; } = new RoomUserData[4];
+        public int mySlotIndex = 0;
 
         private void Awake()
         {
@@ -25,42 +30,102 @@ namespace MCRGame.Net
             }
         }
 
-        /// <summary>
-        /// 3개의 인자를 받아 방 정보를 저장합니다.
-        /// 게스트 닉네임 배열은 기본 길이 3의 빈 배열로 설정합니다.
-        /// </summary>
-        public void SetRoomInfo(string roomId, string roomTitle, string hostNickname)
+        public void SetRoomInfo(string roomId, string roomTitle, RoomUserData hostUser, int hostSlotIndex)
         {
             RoomId = roomId;
             RoomTitle = roomTitle;
-            HostNickname = hostNickname;
-            GuestNicknames = new string[3]; // 길이 3의 빈 배열
-            Debug.Log($"[RoomDataManager] Room info set: {roomId}, {roomTitle}, HostNickname: {hostNickname}");
+            HostUser = hostUser;
+            HostSlotIndex = hostSlotIndex;
+            Players = new RoomUserData[4];
+            Players[hostSlotIndex] = hostUser;
+            Debug.Log($"[RoomDataManager] Room info set: {roomId}, {roomTitle}, Host: {hostUser.nickname} ({hostUser.uid}) at slot {hostSlotIndex}");
         }
 
-        /// <summary>
-        /// 4개의 인자를 받아 방 정보를 저장합니다.
-        /// guestNicknames 배열의 길이가 3이 아니면, 길이 3으로 재설정합니다.
-        /// </summary>
-        public void SetRoomInfo(string roomId, string roomTitle, string hostNickname, string[] guestNicknames)
+        public void SetRoomInfo(string roomId, string roomTitle, RoomUserData hostUser, int hostSlotIndex, RoomUserData[] users)
         {
             RoomId = roomId;
             RoomTitle = roomTitle;
-            HostNickname = hostNickname;
-            if (guestNicknames.Length == 3)
+            HostUser = hostUser;
+            HostSlotIndex = hostSlotIndex;
+            Players = new RoomUserData[4];
+            Players[hostSlotIndex] = hostUser;
+            if (users != null)
             {
-                GuestNicknames = guestNicknames;
+                foreach (var user in users)
+                {
+                    if (user == null)
+                        continue;
+                    if (user.slot_index == hostSlotIndex)
+                        continue;
+                    if (user.slot_index >= 0 && user.slot_index < Players.Length)
+                    {
+                        Players[user.slot_index] = user;
+                    }
+                    else
+                    {
+                        Debug.LogWarning($"[RoomDataManager] user {user.nickname}의 slot_index({user.slot_index})가 유효 범위를 벗어났습니다.");
+                    }
+                }
+            }
+            Debug.Log($"[RoomDataManager] Room info set: {roomId}, {roomTitle}, Host: {hostUser.nickname} ({hostUser.uid}) at slot {hostSlotIndex}, Users: {string.Join(", ", GetGuestNicknames())}");
+        }
+
+        private string[] GetGuestNicknames()
+        {
+            string[] names = new string[Players.Length - 1];
+            int idx = 0;
+            for (int slot = 0; slot < Players.Length; slot++)
+            {
+                if (slot == HostSlotIndex)
+                    continue;
+                names[idx++] = Players[slot] != null ? Players[slot].nickname : "Empty";
+            }
+            return names;
+        }
+
+        public bool IsHost(string myUid)
+        {
+            if (HostUser == null)
+                return false;
+            return HostUser.uid == myUid;
+        }
+
+        public void PrintPlayers()
+        {
+            Debug.Log("[RoomDataManager] 현재 Players 배열 상태:");
+            for (int i = 0; i < Players.Length; i++)
+            {
+                if (Players[i] != null)
+                {
+                    Debug.Log($"  Slot {i}: {Players[i].nickname}, uid: {Players[i].uid}, isReady: {Players[i].isReady}, slot_index: {Players[i].slot_index}");
+                }
+                else
+                {
+                    Debug.Log($"  Slot {i}: Empty");
+                }
+            }
+        }
+
+
+        // 새로 추가: Players 배열에 사용자 정보를 추가하거나 업데이트합니다.
+        public void AddOrUpdateUser(RoomUserData user)
+        {
+            if (user == null)
+                return;
+            if (user.slot_index >= 0 && user.slot_index < Players.Length)
+            {
+                Players[user.slot_index] = user;
+                RoomManager roomManagerInstance = FindFirstObjectByType<RoomManager>();
+                if (roomManagerInstance != null)
+                {
+                    roomManagerInstance.UpdatePlayerReadyState(user.uid, user.isReady);
+                }
+                Debug.Log($"[RoomDataManager] Updated user at slot {user.slot_index}: {user.nickname}");
             }
             else
             {
-                // guestNicknames 길이가 3이 아니면, 길이 3으로 재설정 (필요 시 배열 값을 복사할 수 있음)
-                GuestNicknames = new string[3];
-                for (int i = 0; i < Mathf.Min(guestNicknames.Length, 3); i++)
-                {
-                    GuestNicknames[i] = guestNicknames[i];
-                }
+                Debug.LogWarning($"[RoomDataManager] Invalid slot index {user.slot_index} for user {user.nickname}");
             }
-            Debug.Log($"[RoomDataManager] Room info set: {roomId}, {roomTitle}, HostNickname: {hostNickname}, GuestNicknames: {string.Join(", ", GuestNicknames)}");
         }
     }
 }
