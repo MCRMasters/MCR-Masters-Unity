@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 5c53e22895eab4752af08144ef4631cf
+guid: baef4003204135946b94b8da9dba287e
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -6714880474838764050
-    second: OkButton2_0
+      213: 1227254096713744525
+    second: GoogleButton_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -126,23 +126,43 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: OkButton2_0
+      name: GoogleButton_0
       rect:
         serializedVersion: 2
-        x: 11
-        y: 0
-        width: 1513
-        height: 1024
+        x: 87
+        y: 378
+        width: 848
+        height: 270
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
-      outline: []
+      outline:
+      - - {x: -404, y: 119}
+        - {x: -404, y: 103}
+        - {x: -420, y: 103}
+        - {x: -421, y: -101}
+        - {x: -406, y: -100}
+        - {x: -407, y: -117}
+        - {x: -388.74918, y: -117.41116}
+        - {x: -388, y: -133}
+        - {x: 392, y: -135}
+        - {x: 392, y: -120}
+        - {x: 407, y: -121}
+        - {x: 408, y: -104}
+        - {x: 424, y: -104}
+        - {x: 424, y: 102}
+        - {x: 410, y: 102}
+        - {x: 409, y: 119}
+        - {x: 391, y: 119}
+        - {x: 392, y: 135}
+        - {x: -389, y: 135}
+        - {x: -389, y: 119}
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: ee5770cf8c3ffc2a0800000000000000
-      internalID: -6714880474838764050
+      spriteID: d8004c34915180110800000000000000
+      internalID: 1227254096713744525
       vertices: []
       indices: 
       edges: []
@@ -151,7 +171,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 
+    spriteID: 101b35eb4989a45438f07cb035a9d2be
     internalID: 0
     vertices: []
     indices: 
@@ -161,7 +181,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      OkButton2_0: -6714880474838764050
+      GoogleButton_0: 1227254096713744525
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

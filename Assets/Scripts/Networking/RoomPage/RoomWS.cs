@@ -108,12 +108,12 @@ namespace MCRGame.Net
                     return;
                 }
 
-                if (response.data == null)
+                if (response.Data == null)
                 {
                     Debug.LogWarning("수신 메시지에 data가 없습니다.");
                 }
 
-                switch (response.action)
+                switch (response.Action)
                 {
                     case WSActionType.PING:
                         Debug.Log("서버로부터 PING 수신. PONG 전송.");
@@ -124,35 +124,35 @@ namespace MCRGame.Net
                         break;
                     case WSActionType.USER_READY_CHANGED:
                         {
-                            WSUserReadyData readyData = JsonConvert.DeserializeObject<WSUserReadyData>(response.data?.ToString() ?? "{}");
-                            Debug.Log($"유저 준비 상태 변경: {readyData.user_uid} -> {readyData.is_ready}");
+                            WSUserReadyData readyData = JsonConvert.DeserializeObject<WSUserReadyData>(response.Data?.ToString() ?? "{}");
+                            Debug.Log($"유저 준비 상태 변경: {readyData.UserUid} -> {readyData.IsReady}");
                             RoomManager roomManagerInstance = FindFirstObjectByType<RoomManager>();
                             if (roomManagerInstance != null)
                             {
-                                roomManagerInstance.UpdatePlayerReadyState(readyData.user_uid, readyData.is_ready);
+                                roomManagerInstance.UpdatePlayerReadyState(readyData.UserUid, readyData.IsReady);
                             }
                         }
                         break;
                     case WSActionType.USER_LEFT:
                         {
-                            WSUserLeftData leftData = JsonConvert.DeserializeObject<WSUserLeftData>(response.data?.ToString() ?? "{}");
-                            Debug.Log($"유저 퇴장: {leftData.user_uid}");
+                            WSUserLeftData leftData = JsonConvert.DeserializeObject<WSUserLeftData>(response.Data?.ToString() ?? "{}");
+                            Debug.Log($"유저 퇴장: {leftData.UserUid}");
                         }
                         break;
                     case WSActionType.USER_JOINED:
                         {
-                            WSUserJoinedData joinedData = JsonConvert.DeserializeObject<WSUserJoinedData>(response.data?.ToString() ?? "{}");
-                            Debug.Log($"유저 입장: {joinedData.user_uid} - 닉네임: {joinedData.nickname}, slot_index: {joinedData.slot_index}");
+                            WSUserJoinedData joinedData = JsonConvert.DeserializeObject<WSUserJoinedData>(response.Data?.ToString() ?? "{}");
+                            Debug.Log($"유저 입장: {joinedData.UserUid} - 닉네임: {joinedData.Nickname}, slot_index: {joinedData.SlotIndex}");
 
                             // RoomDataManager 업데이트: Players 배열에 새 사용자 정보 추가/갱신
                             if (RoomDataManager.Instance != null)
                             {
                                 RoomUserData newUser = new RoomUserData
                                 {
-                                    uid = joinedData.user_uid,
-                                    nickname = joinedData.nickname,
-                                    isReady = joinedData.is_ready,
-                                    slot_index = joinedData.slot_index
+                                    uid = joinedData.UserUid,
+                                    nickname = joinedData.Nickname,
+                                    isReady = joinedData.IsReady,
+                                    slot_index = joinedData.SlotIndex
                                 };
                                 RoomDataManager.Instance.AddOrUpdateUser(newUser);
                             }
@@ -173,13 +173,13 @@ namespace MCRGame.Net
 
                     case WSActionType.GAME_STARTED:
                         {
-                            WSGameStartedData gameData = JsonConvert.DeserializeObject<WSGameStartedData>(response.data?.ToString() ?? "{}");
-                            Debug.Log("게임 시작! game_url: " + gameData.game_url);
+                            WSGameStartedData gameData = JsonConvert.DeserializeObject<WSGameStartedData>(response.Data?.ToString() ?? "{}");
+                            Debug.Log("게임 시작! game_url: " + gameData.GameUrl);
                             UnityEngine.SceneManagement.SceneManager.LoadScene("GameScene");
                         }
                         break;
                     default:
-                        Debug.Log("알 수 없는 액션: " + response.action);
+                        Debug.Log("알 수 없는 액션: " + response.Action);
                         break;
                 }
             }
@@ -193,11 +193,11 @@ namespace MCRGame.Net
         {
             WSMessage pongResponse = new WSMessage
             {
-                status = "success",
-                action = WSActionType.PONG,
-                data = new { message = "pong" },
-                error = null,
-                timestamp = DateTime.UtcNow.ToString("o")
+                Status = "success",
+                Action = WSActionType.PONG,
+                Data = new { message = "pong" },
+                Error = null,
+                Timestamp = DateTime.UtcNow.ToString("o")
             };
 
             string json = JsonConvert.SerializeObject(pongResponse);
@@ -219,11 +219,11 @@ namespace MCRGame.Net
         {
             WSMessage pingRequest = new WSMessage
             {
-                status = "success",
-                action = WSActionType.PING,
-                data = new { message = "ping" },
-                error = null,
-                timestamp = DateTime.UtcNow.ToString("o")
+                Status = "success",
+                Action = WSActionType.PING,
+                Data = new { message = "ping" },
+                Error = null,
+                Timestamp = DateTime.UtcNow.ToString("o")
             };
 
             string json = JsonConvert.SerializeObject(pingRequest);
