@@ -15,6 +15,9 @@ namespace MCRGame.Net
         private ClientWebSocket webSocket;
         private CancellationTokenSource cancellation;
 
+        // 연결 완료 시 호출할 콜백 (클라이언트 내부용)
+        public Action OnWebSocketConnected;
+
         async void Start()
         {
             // RoomDataManager에 저장된 방 번호 업데이트
@@ -59,6 +62,8 @@ namespace MCRGame.Net
             {
                 await webSocket.ConnectAsync(uri, cancellation.Token);
                 Debug.Log("WebSocket 연결 성공!");
+                // 연결이 완료되면 연결 완료 콜백 호출
+                OnWebSocketConnected?.Invoke();
                 _ = ReceiveLoop();
             }
             catch (Exception ex)
