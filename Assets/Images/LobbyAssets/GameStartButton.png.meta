@@ -133,6 +133,19 @@ TextureImporter:
     ignorePlatformSupport: 0
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: iOS
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
   spriteSheet:
     serializedVersion: 2
     sprites:
@@ -347,7 +360,16 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      GameStartButton_0: 3003620437649441065
+      GameStartButton_1: -7180211702918714247
+      GameStartButton_2: -906505453766926266
+      GameStartButton_3: -6478256392274453863
+      GameStartButton_4: -7010287524658477302
+      GameStartButton_5: -137076625655404059
+      GameStartButton_6: -4373294568950581257
+      GameStartButton_7: 8666104897586992002
+      GameStartButton_8: 4236580138179601075
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

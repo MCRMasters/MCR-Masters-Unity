@@ -3,48 +3,91 @@ using Newtonsoft.Json;
 
 namespace MCRGame.Net
 {
-    // 클라이언트가 서버로부터 수신하는 이벤트 메시지 모델입니다.
+    // 서버에서 받는 기본 메시지 포맷
     public class WSMessage
     {
-        public string status;    // "success" 또는 "error"
-        public WSActionType action;
-        public object data;
-        public string error;
-        public string timestamp;
+        [JsonProperty("status")]
+        public string Status { get; set; }
+
+        [JsonProperty("action")]
+        public WSActionType Action { get; set; }
+
+        [JsonProperty("data")]
+        public object Data { get; set; }
+
+        [JsonProperty("error")]
+        public string Error { get; set; }
+
+        [JsonProperty("timestamp")]
+        public string Timestamp { get; set; }
     }
 
-    // 서버의 GameStartedData에 대응
-    public class WSGameStartedData
+    // Python의 WebSocketMessage에 대응
+    public class WSWebSocketMessage
     {
-        public string game_url;
+        [JsonProperty("action")]
+        public string Action { get; set; }
+
+        [JsonProperty("data")]
+        public object Data { get; set; }
     }
 
-    // 서버의 UserReadyData에 대응 (uid를 string으로 변경)
+    // Python의 WebSocketResponse에 대응
+    public class WSWebSocketResponse
+    {
+        [JsonProperty("status")]
+        public string Status { get; set; }
+
+        [JsonProperty("action")]
+        public string Action { get; set; }
+
+        [JsonProperty("data")]
+        public object Data { get; set; }
+
+        [JsonProperty("error")]
+        public string Error { get; set; }
+
+        [JsonProperty("timestamp")]
+        public string Timestamp { get; set; } = DateTime.UtcNow.ToString("o");
+    }
+
+    // Python의 UserReadyData에 대응
     public class WSUserReadyData
     {
-        public string user_uid;
-        public bool is_ready;
+        [JsonProperty("user_uid")]
+        public string UserUid { get; set; }
+
+        [JsonProperty("is_ready")]
+        public bool IsReady { get; set; }
     }
 
-    // 서버의 UserJoinedData에 대응 (uid를 string으로 변경)
+    // Python의 UserJoinedData에 대응
     public class WSUserJoinedData
     {
-        public string user_uid;
-        public string nickname;
-        public bool is_ready;  // 기본값 false
-        public int slot_index; // 추가: 사용자의 슬롯 인덱스
+        [JsonProperty("user_uid")]
+        public string UserUid { get; set; }
+
+        [JsonProperty("nickname")]
+        public string Nickname { get; set; }
+
+        [JsonProperty("slot_index")]
+        public int SlotIndex { get; set; }
+
+        [JsonProperty("is_ready")]
+        public bool IsReady { get; set; } = false;
     }
 
-    // 서버의 UserLeftData에 대응 (uid를 string으로 변경)
+    // Python의 UserLeftData에 대응
     public class WSUserLeftData
     {
-        public string user_uid;
+        [JsonProperty("user_uid")]
+        public string UserUid { get; set; }
     }
 
-    // 클라이언트가 서버로 보낼 요청 메시지 모델
-    public class WSRequest
+    // Python의 GameStartedData / 기존 WSGameStartedData에 대응
+    public class WSGameStartedData
     {
-        public string action;
-        public object data;
+        [JsonProperty("game_url")]
+        public string GameUrl { get; set; }
     }
 }
