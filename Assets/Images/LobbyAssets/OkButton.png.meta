@@ -271,6 +271,19 @@ TextureImporter:
     ignorePlatformSupport: 0
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: iOS
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
   spriteSheet:
     serializedVersion: 2
     sprites:
@@ -1497,7 +1510,62 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      OkButton_0: -5207038708433229264
+      OkButton_1: -8984233567203531146
+      OkButton_10: 8108836332986707486
+      OkButton_11: 1557851305947195617
+      OkButton_12: -5277453561754864266
+      OkButton_13: 5075494153798318485
+      OkButton_14: 728687875666413427
+      OkButton_15: -10698370847737660
+      OkButton_16: -4420065326089944791
+      OkButton_17: -4415851931535607521
+      OkButton_18: -122924559595896867
+      OkButton_19: -7088228336570458824
+      OkButton_2: 7485417353834877433
+      OkButton_20: -827415572751893761
+      OkButton_21: -1561272918854566929
+      OkButton_22: -4112112718447237006
+      OkButton_23: -2424317642589996814
+      OkButton_24: -5545518813365806447
+      OkButton_25: -6349492970799174381
+      OkButton_26: 6550642344575944680
+      OkButton_27: -775400913710227491
+      OkButton_28: 4284035826109511627
+      OkButton_29: 7644921113255463174
+      OkButton_3: 2531138505946751889
+      OkButton_30: 2439485595045840081
+      OkButton_31: 7062390276403881781
+      OkButton_32: 5652353836369268899
+      OkButton_33: -7717556310319202503
+      OkButton_34: 516675600826133459
+      OkButton_35: -4602349128020994272
+      OkButton_36: 9045498979988557988
+      OkButton_37: 8364052852374182730
+      OkButton_38: -1059970463707258707
+      OkButton_39: -2068969378492420448
+      OkButton_4: -91158598876863412
+      OkButton_40: 1996165341209335310
+      OkButton_41: 7563088076127817827
+      OkButton_42: -829970532877168654
+      OkButton_43: -8211117465457442658
+      OkButton_44: 4660729611895690003
+      OkButton_45: -9136197776882467044
+      OkButton_46: 4547486845994264116
+      OkButton_47: 8169086457796925059
+      OkButton_48: 475684201512899036
+      OkButton_49: -3051668413461501698
+      OkButton_5: -2918356911812227664
+      OkButton_50: 4710846579800307257
+      OkButton_51: 6161476062611720749
+      OkButton_52: 308376731927872697
+      OkButton_53: 128420832420256619
+      OkButton_54: 604863062379570931
+      OkButton_6: -6447533345205722312
+      OkButton_7: 7937000292084884840
+      OkButton_8: 3102503787308052378
+      OkButton_9: -6964611928936323933
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
