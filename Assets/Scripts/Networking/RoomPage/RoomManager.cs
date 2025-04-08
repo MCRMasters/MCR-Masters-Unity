@@ -1,5 +1,5 @@
 using System.Linq;
-using System.Collections;
+using System.Collections; // 코루틴 사용을 위한 네임스페이스 추가
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -35,6 +35,10 @@ namespace MCRGame.Net
         // 현재 플레이어가 host인지 여부 및 Ready 상태 (개별 변수 대신 RoomDataManager.Instance.mySlotIndex로 슬롯 참조)
         private bool isHost = false;
         private bool isReady = false;
+
+        // 추가: WebSocket 연결 상태 및 연결 전 Ready 버튼 클릭 여부를 추적
+        private bool wsConnected = false;
+        private bool clickedReadyBeforeWS = false;
 
         void Start()
         {
@@ -102,70 +106,29 @@ namespace MCRGame.Net
                     actionButton.interactable = true;
                 }
                 actionButton.onClick.AddListener(OnActionButtonClicked);
-
             }
-            // 초기 UI 업데이트: UpdatePlayerUI가 Players 배열 기반으로 readyIndicators를 관리합니다.
+            // 초기 UI 업데이트: Players 배열 기반으로 readyIndicators를 관리
             UpdatePlayerUI();
-        }
-        public void UpdatePlayerUI()
-        {
-            if (RoomDataManager.Instance != null)
+
+            // WebSocket 연결 완료 콜백 등록
+            if (roomWS != null)
             {
-                RoomDataManager.Instance.PrintPlayers();
-                RoomUserData[] players = RoomDataManager.Instance.Players;
-                for (int i = 0; i < players.Length; i++)
-                {
-                    // 디버깅: 현재 슬롯 i의 플레이어 정보 출력
-                    if (players[i] != null)
-                    {
-                        Debug.Log($"[UpdatePlayerUI] Slot {i}: {players[i].nickname}, isReady: {players[i].isReady}");
-                    }
-                    else
-                    {
-                        Debug.Log($"[UpdatePlayerUI] Slot {i}: Empty");
-                    }
-
-                    // 플레이어 닉네임과 캐릭터 이미지 업데이트
-                    if (players[i] != null)
-                    {
-                        if (playerNicknameTexts != null && playerNicknameTexts.Length > i)
-                        {
-                            playerNicknameTexts[i].text = players[i].nickname;
-                            playerNicknameTexts[i].gameObject.SetActive(true);
-                        }
-                        if (playerCharacterImages != null && playerCharacterImages.Length > i)
-                        {
-                            playerCharacterImages[i].sprite = defaultCharacterSprite;
-                            playerCharacterImages[i].gameObject.SetActive(true);
-                        }
-                    }
-                    else
-                    {
-                        if (playerNicknameTexts != null && playerNicknameTexts.Length > i)
-                            playerNicknameTexts[i].gameObject.SetActive(false);
-                        if (playerCharacterImages != null && playerCharacterImages.Length > i)
-                            playerCharacterImages[i].gameObject.SetActive(false);
-                    }
-
-                    // Ready 상태에 따른 readyIndicators 업데이트
-                    if (readyIndicators != null && readyIndicators.Length > i)
-                    {
-                        if (players[i] != null)
-                        {
-                            readyIndicators[i].gameObject.SetActive(true);
-                            readyIndicators[i].color = players[i].isReady ? Color.green : Color.red;
-                            Debug.Log($"[UpdatePlayerUI] ReadyIndicator Slot {i}: Active, Color: {(players[i].isReady ? "Green" : "Red")}");
-                        }
-                        else
-                        {
-                            readyIndicators[i].gameObject.SetActive(false);
-                            Debug.Log($"[UpdatePlayerUI] ReadyIndicator Slot {i}: Inactive");
-                        }
-                    }
-                }
+                roomWS.OnWebSocketConnected = OnWebSocketConnectedHandler;
             }
         }
 
+        // WebSocket 연결 완료 시 호출되는 콜백 처리
+        private void OnWebSocketConnectedHandler()
+        {
+            wsConnected = true;
+            Debug.Log("[RoomManager] WebSocket 연결 완료. wsConnected = true");
+            // 연결 전에 Ready 버튼이 클릭되어 있던 상태라면(레디 상태가 유지 중이라면) 신호 전송
+            if (!isHost && clickedReadyBeforeWS && roomWS != null)
+            {
+                roomWS.SendReadyStatus(isReady);
+                Debug.Log("[RoomManager] WebSocket 연결 후 미리 설정한 Ready 상태 전송됨: " + isReady);
+            }
+        }
 
         /// <summary>
         /// 단일 버튼 클릭 시 호출. host는 Start 버튼 동작, 게스트는 Ready 상태 토글 수행.
@@ -193,9 +156,17 @@ namespace MCRGame.Net
                 {
                     actionButton.GetComponentInChildren<Text>().text = isReady ? "Ready ✔" : "Ready";
                 }
-                if (roomWS != null)
+
+                // Ready 버튼 클릭 시 WebSocket 연결 상태에 따라 처리:
+                // 연결이 완료되어 있다면 바로 신호 전송, 아니라면 추후 전송을 위해 플래그 설정.
+                if (wsConnected && roomWS != null)
                 {
                     roomWS.SendReadyStatus(isReady);
+                }
+                else
+                {
+                    clickedReadyBeforeWS = true;
+                    Debug.Log("[RoomManager] WebSocket 미연결 상태에서 Ready 버튼 클릭, 나중에 신호 전송 예정.");
                 }
             }
         }
@@ -264,7 +235,7 @@ namespace MCRGame.Net
                 return;
             }
 
-            print($"new uid{uid}, player uid: {PlayerDataManager.Instance.Uid}");
+            print($"new uid: {uid}, player uid: {PlayerDataManager.Instance.Uid}");
             if (uid == PlayerDataManager.Instance.Uid)
             {
                 Debug.Log("already updated player's state");
@@ -334,6 +305,65 @@ namespace MCRGame.Net
             {
                 int readyCount = playerReady.Count(r => r);
                 actionButton.interactable = (readyCount == playerReady.Length);
+            }
+        }
+
+        public void UpdatePlayerUI()
+        {
+            if (RoomDataManager.Instance != null)
+            {
+                RoomDataManager.Instance.PrintPlayers();
+                RoomUserData[] players = RoomDataManager.Instance.Players;
+                for (int i = 0; i < players.Length; i++)
+                {
+                    // 디버깅: 현재 슬롯 i의 플레이어 정보 출력
+                    if (players[i] != null)
+                    {
+                        Debug.Log($"[UpdatePlayerUI] Slot {i}: {players[i].nickname}, isReady: {players[i].isReady}");
+                    }
+                    else
+                    {
+                        Debug.Log($"[UpdatePlayerUI] Slot {i}: Empty");
+                    }
+
+                    // 플레이어 닉네임과 캐릭터 이미지 업데이트
+                    if (players[i] != null)
+                    {
+                        if (playerNicknameTexts != null && playerNicknameTexts.Length > i)
+                        {
+                            playerNicknameTexts[i].text = players[i].nickname;
+                            playerNicknameTexts[i].gameObject.SetActive(true);
+                        }
+                        if (playerCharacterImages != null && playerCharacterImages.Length > i)
+                        {
+                            playerCharacterImages[i].sprite = defaultCharacterSprite;
+                            playerCharacterImages[i].gameObject.SetActive(true);
+                        }
+                    }
+                    else
+                    {
+                        if (playerNicknameTexts != null && playerNicknameTexts.Length > i)
+                            playerNicknameTexts[i].gameObject.SetActive(false);
+                        if (playerCharacterImages != null && playerCharacterImages.Length > i)
+                            playerCharacterImages[i].gameObject.SetActive(false);
+                    }
+
+                    // Ready 상태에 따른 readyIndicators 업데이트
+                    if (readyIndicators != null && readyIndicators.Length > i)
+                    {
+                        if (players[i] != null)
+                        {
+                            readyIndicators[i].gameObject.SetActive(true);
+                            readyIndicators[i].color = players[i].isReady ? Color.green : Color.red;
+                            Debug.Log($"[UpdatePlayerUI] ReadyIndicator Slot {i}: Active, Color: {(players[i].isReady ? "Green" : "Red")}");
+                        }
+                        else
+                        {
+                            readyIndicators[i].gameObject.SetActive(false);
+                            Debug.Log($"[UpdatePlayerUI] ReadyIndicator Slot {i}: Inactive");
+                        }
+                    }
+                }
             }
         }
     }
