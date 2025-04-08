@@ -12,14 +12,14 @@ namespace MCRGame.UI
         public List<GameObject> callBlocks;
 
         [Header("Animation Settings")]
-        public float cbDropHeight   = 10f;   // 위에서 얼마나 높이 시작할지
+        public float cbDropHeight = 10f;   // 위에서 얼마나 높이 시작할지
         public float cbFadeDuration = 0.1f;  // 투명→불투명 페이드 시간
         public float cbDropDuration = 0.2f;  // 낙하 애니메이션 시간
-        public float cbDiagOffset   = 50f;   // 대각선으로 얼마나 멀리 시작할지
+        public float cbDiagOffset = 50f;   // 대각선으로 얼마나 멀리 시작할지
 
         [Header("Bulge Settings")]
         public float cbBulgeHeight = 10f;     // Y축으로 얼마나 불룩하게
-        public bool  cbBulgeUp     = true;   // true면 위로, false면 아래로
+        public bool cbBulgeUp = true;   // true면 위로, false면 아래로
 
         public void AddCallBlock(CallBlockData data)
         {
@@ -83,10 +83,10 @@ namespace MCRGame.UI
 
                 // 3) Y 불룩하게 (Bulge)
                 float baseY = Mathf.Lerp(startLocal.y, finalPos.y, tNorm);
-                float dir   = cbBulgeUp ? 1f : -1f;
+                float dir = cbBulgeUp ? 1f : -1f;
                 // 4*t*(1-t) 꼴로 t=0.5일 때 최대
-                float bulge  = cbBulgeHeight * 4f * tNorm * (1f - tNorm) * dir;
-                float y      = baseY + bulge;
+                float bulge = cbBulgeHeight * 4f * tNorm * (1f - tNorm) * dir;
+                float y = baseY + bulge;
 
                 obj.transform.localPosition = new Vector3(x, y, z);
 
@@ -113,9 +113,22 @@ namespace MCRGame.UI
                         var c = mat.color;
                         c.a = 1f;
                         mat.color = c;
+                        SetMaterialOpaque(mat);
                     }
         }
 
+        private void SetMaterialOpaque(Material mat)
+        {
+            mat.SetFloat("_Mode", 0);
+            mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.One);
+            mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.Zero);
+            mat.SetInt("_ZWrite", 1);
+            mat.DisableKeyword("_ALPHATEST_ON");
+            mat.DisableKeyword("_ALPHABLEND_ON");
+            mat.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+            // 기본 렌더 큐(Geometry 2000)로 복원
+            mat.renderQueue = -1;
+        }
         private void SetMaterialTransparent(Material mat)
         {
             mat.SetFloat("_Mode", 3);
@@ -153,7 +166,7 @@ namespace MCRGame.UI
             var (newMin, newMax) = GetLocalBounds(newCallBlock);
 
             float desiredX = prevMax.x + gap;
-            float offsetX   = desiredX - newMin.x;
+            float offsetX = desiredX - newMin.x;
             newCallBlock.transform.localPosition += new Vector3(offsetX, 0f, 0f);
         }
 
