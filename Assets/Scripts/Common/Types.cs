@@ -67,7 +67,7 @@ namespace MCRGame.Common
         }
     }
 
-    public enum ActionType
+    public enum GameActionType
     {
         SKIP = 0,
         HU = 1,
@@ -77,24 +77,24 @@ namespace MCRGame.Common
         FLOWER = 5
     }
 
-    public static class ActionTypeExtensions
+    public static class GameActionTypeExtensions
     {
-            public static ActionType? CreateFromGameEventType(this GameEventType eventType)
+            public static GameActionType? CreateFromGameEventType(this GameEventType eventType)
         {
             switch (eventType)
             {
                 case GameEventType.SHOMIN_KAN:
                 case GameEventType.DAIMIN_KAN:
                 case GameEventType.AN_KAN:
-                    return ActionType.KAN;
+                    return GameActionType.KAN;
                 case GameEventType.CHII:
-                    return ActionType.CHII;
+                    return GameActionType.CHII;
                 case GameEventType.PON:
-                    return ActionType.PON;
+                    return GameActionType.PON;
                 case GameEventType.FLOWER:
-                    return ActionType.FLOWER;
+                    return GameActionType.FLOWER;
                 case GameEventType.HU:
-                    return ActionType.HU;
+                    return GameActionType.HU;
                 default:
                     return null;
             }

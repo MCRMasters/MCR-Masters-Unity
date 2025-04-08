@@ -1,7 +1,7 @@
-using System;
+using UnityEngine;
 using System.Collections.Generic;
 using MCRGame.Common;
-using UnityEngine;
+using System;
 
 namespace MCRGame.UI
 {
@@ -10,7 +10,7 @@ namespace MCRGame.UI
         public List<GameObject> callBlocks;
         private float offset;
 
-        public void AddCallBlock(CallBlockType type, GameTile firstTile, RelativeSeat sourceSeat, int sourceTileIndex = 0)
+        public void AddCallBlock(CallBlockData data)
         {
             // 새 CallBlock 게임오브젝트 생성
             GameObject callBlockObj = new GameObject("CallBlock");
@@ -18,10 +18,7 @@ namespace MCRGame.UI
 
             // CallBlock 컴포넌트 추가 및 초기화
             CallBlock callBlock = callBlockObj.AddComponent<CallBlock>();
-            callBlock.type = type;
-            callBlock.firstTile = firstTile;
-            callBlock.sourceSeat = sourceSeat;
-            callBlock.sourceTileIndex = sourceTileIndex;
+            callBlock.Data = data;
             callBlock.InitializeCallBlock();
 
             // 리스트에 추가
@@ -43,17 +40,17 @@ namespace MCRGame.UI
                 return;
             }
 
-            // gap을 tile 너비의 일정 비율로 설정 (예: 20%)
+            // gap을 tile 너비의 일정 비율로 설정 (예: 10%)
             float gapRatio = 0.1f;
 
             // 이전 블록 가져오기 및 유효성 검사
             GameObject prevCallBlockObj = callBlocks[callBlocks.Count - 2];
             CallBlock prevCallBlock = prevCallBlockObj.GetComponent<CallBlock>();
-            if (prevCallBlock == null || prevCallBlock.tiles.Count == 0)
+            if (prevCallBlock == null || prevCallBlock.Tiles.Count == 0)
                 return;
 
             // 이전 블록의 첫 타일을 기준으로 너비 측정
-            Renderer prevTileRenderer = prevCallBlock.tiles[0].GetComponent<Renderer>();
+            Renderer prevTileRenderer = prevCallBlock.Tiles[0].GetComponent<Renderer>();
             if (prevTileRenderer == null)
                 return;
             float tileWidth = prevTileRenderer.bounds.size.x;
@@ -81,13 +78,13 @@ namespace MCRGame.UI
         private (Vector3 min, Vector3 max) GetLocalBounds(GameObject callBlockObj)
         {
             CallBlock cb = callBlockObj.GetComponent<CallBlock>();
-            if (cb == null || cb.tiles.Count == 0)
+            if (cb == null || cb.Tiles.Count == 0)
                 return (Vector3.zero, Vector3.zero);
 
             Vector3 overallMin = new Vector3(float.MaxValue, float.MaxValue, float.MaxValue);
             Vector3 overallMax = new Vector3(float.MinValue, float.MinValue, float.MinValue);
 
-            foreach (var tile in cb.tiles)
+            foreach (var tile in cb.Tiles)
             {
                 Renderer rend = tile.GetComponent<Renderer>();
                 if (rend == null)
