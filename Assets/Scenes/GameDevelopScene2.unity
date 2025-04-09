@@ -164,6 +164,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   callBlocks: []
+  cbDropHeight: 2
+  cbFadeDuration: 0.2
+  cbDropDuration: 0.5
+  cbDiagOffset: 1
+  cbBulgeHeight: 5
+  cbBulgeUp: 1
 --- !u!1 &134577190
 GameObject:
   m_ObjectHideFlags: 0
@@ -942,7 +948,7 @@ Transform:
   m_GameObject: {fileID: 513939531}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: 1, z: -0, w: 0}
-  m_LocalPosition: {x: 0.00509, y: -0.00488, z: -0.00011}
+  m_LocalPosition: {x: 0.00618, y: -0.00477, z: -0.00011}
   m_LocalScale: {x: 0.00003333334, y: 0.00003333333, z: 0.00003333333}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -961,6 +967,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   callBlocks: []
+  cbDropHeight: 10
+  cbFadeDuration: 0.1
+  cbDropDuration: 0.2
+  cbDiagOffset: 50
+  cbBulgeHeight: 10
+  cbBulgeUp: 1
 --- !u!1 &539030809
 GameObject:
   m_ObjectHideFlags: 0
@@ -1148,6 +1160,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   callBlocks: []
+  cbDropHeight: 2
+  cbFadeDuration: 0.2
+  cbDropDuration: 0.5
+  cbDiagOffset: 1
+  cbBulgeHeight: 5
+  cbBulgeUp: 1
 --- !u!1 &674211991
 GameObject:
   m_ObjectHideFlags: 0
@@ -1667,6 +1685,10 @@ MonoBehaviour:
   tileSpacing: 15
   rowSpacing: 20
   maxTilesPerRow: 6
+  dropHeight: 30
+  fadeDuration: 0.05
+  dropDuration: 0.15
+  extraRowOffset: 1
 --- !u!4 &1037952425
 Transform:
   m_ObjectHideFlags: 0
@@ -2030,6 +2052,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   callBlocks: []
+  cbDropHeight: 2
+  cbFadeDuration: 0.2
+  cbDropDuration: 0.5
+  cbDiagOffset: 1
+  cbBulgeHeight: 5
+  cbBulgeUp: 1
 --- !u!4 &1178855608 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 9824e9a2063774d1380629fa29445fdb, type: 3}
