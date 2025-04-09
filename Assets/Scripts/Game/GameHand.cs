@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using MCRGame.Common; // GameTile, GameAction, GameActionType, RelativeSeat, WinningConditions, CallBlockData 등이 정의되어 있음
 using UnityEngine;
+using MCRGame.UI;
 
-namespace MCRGame.UI
+namespace MCRGame.Game
 {
     public class GameHand
     {

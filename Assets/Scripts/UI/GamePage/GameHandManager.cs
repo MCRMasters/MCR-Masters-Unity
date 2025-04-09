@@ -5,6 +5,7 @@ using System.Linq;
 using UnityEngine;
 using MCRGame.Common;
 using UnityEngine.UI; // GameTile, GameAction, GameActionType, RelativeSeat, WinningConditions, CallBlockData 등
+using MCRGame.Game;
 
 namespace MCRGame.UI
 {
