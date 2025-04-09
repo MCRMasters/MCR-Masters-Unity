@@ -3,33 +3,40 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using MCRGame.Common; // GameTile, GameAction, GameActionType, RelativeSeat, WinningConditions, CallBlockData 등
+using MCRGame.Common;
+using UnityEngine.UI; // GameTile, GameAction, GameActionType, RelativeSeat, WinningConditions, CallBlockData 등
 
 namespace MCRGame.UI
 {
     public class GameHandManager : MonoBehaviour
     {
         [SerializeField] private GameObject baseTilePrefab;
-        [SerializeField] private CallBlockField callBlockField;  // Inspector에서 할당 (UI상의 호출 블록 관리)
-        [SerializeField] private DiscardManager discardManager;    // Inspector에서 DiscardManager를 할당받음
+        [SerializeField] private CallBlockField callBlockField;
+        [SerializeField] private DiscardManager discardManager;
+
+        [Header("Hand Animation Settings")]
+        [SerializeField] private float slideDuration = 0.5f;
+        [SerializeField] private float gap = 0.1f;
+
+        [Header("Tsumo Drop Settings")]      // <-- 추가
+        [SerializeField] private float tsumoDropHeight   = 50f;
+        [SerializeField] private float tsumoDropDuration = 0.2f;
+        [SerializeField] private float tsumoFadeDuration = 0.15f;
 
         private RectTransform haipaiRect;
-        private List<GameObject> tileObjects;  // 생성된 타일 UI 오브젝트 목록
-        private GameHand gameHand;             // 순수 데이터 및 로직을 관리하는 GameHand
-        private GameObject tsumoTile;          // tsumo 타일 (보통 마지막 타일)
+        private List<GameObject> tileObjects;
+        private GameHand gameHand;
+        private GameObject tsumoTile;
+
+        private Queue<DiscardRequest> discardQueue = new Queue<DiscardRequest>();
+        private bool isSliding = false;
+
 
         // 외부에서 접근 가능한 프로퍼티
         public GameHand GameHand => gameHand;
         public CallBlockField CallBlockField => callBlockField;
 
         public const int FULL_HAND_SIZE = 14;
-
-        // 폐기 요청들을 순차 처리하기 위한 큐 및 슬라이드 상태 플래그
-        private Queue<DiscardRequest> discardQueue = new Queue<DiscardRequest>();
-        private bool isSliding = false;
-        // 애니메이션 지속시간 (HandField와 비슷하게)
-        [SerializeField] private float slideDuration = 0.5f;
-        [SerializeField] private float gap = 0.1f;
 
 
         // 폐기 요청 구조체: 인덱스와 tsumotile 여부 저장
@@ -46,15 +53,12 @@ namespace MCRGame.UI
 
         void Awake()
         {
-            // RectTransform 초기화 및 앵커/피벗 설정
             haipaiRect = GetComponent<RectTransform>();
             haipaiRect.anchorMin = new Vector2(0, 0.5f);
             haipaiRect.anchorMax = new Vector2(0, 0.5f);
 
             tileObjects = new List<GameObject>();
             tsumoTile = null;
-
-            // GameHand 데이터 초기화 
             gameHand = new GameHand();
         }
 
@@ -63,39 +67,109 @@ namespace MCRGame.UI
             InitTestHand();
         }
 
-        // UI 오브젝트만 생성
         private GameObject AddTile(string tileName)
         {
             var newTile = Instantiate(baseTilePrefab, transform);
             var tm = newTile.GetComponent<TileManager>();
-            if (tm != null) tm.SetTileName(tileName);
+            tm?.SetTileName(tileName);
+
             var rt = newTile.GetComponent<RectTransform>();
             if (rt != null)
             {
                 rt.anchorMin = new Vector2(0, 0.5f);
                 rt.anchorMax = new Vector2(0, 0.5f);
-                rt.pivot = new Vector2(0, 0.5f);
+                rt.pivot     = new Vector2(0, 0.5f);
             }
+
             tileObjects.Add(newTile);
             return newTile;
         }
 
-        /// <summary>
-        /// 실제로 tsumo(뽑기) 타일을 추가할 때 호출합니다.
-        /// </summary>
         public void AddTsumo(GameTile tile)
         {
-            // 1) GameHand 데이터에 tsumo 적용
+            // 1) 데이터에 추가
             gameHand.ApplyTsumo(tile);
 
-            // 2) UI 오브젝트 생성 & tsumoTile 지정
-            var tileName = tile.ToCustomString();
+            // 2) UI 생성
+            string tileName = tile.ToCustomString();
             var newTileObj = AddTile(tileName);
             tsumoTile = newTileObj;
 
-            // 3) 정렬(꽃 타일 등 특별처리 없으므로 즉시 배치)
+            // 3) 슬라이드 애니메이션 대신 드롭 애니메이션 시작
+            StartCoroutine(AnimateTsumoDrop());
+        }
+
+        private IEnumerator AnimateTsumoDrop()
+        {
+            if (tsumoTile == null) yield break;
+
+            // --- 1) 정렬 & 목표 위치 계산 ---
             SortTileList();
-            ImmediateReplaceTiles();
+
+            // 기준 타일 너비
+            var firstRt = tileObjects[0].GetComponent<RectTransform>();
+            float tileWidth = firstRt != null ? firstRt.rect.width : 1f;
+
+            // 각 타일의 목표 anchoredPosition
+            var targetPos = new Dictionary<GameObject, Vector2>();
+            int idx = 0;
+            foreach (var go in tileObjects)
+            {
+                if (go == tsumoTile) continue;
+                targetPos[go] = new Vector2(idx * (tileWidth + gap), 0f);
+                // 다른 타일은 즉시 배치
+                var rt = go.GetComponent<RectTransform>();
+                if (rt != null) rt.anchoredPosition = targetPos[go];
+                idx++;
+            }
+            // tsumo 위치: 마지막 + extra gap
+            Vector2 tsumoTarget = new Vector2(
+                idx * (tileWidth + gap) + tileWidth * 0.2f,
+                0f
+            );
+            targetPos[tsumoTile] = tsumoTarget;
+
+    // 2) 시작 위치 & 투명 세팅
+    var tsumoRt = tsumoTile.GetComponent<RectTransform>();
+    Vector2 startPos = tsumoTarget + Vector2.up * tsumoDropHeight;
+    tsumoRt.anchoredPosition = startPos;
+
+    var img = tsumoTile.GetComponentInChildren<Image>();
+    Color origColor = img != null ? img.color : Color.white;
+    if (img != null)
+        img.color = new Color(origColor.r, origColor.g, origColor.b, 0f);
+
+    // 3) 물리 가속도 계산: y = y0 + 0.5 * a * t^2
+    float duration = tsumoDropDuration;
+    float y0 = startPos.y;
+    float y1 = tsumoTarget.y;
+    // a = 2*(y1 - y0)/t^2 로 하면 정확히 duration 후 y1 도달
+    float a = 2f * (y1 - y0) / (duration * duration);
+
+    float elapsed = 0f;
+    while (elapsed < duration)
+    {
+        elapsed += Time.deltaTime;
+        if (elapsed > duration) elapsed = duration;
+
+        // 가속 운동 공식
+        float y = y0 + 0.5f * a * elapsed * elapsed;
+        tsumoRt.anchoredPosition = new Vector2(tsumoTarget.x, y);
+
+        // 페이드인 (기존 로직)
+        if (img != null)
+        {
+            float alpha = Mathf.Clamp01(elapsed / tsumoFadeDuration);
+            img.color = new Color(origColor.r, origColor.g, origColor.b, alpha);
+        }
+
+        yield return null;
+    }
+
+    // 4) 최종 보정
+    tsumoRt.anchoredPosition = tsumoTarget;
+    if (img != null)
+        img.color = origColor;
         }
 
 
