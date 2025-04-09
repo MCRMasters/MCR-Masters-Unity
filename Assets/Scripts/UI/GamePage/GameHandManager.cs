@@ -337,11 +337,7 @@ namespace MCRGame.UI
 
                 initialPos[go] = rt.anchoredPosition;
 
-                float extraGap = (tsumoTile != null && go == tsumoTile && i == tileObjects.Count - 1)
-                    ? tileWidth * 0.2f
-                    : 0f;
-
-                targetPos[go] = new Vector2(i * (tileWidth + gap) + extraGap, 0f);
+                targetPos[go] = new Vector2(i * (tileWidth + gap), 0f);
             }
 
             // SmoothStep 이징 애니메이션
@@ -452,11 +448,8 @@ namespace MCRGame.UI
                 {
                     Destroy(discardedTile);
                 }
-                // tsumoTile의 경우, 참조도 초기화
-                if (request.isTsumoTile)
-                {
-                    tsumoTile = null;
-                }
+                // tsumoTile 참조 초기화
+                tsumoTile = null;
             }
 
             // 재배열 대상 : 현재 tileObjects에 남은 모든 타일들(순서대로 배치)
@@ -477,11 +470,7 @@ namespace MCRGame.UI
 
                 initialPositions[tileObj] = rect.anchoredPosition;
 
-                float extraGap = (tsumoTile != null && tileObj == tsumoTile && i == tileObjects.Count - 1)
-                    ? tileWidth * 0.2f
-                    : 0f;
-
-                targetPositions[tileObj] = new Vector2(i * (tileWidth + gap) + extraGap, 0f);
+                targetPositions[tileObj] = new Vector2(i * (tileWidth + gap), 0f);
             }
 
             float elapsed = 0f;
