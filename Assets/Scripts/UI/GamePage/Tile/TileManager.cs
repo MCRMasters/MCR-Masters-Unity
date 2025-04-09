@@ -95,19 +95,22 @@ namespace MCRGame.UI
 
             //Debug.Log($"[TileManager] 마우스가 '{tileName}' 영역에서 벗어남 -> ImageField 원위치");
         }
-        private bool flag = false;
-        // TODO need to add discard logic
+        
+        
         public void OnPointerClick(PointerEventData eventData)
         {
-            //Debug.Log($"[TileManager] '{tileName}' 클릭됨. (마우스 버튼: {eventData.button})");
-            if (eventData.button != PointerEventData.InputButton.Left){
+            if (eventData.button != PointerEventData.InputButton.Left)
                 return;
+            
+            // 부모 GameHandManager 컴포넌트에 접근하여 DiscardTile(this)를 호출합니다.
+            GameHandManager gameHandManager = GetComponentInParent<GameHandManager>();
+            if (gameHandManager != null)
+            {
+                gameHandManager.DiscardTile(this);
             }
-            flag ^= true;
-            if (flag){
-                imageComponent.color = Color.yellow;
-            }else{
-                imageComponent.color = Color.white;
+            else
+            {
+                Debug.LogWarning("[TileManager] 부모 GameHandManager를 찾을 수 없습니다.");
             }
         }
     }

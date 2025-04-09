@@ -16,13 +16,13 @@ namespace MCRGame.Common
         }
     }
 
-    public class Action : IComparable<Action>
+    public class GameAction : IComparable<GameAction>
     {
-        public ActionType Type { get; set; }
+        public GameActionType Type { get; set; }
         public RelativeSeat SeatPriority { get; set; }
         public GameTile Tile { get; set; }
 
-        public int CompareTo(Action other)
+        public int CompareTo(GameAction other)
         {
             // 간단한 정렬 예시: 타입, 좌석 우선순위, 타일 순으로 비교
             int cmp = Type.CompareTo(other.Type);
@@ -32,23 +32,42 @@ namespace MCRGame.Common
             return Tile.CompareTo(other.Tile);
         }
 
-        public static Action CreateFromGameEvent(GameEvent gameEvent, AbsoluteSeat currentPlayerSeat)
+        public static GameAction CreateFromGameEvent(GameEvent gameEvent, AbsoluteSeat currentPlayerSeat)
         {
             GameTile tile = GameTile.F0;
             if (gameEvent.Data != null && gameEvent.Data.ContainsKey("tile"))
             {
                 tile = (GameTile)gameEvent.Data["tile"];
             }
-            ActionType? actionType = gameEvent.EventType.CreateFromGameEventType();
+            GameActionType? actionType = gameEvent.EventType.CreateFromGameEventType();
             if (actionType == null)
                 throw new ArgumentException("action type is None.");
 
-            return new Action
+            return new GameAction
             {
-                Type = (ActionType)actionType,
+                Type = (GameActionType)actionType,
                 SeatPriority = RelativeSeatExtensions.CreateFromAbsoluteSeats((int)currentPlayerSeat, (int)gameEvent.PlayerSeat),
                 Tile = tile
             };
+        }
+    }
+
+    [Serializable]
+    public class CallBlockData
+    {
+        public CallBlockType Type { get; set; }
+        public GameTile FirstTile { get; set; }
+        public RelativeSeat SourceSeat { get; set; }
+        public int SourceTileIndex { get; set; }
+
+        public CallBlockData() { }
+
+        public CallBlockData(CallBlockType type, GameTile firstTile, RelativeSeat sourceSeat, int sourceTileIndex)
+        {
+            Type = type;
+            FirstTile = firstTile;
+            SourceSeat = sourceSeat;
+            SourceTileIndex = sourceTileIndex;
         }
     }
 }

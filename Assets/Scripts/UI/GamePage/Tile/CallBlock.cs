@@ -7,20 +7,23 @@ namespace MCRGame.UI
 {
     public class CallBlock : MonoBehaviour
     {
-        public CallBlockType type;
-        public GameTile firstTile;
-        public RelativeSeat sourceSeat;
-        public int sourceTileIndex;
-        public List<GameObject> tiles = new List<GameObject>();
-
+        // MCRGame.Common.CallBlockData를 통해 데이터 관리
+        public CallBlockData Data;
+        public List<GameObject> Tiles = new List<GameObject>();
 
         /// <summary>
-        /// CallBlock을 초기화하여 타일들을 생성 및 배치합니다.
+        /// CallBlockData를 기반으로 CallBlock을 초기화하여 타일들을 생성 및 배치합니다.
         /// 타일을 오른쪽에서 왼쪽 순서로 놓되, 각 타일의 '오른쪽 모서리'를 기준으로 배치합니다.
         /// 회전된 타일도 정확히 오른쪽이 offsetX에 맞춰지므로, 왼쪽으로 밀리는 문제를 해결합니다.
         /// </summary>
         public void InitializeCallBlock()
         {
+            if (Data == null)
+            {
+                Debug.LogError("CallBlockData가 설정되지 않았습니다.");
+                return;
+            }
+
             ClearExistingTiles();
             CreateTiles();
             RotateSourceTile();
@@ -34,7 +37,7 @@ namespace MCRGame.UI
             {
                 Destroy(child.gameObject);
             }
-            tiles.Clear();
+            Tiles.Clear();
         }
 
         private void CreateTiles()
@@ -50,23 +53,23 @@ namespace MCRGame.UI
                 {
                     tileObj.transform.localPosition = Vector3.zero;
                     tileObj.transform.localRotation = Quaternion.identity;
-                    tiles.Add(tileObj);
+                    Tiles.Add(tileObj);
                 }
             }
-            tiles.Reverse();
+            Tiles.Reverse();
         }
 
         private int GetTileCount()
         {
-            return (type == CallBlockType.CHII || type == CallBlockType.PUNG) ? 3 : 4;
+            return (Data.Type == CallBlockType.CHII || Data.Type == CallBlockType.PUNG) ? 3 : 4;
         }
 
         private List<int> GetChiiIndices()
         {
-            List<int> chiiIndices = new List<int> { sourceTileIndex };
+            List<int> chiiIndices = new List<int> { Data.SourceTileIndex };
             for (int i = 0; i < 3; ++i)
             {
-                if (i == sourceTileIndex) continue;
+                if (i == Data.SourceTileIndex) continue;
                 chiiIndices.Add(i);
             }
             return chiiIndices;
@@ -74,11 +77,11 @@ namespace MCRGame.UI
 
         private GameTile GetTileValueForIndex(int index, List<int> chiiIndices)
         {
-            if (type == CallBlockType.CHII)
+            if (Data.Type == CallBlockType.CHII)
             {
-                return (GameTile)((int)firstTile + chiiIndices[index]);
+                return (GameTile)((int)Data.FirstTile + chiiIndices[index]);
             }
-            return firstTile;
+            return Data.FirstTile;
         }
 
         private GameObject Create3DTile(GameTile tileValue)
@@ -100,18 +103,18 @@ namespace MCRGame.UI
         private void RotateSourceTile()
         {
             int rotateIndex = GetRotateIndex();
-            if (rotateIndex >= 0 && rotateIndex < tiles.Count)
+            if (rotateIndex >= 0 && rotateIndex < Tiles.Count)
             {
-                tiles[rotateIndex].transform.localRotation = Quaternion.Euler(0f, 0f, 90f);
+                Tiles[rotateIndex].transform.localRotation = Quaternion.Euler(0f, 0f, 90f);
             }
         }
 
         private int GetRotateIndex()
         {
-            switch (sourceSeat)
+            switch (Data.SourceSeat)
             {
-                case RelativeSeat.KAMI: return tiles.Count - 1;
-                case RelativeSeat.TOI: return tiles.Count - 2;
+                case RelativeSeat.KAMI: return Tiles.Count - 1;
+                case RelativeSeat.TOI: return Tiles.Count - 2;
                 case RelativeSeat.SHIMO: return 0;
                 case RelativeSeat.SELF: return -1;
                 default: return -1;
@@ -121,11 +124,11 @@ namespace MCRGame.UI
         private void ArrangeTiles()
         {
             float offsetX = 0f;
-            for (int i = 0; i < tiles.Count; i++)
+            for (int i = 0; i < Tiles.Count; i++)
             {
-                if (tiles[i] == null) continue;
+                if (Tiles[i] == null) continue;
 
-                PositionTile(tiles[i], ref offsetX);
+                PositionTile(Tiles[i], ref offsetX);
             }
         }
 

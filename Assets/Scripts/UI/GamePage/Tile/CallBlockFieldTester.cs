@@ -29,7 +29,7 @@ public class CallBlockFieldTester : MonoBehaviour
         if (GUI.Button(new Rect(10, 10, 150, 30), "Start Random Test"))
         {
             if (!isTesting)
-            StartRandomTest();
+                StartRandomTest();
         }
 
         if (GUI.Button(new Rect(10, 50, 150, 30), "Stop Test"))
@@ -66,7 +66,6 @@ public class CallBlockFieldTester : MonoBehaviour
         {
             // 랜덤한 CallBlock 생성
             CreateRandomCallBlock();
-            
             yield return new WaitForSeconds(spawnInterval);
         }
     }
@@ -85,20 +84,23 @@ public class CallBlockFieldTester : MonoBehaviour
         // 소스 타일 인덱스 (CHII인 경우에만 의미 있음)
         int sourceIndex = Random.Range(0, 3);
         
-        // CallBlock 생성
-        callBlockField.AddCallBlock(randomType, randomTile, randomSeat, sourceIndex);
+        // 새 CallBlockData 생성
+        CallBlockData data = new CallBlockData(randomType, randomTile, randomSeat, sourceIndex);
+        
+        // CallBlockField에 데이터 전달하여 CallBlock 생성 및 배치
+        callBlockField.AddCallBlock(data);
     }
 
     private CallBlockType GetRandomCallBlockType()
     {
-        // FLOWER 제외한 랜덤 타입
+        // FLOWER 제외한 랜덤 타입 (여기서는 0~4까지의 값)
         int random = Random.Range(0, 5);
         return (CallBlockType)random;
     }
 
     private GameTile GetRandomNonFlowerTile()
     {
-        // FLOWER 제외한 랜덤 타일
+        // FLOWER 제외한 랜덤 타일 (GameTile.F0 이상의 값은 꽃 타일이므로 제외)
         int random = Random.Range((int)GameTile.M1, (int)GameTile.F0);
         return (GameTile)random;
     }

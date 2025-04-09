@@ -11,4 +11,5 @@ namespace MCRGame.UI
             return value.ToString() + suit;
         }
     }
+    public enum PlayerSeat { E, S, W, N }
 }

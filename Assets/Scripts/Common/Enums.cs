@@ -67,7 +67,7 @@ namespace MCRGame.Common
             return (AbsoluteSeat)(((int)seat + 1) % 4);
         }
 
-        public static AbsoluteSeat NextSeatAfterAction(this AbsoluteSeat seat, Action action)
+        public static AbsoluteSeat NextSeatAfterAction(this AbsoluteSeat seat, GameAction action)
         {
             return (AbsoluteSeat)(((int)seat + (int)action.SeatPriority) % 4);
         }
@@ -183,6 +183,30 @@ namespace MCRGame.Common
         {
             for (int i = (int)GameTile.F0; i <= (int)GameTile.F7; i++)
                 yield return (GameTile)i;
+        }
+
+        /// <summary>
+        /// GameTile의 ToCustomString()은 타일 이름을 뒤집고 소문자로 변환합니다.
+        /// 예를 들어, M1 -> "1m" 입니다.
+        /// 이 메서드는 커스텀 문자열(예, "1m")을 원래의 GameTile 열거형 값으로 변환하려 시도합니다.
+        /// </summary>
+        public static bool TryParseCustom(string custom, out GameTile tile)
+        {
+            tile = default;
+            if (string.IsNullOrEmpty(custom))
+                return false;
+
+            // 입력 문자열을 뒤집습니다.
+            char[] chars = custom.ToCharArray();
+            Array.Reverse(chars);
+            string reversed = new string(chars);
+
+            // 예: "1m" reversed -> "m1". 첫 글자를 대문자로 변환하여 "M1"로 만듭니다.
+            if (reversed.Length < 2)
+                return false;
+            string enumName = char.ToUpper(reversed[0]) + reversed.Substring(1);
+
+            return Enum.TryParse<GameTile>(enumName, out tile);
         }
 
         public static string ToCustomString(this GameTile tile)

@@ -46,18 +46,17 @@ public class TestCallBlockButton : MonoBehaviour
         // localPosition을 명시적으로 (0,0,0)으로 설정
         newCallBlockObj.transform.localPosition = Vector3.zero;
         
+        // CallBlock 컴포넌트 가져오기
         CallBlock callBlock = newCallBlockObj.GetComponent<CallBlock>();
         if (callBlock == null)
         {
             Debug.LogError("인스턴스화된 CallBlock prefab에 CallBlock 컴포넌트가 없습니다.");
             return;
         }
-        
-        // 테스트용 파라미터 설정
-        callBlock.type = type;
-        callBlock.firstTile = firstTile;
-        callBlock.sourceSeat = sourceSeat;
-        callBlock.sourceTileIndex = sourceTileIndex;
+
+        // 새 CallBlockData 생성 후 callBlock.Data에 할당
+        var data = new CallBlockData(type, firstTile, sourceSeat, sourceTileIndex);
+        callBlock.Data = data;
         
         // CallBlock 초기화 (타일 생성 및 배치)
         callBlock.InitializeCallBlock();
