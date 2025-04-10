@@ -1,3 +1,5 @@
+// GameWS.cs (수정된 버전: 메시지 수신 후 처리 로직을 GameMessageMediator로 위임)
+
 using System;
 using System.Net.WebSockets;
 using System.Text;
@@ -5,20 +7,24 @@ using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
 using Newtonsoft.Json;
+<<<<<<< Updated upstream
+=======
+using MCRGame.UI;
+using System.Collections.Generic;
+using Newtonsoft.Json.Linq;
+using MCRGame.Game;
+>>>>>>> Stashed changes
 
 namespace MCRGame.Net
 {
     public class GameWS : MonoBehaviour
     {
-        // 싱글톤 인스턴스
         public static GameWS Instance { get; private set; }
-
         private ClientWebSocket clientWebSocket;
         private CancellationTokenSource cancellationTokenSource;
 
         private void Awake()
         {
-            // 이미 인스턴스가 존재하면 파괴
             if (Instance != null && Instance != this)
             {
                 Destroy(gameObject);
@@ -113,6 +119,7 @@ namespace MCRGame.Net
                     return;
                 }
                 Debug.Log("[GameWS] Event: " + wsMessage.Event);
+<<<<<<< Updated upstream
                 switch (wsMessage.Event)
                 {
                     case GameWSActionType.INIT_EVENT:
@@ -131,6 +138,17 @@ namespace MCRGame.Net
                     default:
                         Debug.Log("[GameWS] Unhandled event: " + wsMessage.Event);
                         break;
+=======
+
+                // 메시지 처리는 GameMessageMediator로 위임
+                if (GameMessageMediator.Instance != null)
+                {
+                    GameMessageMediator.Instance.EnqueueMessage(wsMessage);
+                }
+                else
+                {
+                    Debug.LogWarning("[GameWS] GameMessageMediator 인스턴스가 존재하지 않습니다.");
+>>>>>>> Stashed changes
                 }
             }
             catch (Exception ex)
