@@ -38,6 +38,12 @@ namespace MCRGame.Net
         [EnumMember(Value = "open_an_kan")]
         OPEN_AN_KAN,
         [EnumMember(Value = "hu_hand")]
-        HU_HAND
+        HU_HAND,
+        [EnumMember(Value = "ping")]
+        PING,
+        [EnumMember(Value = "pong")]
+        PONG,
+        [EnumMember(Value = "user_joined")]
+        USER_JOINED
     }
 }

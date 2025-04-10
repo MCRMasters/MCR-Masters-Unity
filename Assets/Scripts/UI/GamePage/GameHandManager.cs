@@ -20,7 +20,7 @@ namespace MCRGame.UI
         [SerializeField] private float gap = 0.1f;
 
         [Header("Tsumo Drop Settings")]      // <-- 추가
-        [SerializeField] private float tsumoDropHeight   = 50f;
+        [SerializeField] private float tsumoDropHeight = 50f;
         [SerializeField] private float tsumoDropDuration = 0.2f;
         [SerializeField] private float tsumoFadeDuration = 0.15f;
 
@@ -65,12 +65,18 @@ namespace MCRGame.UI
 
         void Start()
         {
-            InitTestHand();
+            // 초기 테스트 핸드 대신, INIT_EVENT에 따른 InitHand가 호출됩니다.
+            // InitTestHand(); // 기존 테스트 코드는 주석 처리합니다.
         }
 
+        /// <summary>
+        /// 기본 타일 오브젝트를 생성하여 반환합니다.
+        /// </summary>
+        /// <param name="tileName">타일 이름 (예: "1m")</param>
+        /// <returns>생성된 타일 GameObject</returns>
         private GameObject AddTile(string tileName)
         {
-            var newTile = Instantiate(baseTilePrefab, transform);
+            GameObject newTile = Instantiate(baseTilePrefab, transform);
             var tm = newTile.GetComponent<TileManager>();
             tm?.SetTileName(tileName);
 
@@ -79,12 +85,158 @@ namespace MCRGame.UI
             {
                 rt.anchorMin = new Vector2(0, 0.5f);
                 rt.anchorMax = new Vector2(0, 0.5f);
-                rt.pivot     = new Vector2(0, 0.5f);
+                rt.pivot = new Vector2(0, 0.5f);
             }
 
             tileObjects.Add(newTile);
             return newTile;
         }
+
+        /// <summary>
+        /// INIT_EVENT로 전달받은 손패 데이터를 이용하여 타일 오브젝트들을 생성 및 초기화한 후,
+        /// 4장씩 그룹으로 위에서 아래로 떨어지는 애니메이션을 실행하고,
+        /// 모든 그룹 애니메이션 종료 후 AnimateReposition()을 호출하여 최종 정렬합니다.
+        /// </summary>
+        /// <param name="initTiles">초기 손패에 해당하는 GameTile 리스트</param>
+        public void InitHand(List<GameTile> initTiles)
+        {
+            // 기존 타일 오브젝트 제거
+            foreach (GameObject tileObj in tileObjects)
+            {
+                Destroy(tileObj);
+            }
+            tileObjects.Clear();
+            tsumoTile = null;
+
+            // GameHand 데이터 업데이트
+            gameHand = GameHand.CreateFromTiles(initTiles);
+
+            // 전달받은 손패 리스트 셔플 (Fisher-Yates 알고리즘)
+            for (int i = 0; i < initTiles.Count; i++)
+            {
+                int randIndex = UnityEngine.Random.Range(i, initTiles.Count);
+                GameTile temp = initTiles[i];
+                initTiles[i] = initTiles[randIndex];
+                initTiles[randIndex] = temp;
+            }
+
+            // 셔플된 손패를 기반으로 타일 오브젝트 생성
+            foreach (GameTile tile in initTiles)
+            {
+                AddTile(tile.ToCustomString());
+            }
+
+            // 떨어지는 애니메이션 실행 (그룹 단위: 4장씩)
+            StartCoroutine(AnimateInitHand());
+        }
+
+        /// <summary>
+        /// 타일 오브젝트들을 4장씩 그룹으로 떨어뜨리는 애니메이션을 실행합니다.
+        /// 각 그룹은 상단에서 목표 위치까지 가속도 효과와 fade in 효과를 적용하여 떨어집니다.
+        /// 모든 그룹 애니메이션 완료 후 정렬된 손패로 AnimateReposition() 호출합니다.
+        /// </summary>
+        private IEnumerator AnimateInitHand()
+        {
+            if (tileObjects.Count != GameHand.FULL_HAND_SIZE - 1)
+            {
+                yield break;
+            }
+
+            // 첫 타일의 RectTransform을 통해 타일 너비 계산
+            RectTransform firstRT = tileObjects[0].GetComponent<RectTransform>();
+            float tileWidth = firstRT != null ? firstRT.rect.width : 100f;
+
+            // 최종 목표 위치 계산 (순서대로 수평 배치)
+            Dictionary<GameObject, Vector2> finalPositions = new Dictionary<GameObject, Vector2>();
+            for (int i = 0; i < tileObjects.Count; i++)
+            {
+                Vector2 pos = new Vector2(i * (tileWidth + gap), 0f);
+                finalPositions[tileObjects[i]] = pos;
+            }
+
+            int groupSize = 4;
+            int numGroups = Mathf.CeilToInt(tileObjects.Count / (float)groupSize);
+            float dropHeight = 300f;   // 타일들이 시작할 Y 오프셋 (위쪽)
+            float duration = 0.1f;     // 각 그룹 애니메이션 지속시간
+
+            for (int group = 0; group < numGroups; group++)
+            {
+                int startIdx = group * groupSize;
+                int endIdx = Mathf.Min((group + 1) * groupSize, tileObjects.Count);
+
+                // 각 그룹의 타일들에 대해 시작 위치와 fade 초기화
+                Dictionary<GameObject, Color> tileOriginalColors = new Dictionary<GameObject, Color>();
+                for (int i = startIdx; i < endIdx; i++)
+                {
+                    GameObject tileObj = tileObjects[i];
+                    RectTransform rt = tileObj.GetComponent<RectTransform>();
+                    if (rt != null)
+                    {
+                        rt.anchoredPosition = finalPositions[tileObj] + new Vector2(0f, dropHeight);
+                    }
+                    // Fade 초기화: 이미지의 알파를 0으로 설정
+                    Image img = tileObj.GetComponentInChildren<Image>();
+                    if (img != null)
+                    {
+                        tileOriginalColors[tileObj] = img.color;
+                        img.color = new Color(img.color.r, img.color.g, img.color.b, 0f);
+                    }
+                }
+
+                // 해당 그룹 타일 애니메이션: 이동과 동시에 fade in 진행 (easing: 1 - (1-t)^2)
+                float elapsed = 0f;
+                while (elapsed < duration)
+                {
+                    elapsed += Time.deltaTime;
+                    float t = Mathf.Clamp01(elapsed / duration);
+                    float ease = 1 - Mathf.Pow(1 - t, 2);
+                    float alpha = t; // fade in 진행 (drop과 동시에 진행하므로 t로 결정)
+                    for (int i = startIdx; i < endIdx; i++)
+                    {
+                        GameObject tileObj = tileObjects[i];
+                        RectTransform rt = tileObj.GetComponent<RectTransform>();
+                        if (rt != null)
+                        {
+                            Vector2 startPos = finalPositions[tileObj] + new Vector2(0f, dropHeight);
+                            Vector2 endPos = finalPositions[tileObj];
+                            rt.anchoredPosition = Vector2.Lerp(startPos, endPos, ease);
+                        }
+                        // fade in 업데이트
+                        Image img = tileObj.GetComponentInChildren<Image>();
+                        if (img != null)
+                        {
+                            Color origColor = tileOriginalColors[tileObj];
+                            img.color = new Color(origColor.r, origColor.g, origColor.b, alpha);
+                        }
+                    }
+                    yield return null;
+                }
+
+                // 그룹 애니메이션 완료 후 각 타일을 최종 위치에 고정하고, 이미지 알파를 원래 색상으로 복구
+                for (int i = startIdx; i < endIdx; i++)
+                {
+                    GameObject tileObj = tileObjects[i];
+                    RectTransform rt = tileObj.GetComponent<RectTransform>();
+                    if (rt != null)
+                        rt.anchoredPosition = finalPositions[tileObj];
+                    Image img = tileObj.GetComponentInChildren<Image>();
+                    if (img != null)
+                    {
+                        Color origColor = tileOriginalColors[tileObj];
+                        img.color = new Color(origColor.r, origColor.g, origColor.b, 1f);
+                    }
+                }
+                yield return new WaitForSeconds(0.1f);
+            }
+
+            SortTileList();
+
+            // 모든 그룹 애니메이션 후 최종 정렬 애니메이션 실행
+            yield return StartCoroutine(AnimateReposition());
+            yield break;
+        }
+
+
 
         public void AddTsumo(GameTile tile)
         {
@@ -105,7 +257,7 @@ namespace MCRGame.UI
             if (tsumoTile == null) yield break;
 
             // --- 1) 정렬 & 목표 위치 계산 ---
-            SortTileList();
+            // SortTileList();
 
             // 기준 타일 너비
             var firstRt = tileObjects[0].GetComponent<RectTransform>();
@@ -130,87 +282,49 @@ namespace MCRGame.UI
             );
             targetPos[tsumoTile] = tsumoTarget;
 
-    // 2) 시작 위치 & 투명 세팅
-    var tsumoRt = tsumoTile.GetComponent<RectTransform>();
-    Vector2 startPos = tsumoTarget + Vector2.up * tsumoDropHeight;
-    tsumoRt.anchoredPosition = startPos;
+            // 2) 시작 위치 & 투명 세팅
+            var tsumoRt = tsumoTile.GetComponent<RectTransform>();
+            Vector2 startPos = tsumoTarget + Vector2.up * tsumoDropHeight;
+            tsumoRt.anchoredPosition = startPos;
 
-    var img = tsumoTile.GetComponentInChildren<Image>();
-    Color origColor = img != null ? img.color : Color.white;
-    if (img != null)
-        img.color = new Color(origColor.r, origColor.g, origColor.b, 0f);
+            var img = tsumoTile.GetComponentInChildren<Image>();
+            Color origColor = img != null ? img.color : Color.white;
+            if (img != null)
+                img.color = new Color(origColor.r, origColor.g, origColor.b, 0f);
 
-    // 3) 물리 가속도 계산: y = y0 + 0.5 * a * t^2
-    float duration = tsumoDropDuration;
-    float y0 = startPos.y;
-    float y1 = tsumoTarget.y;
-    // a = 2*(y1 - y0)/t^2 로 하면 정확히 duration 후 y1 도달
-    float a = 2f * (y1 - y0) / (duration * duration);
+            // 3) 물리 가속도 계산: y = y0 + 0.5 * a * t^2
+            float duration = tsumoDropDuration;
+            float y0 = startPos.y;
+            float y1 = tsumoTarget.y;
+            // a = 2*(y1 - y0)/t^2 로 하면 정확히 duration 후 y1 도달
+            float a = 2f * (y1 - y0) / (duration * duration);
 
-    float elapsed = 0f;
-    while (elapsed < duration)
-    {
-        elapsed += Time.deltaTime;
-        if (elapsed > duration) elapsed = duration;
-
-        // 가속 운동 공식
-        float y = y0 + 0.5f * a * elapsed * elapsed;
-        tsumoRt.anchoredPosition = new Vector2(tsumoTarget.x, y);
-
-        // 페이드인 (기존 로직)
-        if (img != null)
-        {
-            float alpha = Mathf.Clamp01(elapsed / tsumoFadeDuration);
-            img.color = new Color(origColor.r, origColor.g, origColor.b, alpha);
-        }
-
-        yield return null;
-    }
-
-    // 4) 최종 보정
-    tsumoRt.anchoredPosition = tsumoTarget;
-    if (img != null)
-        img.color = origColor;
-        }
-
-
-        // ReplaceTiles() 함수는 즉시 배치하는 대신, 애니메이션 코루틴에서 타일의 새 위치를 계산합니다.
-        private Vector2 GetTargetPosition(int visualIndex, float tileWidth)
-        {
-            // visualIndex는 discarded tile이 제거된 후 재배치할 순번
-            return new Vector2(tileWidth * visualIndex, 0f);
-        }
-
-        // 테스트용 초기 핸드(haipai)를 생성합니다.
-        void InitTestHand()
-        {
-            // NORMAL_TILE들 (꽃 타일 제외)을 GameTileExtensions.NormalTiles()로 가져옵니다.
-            List<GameTile> normalTiles = new List<GameTile>(GameTileExtensions.NormalTiles());
-            List<GameTile> tilesForData = new List<GameTile>();
-
-            // 14장의 타일을 랜덤으로 선택하여 UI 오브젝트 생성 및 GameHand 데이터로 저장
-            for (int i = 0; i < FULL_HAND_SIZE; ++i)
+            float elapsed = 0f;
+            while (elapsed < duration)
             {
-                int randomIndex = UnityEngine.Random.Range(0, normalTiles.Count);
-                GameTile randomTile = normalTiles[randomIndex];
+                elapsed += Time.deltaTime;
+                if (elapsed > duration) elapsed = duration;
 
-                // UI 오브젝트 생성: randomTile의 문자열은 ToCustomString()으로 변환하여 사용
-                AddTile(randomTile.ToCustomString());
+                // 가속 운동 공식
+                float y = y0 + 0.5f * a * elapsed * elapsed;
+                tsumoRt.anchoredPosition = new Vector2(tsumoTarget.x, y);
 
-                // GameHand 데이터 저장용 리스트에 추가
-                tilesForData.Add(randomTile);
+                // 페이드인 (기존 로직)
+                if (img != null)
+                {
+                    float alpha = Mathf.Clamp01(elapsed / tsumoFadeDuration);
+                    img.color = new Color(origColor.r, origColor.g, origColor.b, alpha);
+                }
+
+                yield return null;
             }
 
-            // TsumoTile은 보통 마지막 타일로 설정
-            tsumoTile = tileObjects[tileObjects.Count - 1];
-
-            // 정렬 후 즉시 배치 (초기화 전)
-            SortTileList();
-            ImmediateReplaceTiles();
-
-            // GameHand 데이터를 생성하여 내부 타일 정보를 업데이트
-            gameHand = GameHand.CreateFromTiles(tilesForData);
+            // 4) 최종 보정
+            tsumoRt.anchoredPosition = tsumoTarget;
+            if (img != null)
+                img.color = origColor;
         }
+
 
         // 타일 UI 오브젝트 목록을 정렬합니다.
         void SortTileList()
@@ -219,14 +333,13 @@ namespace MCRGame.UI
             {
                 // 이름의 앞 2글자를 기준으로 정렬 (예제 정렬 방식; 필요에 따라 변경)
                 string namePart = child.name.Substring(0, 2);
-                if (namePart == "0f")
-                    return (2, string.Empty);
                 string reversedString = new string(namePart.Reverse().ToArray());
+                if (namePart[1] == 'f')
+                    return (2, reversedString);
                 return (1, reversedString);
             }).ToList();
         }
 
-        // 초기 배치는 즉시 적용 (애니메이션 없이)
         void ImmediateReplaceTiles()
         {
             int tsumoTileIndex = 0;
@@ -314,7 +427,6 @@ namespace MCRGame.UI
                     Destroy(go);
                 }
             }
-
             // 3) 남은 tileObjects를 애니메이션으로 재배치
             yield return StartCoroutine(AnimateReposition());
         }
@@ -505,3 +617,5 @@ namespace MCRGame.UI
         }
     }
 }
+
+

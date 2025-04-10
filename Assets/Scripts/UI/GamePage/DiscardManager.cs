@@ -7,10 +7,10 @@ namespace MCRGame.UI
 {
     public class DiscardManager : MonoBehaviour
     {
-        public Transform discardPosE;
-        public Transform discardPosS;
-        public Transform discardPosW;
-        public Transform discardPosN;
+        public Transform discardPosSELF;
+        public Transform discardPosSHIMO;
+        public Transform discardPosTOI;
+        public Transform discardPosKAMI;
 
         [Header("타일 간격 설정")]
         public float tileSpacing = 14f;
@@ -203,10 +203,10 @@ namespace MCRGame.UI
 
         private Transform GetDiscardPosition(RelativeSeat seat) => seat switch
         {
-            RelativeSeat.SELF  => discardPosE,
-            RelativeSeat.SHIMO => discardPosS,
-            RelativeSeat.TOI   => discardPosW,
-            RelativeSeat.KAMI  => discardPosN,
+            RelativeSeat.SELF  => discardPosSELF,
+            RelativeSeat.SHIMO => discardPosSHIMO,
+            RelativeSeat.TOI   => discardPosTOI,
+            RelativeSeat.KAMI  => discardPosKAMI,
             _                  => null,
         };
     }
