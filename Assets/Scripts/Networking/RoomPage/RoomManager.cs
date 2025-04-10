@@ -193,16 +193,9 @@ namespace MCRGame.Net
                 Debug.LogWarning("Not all players are ready yet!");
             }
         }
-
-        /// <summary>
-        /// Start game API를 호출하는 UnityWebRequest 코드.
-        /// </summary>
-        private IEnumerator CallStartGameApi()
+        IEnumerator CallStartGameApi()
         {
-            string roomNumber = RoomDataManager.Instance.RoomId;
-            string url = CoreServerConfig.GetHttpUrl($"/room/{roomNumber}/game-start");
-            Debug.Log("[RoomManager] API URL: " + url);
-
+            string url = CoreServerConfig.GetHttpUrl("/room/" + RoomDataManager.Instance.RoomId + "/game-start");
             using (UnityWebRequest request = new UnityWebRequest(url, "POST"))
             {
                 request.uploadHandler = new UploadHandlerRaw(new byte[0]);
@@ -215,6 +208,7 @@ namespace MCRGame.Net
                 if (request.result == UnityWebRequest.Result.Success)
                 {
                     Debug.Log("Start game API success: " + request.downloadHandler.text);
+                    // API 호출 성공 시 추가 GameWS 인스턴스 생성 및 씬 전환 로직은 외부에서 처리합니다.
                 }
                 else
                 {
@@ -222,6 +216,9 @@ namespace MCRGame.Net
                 }
             }
         }
+
+
+
 
         /// <summary>
         /// 외부(예: 웹소켓 이벤트)에서 호출하여 해당 유저의 Ready 상태 및 전체 상태를 업데이트합니다.
