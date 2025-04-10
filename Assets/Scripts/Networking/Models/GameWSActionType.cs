@@ -7,8 +7,12 @@ namespace MCRGame.Net
     [JsonConverter(typeof(StringEnumConverter))]
     public enum GameWSActionType
     {
+        [EnumMember(Value = "game_start_info")]
+        GAME_START_INFO,
         [EnumMember(Value = "init_event")]
         INIT_EVENT,
+        [EnumMember(Value = "init_flower_replacement")]
+        INIT_FLOWER_REPLACEMENT,
         [EnumMember(Value = "haipai_hand")]
         HAIPAI_HAND,
         [EnumMember(Value = "tsumo_actions")]

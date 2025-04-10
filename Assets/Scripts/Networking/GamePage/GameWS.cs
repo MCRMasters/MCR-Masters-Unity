@@ -5,6 +5,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
 using Newtonsoft.Json;
+using MCRGame.UI;
+using System.Collections.Generic;
+using Newtonsoft.Json.Linq;
 
 namespace MCRGame.Net
 {
@@ -113,6 +116,7 @@ namespace MCRGame.Net
                     return;
                 }
                 Debug.Log("[GameWS] Event: " + wsMessage.Event);
+
                 switch (wsMessage.Event)
                 {
                     case GameWSActionType.INIT_EVENT:
@@ -127,6 +131,35 @@ namespace MCRGame.Net
                         break;
                     case GameWSActionType.TSUMO_ACTIONS:
                         Debug.Log("[GameWS] Tsumo actions received.");
+                        break;
+                    case GameWSActionType.GAME_START_INFO:
+                        Debug.Log("[GameWS] GAME_START_INFO event received.");
+                        Debug.Log("[GameWS] Data: " + wsMessage.Data.ToString());
+                        break;
+                    case GameWSActionType.INIT_FLOWER_REPLACEMENT:
+                        Debug.Log("[GameWS] INIT_FLOWER_REPLACEMENT event received.");
+
+                        // new_tiles 파싱
+                        if (wsMessage.Data.TryGetValue("new_tiles", out JToken tilesToken))
+                        {
+                            List<int> newTiles = tilesToken.ToObject<List<int>>();
+                            Debug.Log("[GameWS] New flower replacement tiles: " + string.Join(", ", newTiles));
+                        }
+                        else
+                        {
+                            Debug.LogWarning("[GameWS] INIT_FLOWER_REPLACEMENT: new_tiles 키가 없습니다.");
+                        }
+
+                        // flower_count 파싱
+                        if (wsMessage.Data.TryGetValue("flower_count", out JToken countToken))
+                        {
+                            List<int> flowerCount = countToken.ToObject<List<int>>();
+                            Debug.Log("[GameWS] Flower counts for each hand: " + string.Join(", ", flowerCount));
+                        }
+                        else
+                        {
+                            Debug.LogWarning("[GameWS] INIT_FLOWER_REPLACEMENT: flower_count 키가 없습니다.");
+                        }
                         break;
                     default:
                         Debug.Log("[GameWS] Unhandled event: " + wsMessage.Event);
