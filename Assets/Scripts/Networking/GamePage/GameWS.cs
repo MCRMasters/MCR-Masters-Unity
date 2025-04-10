@@ -5,45 +5,70 @@ using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace MCRGame.Net
 {
-
-    public class GameRoomWS : MonoBehaviour
+    public class GameWS : MonoBehaviour
     {
-        public int roomNumber = 1; // 접속할 방 번호 (기본값)
+        // 싱글톤 인스턴스
+        public static GameWS Instance { get; private set; }
+
         private ClientWebSocket clientWebSocket;
         private CancellationTokenSource cancellationTokenSource;
 
-        // GameServerConfig에서 최신 설정값을 기반으로 웹소켓 URL 생성
+        private void Awake()
+        {
+            // 이미 인스턴스가 존재하면 파괴
+            if (Instance != null && Instance != this)
+            {
+                Destroy(gameObject);
+                return;
+            }
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+
+        // GameServerConfig에서 설정한 완전한 WebSocket URL 반환
         private string GetWebSocketUrl()
         {
-            string endpoint = $"/ws/room/{roomNumber}";
-            return GameServerConfig.GetWebSocketUrl(endpoint);
+            return GameServerConfig.GetWebSocketUrl();
         }
 
         async void Start()
         {
             cancellationTokenSource = new CancellationTokenSource();
-            // RoomScene에서 GameServerConfig.UpdateWebSocketConfig(newUrl)를 호출했으므로, 최신 URL이 설정됨.
+            Debug.Log("[GameWS] Attempting to connect to: " + GetWebSocketUrl());
             await ConnectAsync();
         }
 
         async Task ConnectAsync()
         {
             clientWebSocket = new ClientWebSocket();
+
+            // PlayerDataManager에서 uid와 nickname을 헤더에 추가
+            if (PlayerDataManager.Instance != null)
+            {
+                clientWebSocket.Options.SetRequestHeader("user_id", PlayerDataManager.Instance.Uid);
+                clientWebSocket.Options.SetRequestHeader("nickname", PlayerDataManager.Instance.Nickname);
+                Debug.Log($"[GameWS] Set headers - user_id: {PlayerDataManager.Instance.Uid}, nickname: {PlayerDataManager.Instance.Nickname}");
+            }
+            else
+            {
+                Debug.LogError("[GameWS] PlayerDataManager 인스턴스가 없습니다.");
+                return;
+            }
+
             try
             {
                 Uri uri = new Uri(GetWebSocketUrl());
-                Debug.Log("[GameRoomWS] Connecting to: " + uri);
+                Debug.Log("[GameWS] Connecting to: " + uri);
                 await clientWebSocket.ConnectAsync(uri, cancellationTokenSource.Token);
-                Debug.Log("[GameRoomWS] WebSocket connected!");
+                Debug.Log("[GameWS] WebSocket connected!");
                 _ = ReceiveLoopAsync(); // 메시지 수신 시작
             }
             catch (Exception ex)
             {
-                Debug.LogError("[GameRoomWS] Connect error: " + ex.Message);
+                Debug.LogError("[GameWS] Connect error: " + ex.Message);
             }
         }
 
@@ -59,19 +84,19 @@ namespace MCRGame.Net
                     if (result.MessageType == WebSocketMessageType.Close)
                     {
                         await clientWebSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Closing", cancellationTokenSource.Token);
-                        Debug.Log("[GameRoomWS] WebSocket connection closed.");
+                        Debug.Log("[GameWS] WebSocket connection closed.");
                     }
                     else
                     {
                         int count = result.Count;
                         string message = Encoding.UTF8.GetString(buffer, 0, count);
-                        Debug.Log("[GameRoomWS] Received message: " + message);
+                        Debug.Log("[GameWS] Received message: " + message);
                         ProcessMessage(message);
                     }
                 }
                 catch (Exception ex)
                 {
-                    Debug.LogError("[GameRoomWS] ReceiveLoop error: " + ex.Message);
+                    Debug.LogError("[GameWS] ReceiveLoop error: " + ex.Message);
                     break;
                 }
             }
@@ -84,40 +109,33 @@ namespace MCRGame.Net
                 GameWSMessage wsMessage = JsonConvert.DeserializeObject<GameWSMessage>(message);
                 if (wsMessage == null)
                 {
-                    Debug.LogWarning("[GameRoomWS] Failed to deserialize message.");
+                    Debug.LogWarning("[GameWS] Failed to deserialize message.");
                     return;
                 }
-                Debug.Log("[GameRoomWS] Event: " + wsMessage.Event);
-
-                // 이벤트 분기 처리: 필요에 맞게 이벤트 별 데이터를 처리합니다.
+                Debug.Log("[GameWS] Event: " + wsMessage.Event);
                 switch (wsMessage.Event)
                 {
                     case GameWSActionType.INIT_EVENT:
-                        Debug.Log("[GameRoomWS] Init event received.");
+                        Debug.Log("[GameWS] Init event received.");
                         if (wsMessage.Data["hand"] != null)
                         {
-                            Debug.Log("[GameRoomWS] Hand: " + wsMessage.Data["hand"].ToString());
+                            Debug.Log("[GameWS] Hand: " + wsMessage.Data["hand"].ToString());
                         }
                         break;
-
                     case GameWSActionType.DISCARD:
-                        Debug.Log("[GameRoomWS] Discard event received.");
-                        // 추가 데이터 처리...
+                        Debug.Log("[GameWS] Discard event received.");
                         break;
-
                     case GameWSActionType.TSUMO_ACTIONS:
-                        Debug.Log("[GameRoomWS] Tsumo actions received.");
-                        // 예: action_id 및 actions 배열 처리
+                        Debug.Log("[GameWS] Tsumo actions received.");
                         break;
-
                     default:
-                        Debug.Log("[GameRoomWS] Unhandled event: " + wsMessage.Event);
+                        Debug.Log("[GameWS] Unhandled event: " + wsMessage.Event);
                         break;
                 }
             }
             catch (Exception ex)
             {
-                Debug.LogError("[GameRoomWS] ProcessMessage error: " + ex.Message);
+                Debug.LogError("[GameWS] ProcessMessage error: " + ex.Message);
             }
         }
 
@@ -132,7 +150,7 @@ namespace MCRGame.Net
                 }
                 catch (Exception ex)
                 {
-                    Debug.LogError("[GameRoomWS] Close error: " + ex.Message);
+                    Debug.LogError("[GameWS] Close error: " + ex.Message);
                 }
                 clientWebSocket.Dispose();
             }

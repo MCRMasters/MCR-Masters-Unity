@@ -1,39 +1,27 @@
-using System;
 using UnityEngine;
 
 namespace MCRGame.Net
 {
     public static class GameServerConfig
     {
-        public static string HttpBaseUrl = "http://localhost";
-        public static string WebSocketBaseUrl = "ws://localhost";
-        public static int Port = 8001;
-        public static string ApiPrefix = "/api/v1";
+        private static string webSocketBaseUrl = "";
 
-        public static string GetHttpUrl(string endpoint)
+        /// <summary>
+        /// 외부(게임 시작 API)에서 받은 websocket URL로 기본 URL을 업데이트합니다.
+        /// </summary>
+        /// <param name="newUrl">새로운 전체 WebSocket URL (game id 포함)</param>
+        public static void UpdateWebSocketConfig(string newUrl)
         {
-            return $"{HttpBaseUrl}:{Port}{ApiPrefix}{endpoint}";
+            webSocketBaseUrl = newUrl;
+            Debug.Log("[GameServerConfig] Updated WebSocket base URL: " + webSocketBaseUrl);
         }
 
-        public static string GetWebSocketUrl(string endpoint)
+        /// <summary>
+        /// 현재 설정된 WebSocket 기본 URL을 반환합니다.
+        /// </summary>
+        public static string GetWebSocketUrl()
         {
-            return $"{WebSocketBaseUrl}:{Port}{ApiPrefix}{endpoint}";
-        }
-        
-        // API 호출 후 새 WebSocket URL을 받아오면 이 메서드를 호출하여 업데이트합니다.
-        public static void UpdateWebSocketConfig(string newWebSocketUrl)
-        {
-            if (Uri.TryCreate(newWebSocketUrl, UriKind.Absolute, out Uri uri))
-            {
-                WebSocketBaseUrl = uri.Scheme + "://" + uri.Host;
-                Port = uri.Port;
-                ApiPrefix = uri.AbsolutePath.TrimEnd('/');
-                Debug.Log("[GameServerConfig] Updated: " + WebSocketBaseUrl + ":" + Port + ApiPrefix);
-            }
-            else
-            {
-                Debug.LogError("[GameServerConfig] Invalid WebSocket URL: " + newWebSocketUrl);
-            }
+            return webSocketBaseUrl;
         }
     }
 }

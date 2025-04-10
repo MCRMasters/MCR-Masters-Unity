@@ -193,7 +193,6 @@ namespace MCRGame.Net
                 Debug.LogWarning("Not all players are ready yet!");
             }
         }
-        // RoomScene의 API 호출 후 (예시)
         IEnumerator CallStartGameApi()
         {
             string url = CoreServerConfig.GetHttpUrl("/room/" + RoomDataManager.Instance.RoomId + "/game-start");
@@ -209,11 +208,7 @@ namespace MCRGame.Net
                 if (request.result == UnityWebRequest.Result.Success)
                 {
                     Debug.Log("Start game API success: " + request.downloadHandler.text);
-                    // API 응답으로 새 WebSocket URL을 받았다고 가정
-                    string newWsUrl = JsonUtility.FromJson<WSGameStartedData>(request.downloadHandler.text).GameUrl;
-                    GameServerConfig.UpdateWebSocketConfig(newWsUrl);
-                    // 이후 GameScene으로 전환
-                    SceneManager.LoadScene("GameScene");
+                    // API 호출 성공 시 추가 GameWS 인스턴스 생성 및 씬 전환 로직은 외부에서 처리합니다.
                 }
                 else
                 {
@@ -221,6 +216,8 @@ namespace MCRGame.Net
                 }
             }
         }
+
+
 
 
         /// <summary>

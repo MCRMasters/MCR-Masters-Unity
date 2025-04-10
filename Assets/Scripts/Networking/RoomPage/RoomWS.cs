@@ -11,12 +11,26 @@ namespace MCRGame.Net
 {
     public class RoomWS : MonoBehaviour
     {
+        // 싱글톤 인스턴스
+        public static RoomWS Instance { get; private set; }
+
         public int roomNumber = 1; // 기본 접속할 방 번호
         private ClientWebSocket webSocket;
         private CancellationTokenSource cancellation;
 
         // 연결 완료 시 호출할 콜백 (클라이언트 내부용)
         public Action OnWebSocketConnected;
+
+        private void Awake()
+        {
+            if (Instance != null && Instance != this)
+            {
+                Destroy(gameObject);
+                return;
+            }
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
 
         async void Start()
         {
@@ -36,7 +50,6 @@ namespace MCRGame.Net
 
             cancellation = new CancellationTokenSource();
             await Connect();
-
             // 연결 성공 시 주기적인 Ping 전송 (필요한 경우)
             // _ = StartPingLoop();
         }
@@ -175,11 +188,19 @@ namespace MCRGame.Net
                             }
                             break;
                         }
-
                     case WSActionType.GAME_STARTED:
                         {
                             WSGameStartedData gameData = JsonConvert.DeserializeObject<WSGameStartedData>(response.Data?.ToString() ?? "{}");
                             Debug.Log("게임 시작! game_url: " + gameData.GameUrl);
+
+                            GameServerConfig.UpdateWebSocketConfig(gameData.GameUrl);
+
+                            if (GameWS.Instance == null)
+                            {
+                                new GameObject("GameWS").AddComponent<GameWS>();
+                            }
+
+                            // 게임 씬으로 전환
                             UnityEngine.SceneManagement.SceneManager.LoadScene("GameScene");
                         }
                         break;
