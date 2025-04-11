@@ -130,110 +130,108 @@ namespace MCRGame.UI
             StartCoroutine(AnimateInitHand());
         }
 
-        /// <summary>
-        /// 타일 오브젝트들을 4장씩 그룹으로 떨어뜨리는 애니메이션을 실행합니다.
-        /// 각 그룹은 상단에서 목표 위치까지 가속도 효과와 fade in 효과를 적용하여 떨어집니다.
-        /// 모든 그룹 애니메이션 완료 후 정렬된 손패로 AnimateReposition() 호출합니다.
-        /// </summary>
         private IEnumerator AnimateInitHand()
         {
-            if (tileObjects.Count != GameHand.FULL_HAND_SIZE - 1)
+            int count = tileObjects.Count;
+            if (count <= 0)
             {
                 yield break;
             }
 
-            // 첫 타일의 RectTransform을 통해 타일 너비 계산
-            RectTransform firstRT = tileObjects[0].GetComponent<RectTransform>();
-            float tileWidth = firstRT != null ? firstRT.rect.width : 100f;
-
-            // 최종 목표 위치 계산 (순서대로 수평 배치)
-            Dictionary<GameObject, Vector2> finalPositions = new Dictionary<GameObject, Vector2>();
-            for (int i = 0; i < tileObjects.Count; i++)
+            // 1) ImageField/Image 컴포넌트를 한 번만 캐싱
+            var tileImages = new List<Image>(count);
+            for (int i = 0; i < count; i++)
             {
-                Vector2 pos = new Vector2(i * (tileWidth + gap), 0f);
-                finalPositions[tileObjects[i]] = pos;
+                var tileObj = tileObjects[i];
+                var imageField = tileObj.transform.Find("ImageField");
+                if (imageField != null)
+                {
+                    var img = imageField.GetComponent<Image>();
+                    tileImages.Add(img);
+                }
+                else
+                {
+                    tileImages.Add(null);
+                }
             }
 
+            // 2) 위치와 finalPositions 계산
+            RectTransform firstRT = tileObjects[0].GetComponent<RectTransform>();
+            float tileWidth = firstRT != null ? firstRT.rect.width : 100f;
+            var finalPositions = new Dictionary<GameObject, Vector2>();
+            for (int i = 0; i < count; i++)
+                finalPositions[tileObjects[i]] = new Vector2(i * (tileWidth + gap), 0f);
+
             int groupSize = 4;
-            int numGroups = Mathf.CeilToInt(tileObjects.Count / (float)groupSize);
-            float dropHeight = 300f;   // 타일들이 시작할 Y 오프셋 (위쪽)
-            float duration = 0.1f;     // 각 그룹 애니메이션 지속시간
+            int numGroups = (count - 1) / groupSize + 1;
+            float dropHeight = 300f;
+            float duration = 0.1f;
 
-            for (int group = 0; group < numGroups; group++)
+            // 3) 초기 투명화 & 위치 세팅
+            for (int i = 0; i < count; i++)
             {
-                int startIdx = group * groupSize;
-                int endIdx = Mathf.Min((group + 1) * groupSize, tileObjects.Count);
+                var rt = tileObjects[i].GetComponent<RectTransform>();
+                if (rt != null)
+                    rt.anchoredPosition = finalPositions[tileObjects[i]] + Vector2.up * dropHeight;
+                var img = tileImages[i];
+                if (img != null)
+                    img.color = new Color(img.color.r, img.color.g, img.color.b, 0f);
+            }
 
-                // 각 그룹의 타일들에 대해 시작 위치와 fade 초기화
-                Dictionary<GameObject, Color> tileOriginalColors = new Dictionary<GameObject, Color>();
-                for (int i = startIdx; i < endIdx; i++)
-                {
-                    GameObject tileObj = tileObjects[i];
-                    RectTransform rt = tileObj.GetComponent<RectTransform>();
-                    if (rt != null)
-                    {
-                        rt.anchoredPosition = finalPositions[tileObj] + new Vector2(0f, dropHeight);
-                    }
-                    // Fade 초기화: 이미지의 알파를 0으로 설정
-                    Image img = tileObj.GetComponentInChildren<Image>();
-                    if (img != null)
-                    {
-                        tileOriginalColors[tileObj] = img.color;
-                        img.color = new Color(img.color.r, img.color.g, img.color.b, 0f);
-                    }
-                }
+            // 4) 그룹별 애니메이션
+            for (int g = 0; g < numGroups; g++)
+            {
+                int start = g * groupSize;
+                int end = Mathf.Min(start + groupSize, count);
 
-                // 해당 그룹 타일 애니메이션: 이동과 동시에 fade in 진행 (easing: 1 - (1-t)^2)
+                // 매 프레임마다 아직 애니메이션되지 않은 (대기) 타일을 투명하게 유지
                 float elapsed = 0f;
                 while (elapsed < duration)
                 {
                     elapsed += Time.deltaTime;
                     float t = Mathf.Clamp01(elapsed / duration);
                     float ease = 1 - Mathf.Pow(1 - t, 2);
-                    float alpha = t; // fade in 진행 (drop과 동시에 진행하므로 t로 결정)
-                    for (int i = startIdx; i < endIdx; i++)
+
+                    // 현재 그룹 타일의 위치 보간 및 alpha 업데이트
+                    for (int i = start; i < end; i++)
                     {
-                        GameObject tileObj = tileObjects[i];
-                        RectTransform rt = tileObj.GetComponent<RectTransform>();
+                        var rt = tileObjects[i].GetComponent<RectTransform>();
                         if (rt != null)
                         {
-                            Vector2 startPos = finalPositions[tileObj] + new Vector2(0f, dropHeight);
-                            Vector2 endPos = finalPositions[tileObj];
+                            var startPos = finalPositions[tileObjects[i]] + Vector2.up * dropHeight;
+                            var endPos = finalPositions[tileObjects[i]];
                             rt.anchoredPosition = Vector2.Lerp(startPos, endPos, ease);
                         }
-                        // fade in 업데이트
-                        Image img = tileObj.GetComponentInChildren<Image>();
+                        var img = tileImages[i];
                         if (img != null)
-                        {
-                            Color origColor = tileOriginalColors[tileObj];
-                            img.color = new Color(origColor.r, origColor.g, origColor.b, alpha);
-                        }
+                            img.color = new Color(img.color.r, img.color.g, img.color.b, t);
+                    }
+                    // 대기 타일은 매 프레임 α=0으로 설정
+                    for (int i = end; i < count; i++)
+                    {
+                        var img = tileImages[i];
+                        if (img != null)
+                            img.color = new Color(img.color.r, img.color.g, img.color.b, 0f);
                     }
                     yield return null;
                 }
 
-                // 그룹 애니메이션 완료 후 각 타일을 최종 위치에 고정하고, 이미지 알파를 원래 색상으로 복구
-                for (int i = startIdx; i < endIdx; i++)
+                // 그룹 완료 시 위치 고정 및 alpha=1로 변경
+                for (int i = start; i < end; i++)
                 {
-                    GameObject tileObj = tileObjects[i];
-                    RectTransform rt = tileObj.GetComponent<RectTransform>();
+                    var rt = tileObjects[i].GetComponent<RectTransform>();
                     if (rt != null)
-                        rt.anchoredPosition = finalPositions[tileObj];
-                    Image img = tileObj.GetComponentInChildren<Image>();
+                        rt.anchoredPosition = finalPositions[tileObjects[i]];
+                    var img = tileImages[i];
                     if (img != null)
-                    {
-                        Color origColor = tileOriginalColors[tileObj];
-                        img.color = new Color(origColor.r, origColor.g, origColor.b, 1f);
-                    }
+                        img.color = new Color(img.color.r, img.color.g, img.color.b, 1f);
                 }
                 yield return new WaitForSeconds(0.1f);
             }
- 
+
             SortTileList();
 
-            // 모든 그룹 애니메이션 후 최종 정렬 애니메이션 실행
             yield return StartCoroutine(AnimateReposition());
-            yield break;
         }
 
 
