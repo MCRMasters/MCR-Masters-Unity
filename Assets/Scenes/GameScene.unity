@@ -3552,6 +3552,8 @@ MonoBehaviour:
   FlowerIcon_White: {fileID: 6028947500445444350, guid: 470315f4f0524a740ae77bbe723e0e2f, type: 3}
   FlowerIcon_Yellow: {fileID: 5380202520717269035, guid: 470315f4f0524a740ae77bbe723e0e2f, type: 3}
   FlowerIcon_Red: {fileID: -7115806580219000095, guid: 470315f4f0524a740ae77bbe723e0e2f, type: 3}
+  flowerPhaseEffectPrefab: {fileID: 988111730318827120, guid: 4a38a319ff01e5a48b2b136cfd541d22, type: 3}
+  roundStartEffectPrefab: {fileID: 7131176115911774369, guid: a16a8301208e4ff49aed228813b7869c, type: 3}
   defaultFrameSprite: {fileID: 21300000, guid: fe3b4f528d464b24db501451562d3523, type: 3}
   defaultProfileImageSprite: {fileID: 21300000, guid: 1692a8fb9bb7f471399f59ee9bbebc13, type: 3}
 --- !u!4 &1254287264
@@ -3951,7 +3953,7 @@ GameObject:
   - component: {fileID: 1668335929}
   - component: {fileID: 1668335928}
   m_Layer: 5
-  m_Name: Canvas
+  m_Name: Main 2D Canvas
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

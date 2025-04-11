@@ -136,34 +136,49 @@ namespace MCRGame.Game
 
                 case GameWSActionType.INIT_FLOWER_REPLACEMENT:
                     Debug.Log("[GameMessageMediator] INIT_FLOWER_REPLACEMENT event received.");
+
+                    List<GameTile> newTiles = null;
+                    List<GameTile> appliedFlowers = null;
+                    List<int> flowerCounts = null;
+
                     if (message.Data.TryGetValue("new_tiles", out JToken tilesToken))
                     {
-                        List<int> newTiles = tilesToken.ToObject<List<int>>();
+                        List<int> newTilesInts = tilesToken.ToObject<List<int>>();
+                        newTiles = newTilesInts.Select(i => (GameTile)i).ToList();
                         Debug.Log("[GameMessageMediator] New flower replacement tiles: " + string.Join(", ", newTiles));
                     }
                     else
                     {
                         Debug.LogWarning("[GameMessageMediator] INIT_FLOWER_REPLACEMENT: new_tiles 키가 없습니다.");
                     }
+
                     if (message.Data.TryGetValue("applied_flowers", out JToken appliedFlowersToken))
                     {
-                        List<GameTile> appliedFlowers = appliedFlowersToken.ToObject<List<GameTile>>();
+                        appliedFlowers = appliedFlowersToken.ToObject<List<GameTile>>();
                         Debug.Log("[GameMessageMediator] Applied flower tiles: " + string.Join(", ", appliedFlowers));
                     }
                     else
                     {
                         Debug.LogWarning("[GameMessageMediator] INIT_FLOWER_REPLACEMENT: applied_flowers 키가 없습니다.");
                     }
+
                     if (message.Data.TryGetValue("flower_count", out JToken countToken))
                     {
-                        List<GameTile> flowerCount = countToken.ToObject<List<GameTile>>();
-                        Debug.Log("[GameMessageMediator] Flower counts for each hand: " + string.Join(", ", flowerCount));
+                        flowerCounts = countToken.ToObject<List<int>>();
+                        Debug.Log("[GameMessageMediator] Flower counts for each hand: " + string.Join(", ", flowerCounts));
                     }
                     else
                     {
                         Debug.LogWarning("[GameMessageMediator] INIT_FLOWER_REPLACEMENT: flower_count 키가 없습니다.");
                     }
+
+                    if (newTiles != null && appliedFlowers != null && flowerCounts != null)
+                    {
+                        // GameManager의 화패 교체 이벤트 시작 (코루틴 내부에서 전체 이벤트 연출 진행)
+                        GameManager.Instance.StartFlowerReplacement(newTiles, appliedFlowers, flowerCounts);
+                    }
                     break;
+
 
                 default:
                     Debug.Log("[GameMessageMediator] Unhandled event: " + message.Event);
