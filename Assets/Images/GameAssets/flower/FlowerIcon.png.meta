@@ -1,10 +1,16 @@
 fileFormatVersion: 2
-guid: 0f4bf19ed1af9449b862bea17311ebdb
+guid: 470315f4f0524a740ae77bbe723e0e2f
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -3355332485978317212
-    second: Adobe Express - file (32)_0
+      213: -7115806580219000095
+    second: 4ec858b2-5d45-470f-9ccc-78e456a912f0_0
+  - first:
+      213: 6028947500445444350
+    second: 4ec858b2-5d45-470f-9ccc-78e456a912f0_1
+  - first:
+      213: 5380202520717269035
+    second: 4ec858b2-5d45-470f-9ccc-78e456a912f0_2
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -46,12 +52,12 @@ TextureImporter:
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
-  spriteMode: 1
+  spriteMode: 2
   spriteExtrude: 1
   spriteMeshType: 1
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
-  spritePixelsToUnits: 100
+  spritePixelsToUnits: 200
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
@@ -126,23 +132,67 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Adobe Express - file (32)_0
+      name: FlowerIcon_Red
       rect:
         serializedVersion: 2
-        x: 0
-        y: 0
-        width: 271
-        height: 271
+        x: 687
+        y: 387
+        width: 260
+        height: 260
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 46e1fed91e67f61d0800000000000000
-      internalID: -3355332485978317212
+      spriteID: 1eac8afcd939f3d90800000000000000
+      internalID: -7115806580219000095
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: FlowerIcon_White
+      rect:
+        serializedVersion: 2
+        x: 76
+        y: 387
+        width: 260
+        height: 260
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ef8a7851fcf1ba350800000000000000
+      internalID: 6028947500445444350
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: FlowerIcon_Yellow
+      rect:
+        serializedVersion: 2
+        x: 379
+        y: 387
+        width: 263
+        height: 260
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b289303efa15aaa40800000000000000
+      internalID: 5380202520717269035
       vertices: []
       indices: 
       edges: []
@@ -151,7 +201,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 5e97eb03825dee720800000000000000
+    spriteID: 9477a5d70a8421345899af163ca17ac4
     internalID: 0
     vertices: []
     indices: 
@@ -161,7 +211,9 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      Adobe Express - file (32)_0: -3355332485978317212
+      FlowerIcon_Red: -7115806580219000095
+      FlowerIcon_White: 6028947500445444350
+      FlowerIcon_Yellow: 5380202520717269035
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

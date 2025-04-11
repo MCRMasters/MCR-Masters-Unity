@@ -87,6 +87,18 @@ namespace MCRGame.Common
         {
             return (RelativeSeat)(((targetSeat - currentSeat + 4) % 4));
         }
+
+        public static RelativeSeat NextSeat(this RelativeSeat seat)
+        {
+            return (RelativeSeat)(((int)seat + 1) % 4);
+        }
+        /// <summary>
+        /// 내 자리(MySeat) 기준으로 상대 좌석(RelativeSeat)을 절대 좌석(AbsoluteSeat)으로 변환합니다.
+        /// </summary>
+        public static AbsoluteSeat ToAbsoluteSeat(this RelativeSeat rel, AbsoluteSeat mySeat)
+        {
+            return (AbsoluteSeat)(((int)mySeat + (int)rel) % 4);
+        }
     }
 
     public enum GameTile

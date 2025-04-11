@@ -122,7 +122,7 @@ namespace MCRGame.Game
                     if (startInfo != null)
                     {
                         Debug.Log("[GameMessageMediator] Updating GameManager with game start info.");
-                        GameManager.Instance.SetPlayers(startInfo.players);
+                        GameManager.Instance.InitGame(startInfo.players);
                     }
                     break;
 
