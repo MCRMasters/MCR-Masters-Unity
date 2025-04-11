@@ -3,12 +3,12 @@ using MCRGame.UI;
 
 public class HandFieldTest : MonoBehaviour
 {
-    private HandField handField;
+    private Hand3DField handField;
 
     private void Start()
     {
         // 같은 게임 오브젝트에 HandField 컴포넌트가 붙어있어야 합니다.
-        handField = GetComponent<HandField>();
+        handField = GetComponent<Hand3DField>();
         if (handField == null)
         {
             Debug.LogError("HandField 컴포넌트를 찾을 수 없습니다. HandFieldTest 스크립트를 붙인 오브젝트에 HandField 컴포넌트를 추가하세요.");
