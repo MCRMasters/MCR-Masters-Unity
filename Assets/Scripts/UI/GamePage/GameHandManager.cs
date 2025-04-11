@@ -98,7 +98,7 @@ namespace MCRGame.UI
         /// 모든 그룹 애니메이션 종료 후 AnimateReposition()을 호출하여 최종 정렬합니다.
         /// </summary>
         /// <param name="initTiles">초기 손패에 해당하는 GameTile 리스트</param>
-        public void InitHand(List<GameTile> initTiles)
+        public IEnumerator InitHand(List<GameTile> initTiles, GameTile? receivedTsumoTile)
         {
             // 기존 타일 오브젝트 제거
             foreach (GameObject tileObj in tileObjects)
@@ -127,7 +127,15 @@ namespace MCRGame.UI
             }
 
             // 떨어지는 애니메이션 실행 (그룹 단위: 4장씩)
-            StartCoroutine(AnimateInitHand());
+            yield return StartCoroutine(AnimateInitHand());
+
+            yield return new WaitForSeconds(0.5f);
+            // tsumoTile이 있으면, 그 뒤에 추가
+            if (receivedTsumoTile.HasValue)
+            {
+                AddTsumo(receivedTsumoTile.Value);
+            }
+            yield return null;
         }
 
         private IEnumerator AnimateInitHand()
@@ -165,7 +173,7 @@ namespace MCRGame.UI
             int groupSize = 4;
             int numGroups = (count - 1) / groupSize + 1;
             float dropHeight = 300f;
-            float duration = 0.1f;
+            float duration = 0.2f;
 
             // 3) 초기 투명화 & 위치 세팅
             for (int i = 0; i < count; i++)
@@ -562,6 +570,8 @@ namespace MCRGame.UI
                 // tsumoTile 참조 초기화
                 tsumoTile = null;
             }
+
+            SortTileList();
 
             // 재배열 대상 : 현재 tileObjects에 남은 모든 타일들(순서대로 배치)
             if (tileObjects.Count == 0)

@@ -37,7 +37,7 @@ namespace MCRGame.Game
                 return;
             }
             Instance = this;
-            
+
             Players = new List<Player>();
             leftTiles = MAX_TILES - (GameHand.FULL_HAND_SIZE - 1) * MAX_PLAYERS;
             UpdateLeftTiles(leftTiles);
@@ -63,26 +63,28 @@ namespace MCRGame.Game
         }
 
         /// <summary>
-        /// INIT_EVENT 메시지를 통해 받은 초기 손패 데이터를 SELF의 손패와 플레이어들의 3D 손패 필드에 반영합니다.
-        /// 각 Hand3DField 자식 오브젝트가 있다면 모두 삭제한 후,
-        /// GameHand.FULL_HAND_SIZE - 1 만큼의 타일을 생성하고 tsumoTile은 null로 초기화합니다.
+        /// INIT_EVENT 메시지를 통해 받은 초기 손패 데이터를 SELF의 손패와
+        /// 플레이어들의 3D 손패 필드에 반영합니다.
         /// </summary>
         /// <param name="initTiles">자신의 초기 손패 타일 데이터 리스트</param>
-        public void InitHandFromMessage(List<GameTile> initTiles)
+        /// <param name="tsumoTile">서버에서 받은 tsumotile (없으면 null)</param>
+        public void InitHandFromMessage(List<GameTile> initTiles, GameTile? tsumoTile)
         {
             Debug.Log("GameManager: Initializing hand with received data for SELF.");
 
-            // 자신의 손패 초기화는 기존 GameHandManager를 이용합니다.
+            // 1) 2D 핸드(UI) 초기화
             if (gameHandManager != null)
             {
-                gameHandManager.InitHand(initTiles);
+                // 기본 init (initTiles 수만큼 4장씩 떨어뜨림)
+                StartCoroutine(gameHandManager.InitHand(initTiles, tsumoTile));
+
             }
             else
             {
                 Debug.LogWarning("GameManager: GameHandManager 인스턴스가 없습니다.");
             }
 
-            // Inspector에서 할당된 각 Hand3DField에 대해 초기화 처리 (SELF 포함)
+            // 2) 3D 필드(상대방 포함) 초기화
             if (playersHand3DFields == null || playersHand3DFields.Length < MAX_PLAYERS)
             {
                 Debug.LogError("playersHand3DFields 배열이 4개로 할당되어 있지 않습니다.");
@@ -98,27 +100,26 @@ namespace MCRGame.Game
                     continue;
                 }
 
-                // 기존 자식 타일 오브젝트가 있다면 모두 파괴하고 리스트를 클리어
-                if (hand3DField.handTiles != null && hand3DField.handTiles.Count > 0)
+                // 기존 타일들 제거
+                if (hand3DField.handTiles != null)
                 {
-                    foreach (GameObject tileObj in hand3DField.handTiles)
-                    {
-                        if (tileObj != null)
-                        {
-                            Destroy(tileObj);
-                        }
-                    }
+                    foreach (var obj in hand3DField.handTiles)
+                        Destroy(obj);
                     hand3DField.handTiles.Clear();
                 }
-                // tsumoTile을 null로 초기화
                 hand3DField.tsumoTile = null;
 
+                // SELF(자기)는 이미 2D 핸드로 처리했으니 건너뛰기
+                if (i == (int)RelativeSeat.SELF)
+                    continue;
+
+                // 나머지 플레이어들은 항상 FULL_HAND_SIZE-1 개의 타일을 생성
                 int tilesToCreate = GameHand.FULL_HAND_SIZE - 1;
-                if (i != (int)RelativeSeat.SELF)
                 for (int j = 0; j < tilesToCreate; j++)
-                {
                     hand3DField.AddTile();
-                }
+
+                // (옵션) 다른 플레이어의 tsumoTile 시각화가 필요하면
+                // if (i == (int)RelativeSeat.SELF && tsumoTile.HasValue) { hand3DField.AddTsumo(tsumoTile.Value); }
             }
         }
     }
