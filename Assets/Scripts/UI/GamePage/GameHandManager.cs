@@ -123,7 +123,14 @@ namespace MCRGame.UI
             // 셔플된 손패를 기반으로 타일 오브젝트 생성
             foreach (GameTile tile in initTiles)
             {
-                AddTile(tile.ToCustomString());
+                GameObject tileObj = AddTile(tile.ToCustomString());
+                var imageField = tileObj.transform.Find("ImageField");
+                if (imageField != null)
+                {
+                    var img = imageField.GetComponent<Image>();
+                    if (img != null)
+                        img.color = new Color(img.color.r, img.color.g, img.color.b, 0f);
+                }
             }
 
             // 떨어지는 애니메이션 실행 (그룹 단위: 4장씩)
@@ -156,6 +163,8 @@ namespace MCRGame.UI
                 {
                     var img = imageField.GetComponent<Image>();
                     tileImages.Add(img);
+                    if (img != null)
+                        img.color = new Color(img.color.r, img.color.g, img.color.b, 0f);
                 }
                 else
                 {
