@@ -12,7 +12,7 @@ namespace MCRGame.Game
         // 각 타일의 개수를 저장하는 역할
         public Dictionary<GameTile, int> Tiles { get; private set; }
         // 호출(Call) 블록 데이터 목록 (내부 논리용: UI 오브젝트가 아닌 데이터만 관리)
-        public List<CallBlockData> CallBlockDatas { get; private set; }
+        public List<CallBlockData> CallBlockData { get; private set; }
         // 마지막으로 뽑은(또는 점수 계산 시 사용) 타일 (tsumo tile)
         public GameTile? TsumoTile { get; private set; }
 
@@ -38,7 +38,7 @@ namespace MCRGame.Game
         public GameHand()
         {
             Tiles = new Dictionary<GameTile, int>();
-            CallBlockDatas = new List<CallBlockData>();
+            CallBlockData = new List<CallBlockData>();
             TsumoTile = null;
         }
 
@@ -100,7 +100,7 @@ namespace MCRGame.Game
             get
             {
                 int total = Tiles.Values.Sum();
-                total += CallBlockDatas.Count * 3;
+                total += CallBlockData.Count * 3;
                 return total;
             }
         }
@@ -199,7 +199,7 @@ namespace MCRGame.Game
             {
                 RemoveTiles(tile, 1);
             }
-            CallBlockDatas.Add(cbData);
+            CallBlockData.Add(cbData);
         }
 
         public void ApplyPung(CallBlockData cbData)
@@ -209,7 +209,7 @@ namespace MCRGame.Game
                 throw new InvalidOperationException("Cannot apply pung: not enough valid tiles to pung");
             }
             RemoveTiles(cbData.FirstTile, 2);
-            CallBlockDatas.Add(cbData);
+            CallBlockData.Add(cbData);
         }
 
         public void ApplyAnKong(CallBlockData cbData)
@@ -219,7 +219,7 @@ namespace MCRGame.Game
                 throw new InvalidOperationException("Cannot apply ankong: not enough valid tiles to ankong");
             }
             RemoveTiles(cbData.FirstTile, 4);
-            CallBlockDatas.Add(cbData);
+            CallBlockData.Add(cbData);
             TsumoTile = null;
         }
 
@@ -230,7 +230,7 @@ namespace MCRGame.Game
                 throw new InvalidOperationException("Cannot apply daiminkong: not enough valid tiles to daiminkong");
             }
             RemoveTiles(cbData.FirstTile, 3);
-            CallBlockDatas.Add(cbData);
+            CallBlockData.Add(cbData);
         }
 
         public void ApplyShominKong(CallBlockData cbData)
@@ -240,7 +240,7 @@ namespace MCRGame.Game
                 throw new InvalidOperationException("Cannot apply shominkong: not enough valid tiles to shominkong");
             }
             CallBlockData targetData = null;
-            foreach (var data in CallBlockDatas)
+            foreach (var data in CallBlockData)
             {
                 if (data.Type == CallBlockType.PUNG && data.FirstTile.Equals(cbData.FirstTile))
                 {
@@ -255,7 +255,7 @@ namespace MCRGame.Game
             RemoveTiles(cbData.FirstTile, 1);
             targetData.Type = CallBlockType.SHOMIN_KONG;
             TsumoTile = null;
-            CallBlockDatas.Add(targetData);
+            CallBlockData.Add(targetData);
         }
 
         public List<GameAction> GetPossibleChiiGameActions(RelativeSeat priority, WinningConditions winningCondition)
@@ -352,7 +352,7 @@ namespace MCRGame.Game
                         result.Add(new GameAction { Type = GameActionType.KAN, SeatPriority = priority, Tile = kv.Key });
                     }
                 }
-                foreach (var cb in CallBlockDatas)
+                foreach (var cb in CallBlockData)
                 {
                     if (cb.Type == CallBlockType.PUNG &&
                         (cb.FirstTile.Equals(tile) || Tiles.ContainsKey(cb.FirstTile)))

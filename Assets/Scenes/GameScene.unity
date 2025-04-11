@@ -202,7 +202,7 @@ GameObject:
   - component: {fileID: 70816836}
   - component: {fileID: 70816837}
   m_Layer: 5
-  m_Name: FolwerCounterS
+  m_Name: FolwerCounter_Shimo
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -224,8 +224,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 25, y: 0}
-  m_SizeDelta: {x: -50, y: 0}
+  m_AnchoredPosition: {x: 35, y: 5}
+  m_SizeDelta: {x: -30, y: -10}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &70816836
 CanvasRenderer:
@@ -256,50 +256,19 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_FontData:
-    m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
-    m_FontSize: 14
+    m_Font: {fileID: 12800000, guid: 652f7165b7c30ab46af6c4aad90a639b, type: 2}
+    m_FontSize: 50
     m_FontStyle: 0
     m_BestFit: 0
-    m_MinSize: 10
-    m_MaxSize: 40
+    m_MinSize: 0
+    m_MaxSize: 50
     m_Alignment: 0
     m_AlignByGeometry: 0
     m_RichText: 1
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: 
---- !u!1 &79845150
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 79845151}
-  m_Layer: 0
-  m_Name: GameObject
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &79845151
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 79845150}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_Text: X0
 --- !u!1 &84894195
 GameObject:
   m_ObjectHideFlags: 0
@@ -424,7 +393,7 @@ GameObject:
   m_Component:
   - component: {fileID: 128826768}
   m_Layer: 5
-  m_Name: Flower
+  m_Name: Flower_Kami
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -542,7 +511,7 @@ GameObject:
   - component: {fileID: 214823569}
   - component: {fileID: 214823568}
   m_Layer: 5
-  m_Name: ProfileImage
+  m_Name: ProfileImage_Shimo
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -587,7 +556,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: -5042980196633182231, guid: 0c0e7d22a2a404e33bedcee6ec9937f2, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 1692a8fb9bb7f471399f59ee9bbebc13, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -646,7 +615,7 @@ GameObject:
   m_Component:
   - component: {fileID: 308466844}
   m_Layer: 5
-  m_Name: ProfileImageS
+  m_Name: Profile_Shimo
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -671,7 +640,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 1561, y: 625}
+  m_AnchoredPosition: {x: 1721, y: 782}
   m_SizeDelta: {x: 100, y: 400}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &329750098
@@ -686,7 +655,7 @@ GameObject:
   - component: {fileID: 329750101}
   - component: {fileID: 329750100}
   m_Layer: 5
-  m_Name: NicknameN
+  m_Name: Nickname_Kami
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -709,7 +678,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: -75}
-  m_SizeDelta: {x: 0, y: -350}
+  m_SizeDelta: {x: 80, y: -350}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &329750100
 MonoBehaviour:
@@ -724,7 +693,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 0, b: 0, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -732,12 +701,12 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_FontData:
-    m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
-    m_FontSize: 20
+    m_Font: {fileID: 12800000, guid: 652f7165b7c30ab46af6c4aad90a639b, type: 2}
+    m_FontSize: 30
     m_FontStyle: 0
     m_BestFit: 0
-    m_MinSize: 2
-    m_MaxSize: 40
+    m_MinSize: 0
+    m_MaxSize: 50
     m_Alignment: 4
     m_AlignByGeometry: 0
     m_RichText: 1
@@ -893,7 +862,7 @@ GameObject:
   m_Component:
   - component: {fileID: 442033292}
   m_Layer: 5
-  m_Name: ProfileImageW
+  m_Name: ProfileImage_Toi
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -918,7 +887,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 1261, y: 825}
+  m_AnchoredPosition: {x: 1320, y: 963}
   m_SizeDelta: {x: 100, y: 400}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &480624412
@@ -933,7 +902,7 @@ GameObject:
   - component: {fileID: 480624415}
   - component: {fileID: 480624414}
   m_Layer: 5
-  m_Name: ProfileImage
+  m_Name: ProfileImage_Self
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -978,7 +947,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: -5042980196633182231, guid: 0c0e7d22a2a404e33bedcee6ec9937f2, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 1692a8fb9bb7f471399f59ee9bbebc13, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -1046,7 +1015,7 @@ GameObject:
   - component: {fileID: 505218243}
   - component: {fileID: 505218242}
   m_Layer: 5
-  m_Name: FolwerCounterN
+  m_Name: FolwerCounter_Kami
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1073,19 +1042,19 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_FontData:
-    m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
-    m_FontSize: 14
+    m_Font: {fileID: 12800000, guid: 652f7165b7c30ab46af6c4aad90a639b, type: 2}
+    m_FontSize: 50
     m_FontStyle: 0
     m_BestFit: 0
-    m_MinSize: 10
-    m_MaxSize: 40
+    m_MinSize: 0
+    m_MaxSize: 50
     m_Alignment: 0
     m_AlignByGeometry: 0
     m_RichText: 1
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: 
+  m_Text: X0
 --- !u!222 &505218243
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -1110,8 +1079,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 25, y: 0}
-  m_SizeDelta: {x: -50, y: 0}
+  m_AnchoredPosition: {x: 35, y: 5}
+  m_SizeDelta: {x: -30, y: -10}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &522875598
 GameObject:
@@ -1374,7 +1343,7 @@ GameObject:
   - component: {fileID: 573634911}
   - component: {fileID: 573634910}
   m_Layer: 5
-  m_Name: ProfileImage
+  m_Name: ProfileImage_Kami
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1419,7 +1388,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: -5042980196633182231, guid: 0c0e7d22a2a404e33bedcee6ec9937f2, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 1692a8fb9bb7f471399f59ee9bbebc13, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -1506,7 +1475,7 @@ GameObject:
   - component: {fileID: 656088380}
   - component: {fileID: 656088379}
   m_Layer: 5
-  m_Name: ProfileImage
+  m_Name: ProfileImage_Toi
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1551,7 +1520,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: -5042980196633182231, guid: 0c0e7d22a2a404e33bedcee6ec9937f2, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 1692a8fb9bb7f471399f59ee9bbebc13, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -2083,7 +2052,7 @@ GameObject:
   - component: {fileID: 790473961}
   - component: {fileID: 790473962}
   m_Layer: 5
-  m_Name: FolwerCounterW
+  m_Name: FolwerCounter_Toi
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2105,8 +2074,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 25, y: 0}
-  m_SizeDelta: {x: -50, y: 0}
+  m_AnchoredPosition: {x: 35, y: 5}
+  m_SizeDelta: {x: -30, y: -10}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &790473961
 CanvasRenderer:
@@ -2137,19 +2106,19 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_FontData:
-    m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
-    m_FontSize: 14
+    m_Font: {fileID: 12800000, guid: 652f7165b7c30ab46af6c4aad90a639b, type: 2}
+    m_FontSize: 50
     m_FontStyle: 0
     m_BestFit: 0
-    m_MinSize: 10
-    m_MaxSize: 40
+    m_MinSize: 0
+    m_MaxSize: 50
     m_Alignment: 0
     m_AlignByGeometry: 0
     m_RichText: 1
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: 
+  m_Text: X0
 --- !u!1 &798848188
 GameObject:
   m_ObjectHideFlags: 0
@@ -2194,7 +2163,7 @@ GameObject:
   - component: {fileID: 810373927}
   - component: {fileID: 810373928}
   m_Layer: 5
-  m_Name: FolwerCounterE
+  m_Name: FolwerCount_Self
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2216,8 +2185,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 25, y: 0}
-  m_SizeDelta: {x: -50, y: 0}
+  m_AnchoredPosition: {x: 35, y: 5}
+  m_SizeDelta: {x: -30, y: -10}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &810373927
 CanvasRenderer:
@@ -2248,19 +2217,19 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_FontData:
-    m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
-    m_FontSize: 14
+    m_Font: {fileID: 12800000, guid: 652f7165b7c30ab46af6c4aad90a639b, type: 2}
+    m_FontSize: 50
     m_FontStyle: 0
     m_BestFit: 0
-    m_MinSize: 10
-    m_MaxSize: 40
+    m_MinSize: 0
+    m_MaxSize: 50
     m_Alignment: 0
     m_AlignByGeometry: 0
     m_RichText: 1
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: 
+  m_Text: X0
 --- !u!1001 &866534058
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2497,7 +2466,7 @@ GameObject:
   m_Component:
   - component: {fileID: 873319201}
   m_Layer: 5
-  m_Name: ProfileImageE
+  m_Name: Profile_Self
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2614,7 +2583,7 @@ GameObject:
   m_Component:
   - component: {fileID: 952449370}
   m_Layer: 0
-  m_Name: ProfileImage
+  m_Name: Profile
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2651,7 +2620,7 @@ GameObject:
   - component: {fileID: 964316025}
   - component: {fileID: 964316024}
   m_Layer: 5
-  m_Name: NicknameE
+  m_Name: Nickname_Self
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2674,7 +2643,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: -75}
-  m_SizeDelta: {x: 0, y: -350}
+  m_SizeDelta: {x: 80, y: -350}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &964316024
 MonoBehaviour:
@@ -2689,7 +2658,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 0, b: 0, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -2697,12 +2666,12 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_FontData:
-    m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
-    m_FontSize: 20
+    m_Font: {fileID: 12800000, guid: 652f7165b7c30ab46af6c4aad90a639b, type: 2}
+    m_FontSize: 30
     m_FontStyle: 0
     m_BestFit: 0
-    m_MinSize: 2
-    m_MaxSize: 40
+    m_MinSize: 0
+    m_MaxSize: 50
     m_Alignment: 4
     m_AlignByGeometry: 0
     m_RichText: 1
@@ -2972,8 +2941,10 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1062649814}
+  - component: {fileID: 1062649815}
+  - component: {fileID: 1062649816}
   m_Layer: 5
-  m_Name: FlowerImage
+  m_Name: FlowerImage_Kami
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2995,9 +2966,47 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -25, y: 0}
-  m_SizeDelta: {x: -50, y: 0}
+  m_AnchoredPosition: {x: -32.5, y: 25}
+  m_SizeDelta: {x: -65, y: -50}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!222 &1062649815
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1062649813}
+  m_CullTransparentMesh: 1
+--- !u!114 &1062649816
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1062649813}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 21300000, guid: ebe873ec2586b4249bf2a61ef54f1614, type: 3}
+  m_Type: 0
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
 --- !u!1 &1133627707
 GameObject:
   m_ObjectHideFlags: 0
@@ -3087,7 +3096,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1188689347}
   m_Layer: 5
-  m_Name: Flower
+  m_Name: Flower_Toi
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3268,11 +3277,48 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gameHandManager: {fileID: 866534060}
   leftTilesText: {fileID: 84894197}
+  currentRoundText: {fileID: 2007157733}
   playersHand3DFields:
   - {fileID: 747411122}
   - {fileID: 665667696}
   - {fileID: 1202111115}
   - {fileID: 1683828336}
+  scoreText_Self: {fileID: 999382806}
+  scoreText_Shimo: {fileID: 763404405}
+  scoreText_Toi: {fileID: 545457057}
+  scoreText_Kami: {fileID: 716526406}
+  positiveScoreColor: {r: 0, g: 0.0941, b: 0.7373, a: 1}
+  zeroScoreColor: {r: 1, g: 1, b: 1, a: 1}
+  negativeScoreColor: {r: 0.7804, g: 0.7569, b: 0.3186, a: 1}
+  windText_Self: {fileID: 891973572}
+  windText_Shimo: {fileID: 1133627709}
+  windText_Toi: {fileID: 332949162}
+  windText_Kami: {fileID: 697085766}
+  eastWindColor: {r: 0.7961, g: 0, b: 0, a: 1}
+  otherWindColor: {r: 0, g: 0, b: 0, a: 1}
+  profileImages:
+  - {fileID: 480624414}
+  - {fileID: 214823568}
+  - {fileID: 656088379}
+  - {fileID: 573634910}
+  nicknameTexts:
+  - {fileID: 964316024}
+  - {fileID: 1827708729}
+  - {fileID: 1886950547}
+  - {fileID: 329750100}
+  flowerImages:
+  - {fileID: 2139926245}
+  - {fileID: 1928704779}
+  - {fileID: 1927789870}
+  - {fileID: 1062649816}
+  flowerCountTexts:
+  - {fileID: 810373928}
+  - {fileID: 70816837}
+  - {fileID: 790473962}
+  - {fileID: 505218242}
+  FlowerIcon_White: {fileID: 6028947500445444350, guid: 470315f4f0524a740ae77bbe723e0e2f, type: 3}
+  FlowerIcon_Yellow: {fileID: 5380202520717269035, guid: 470315f4f0524a740ae77bbe723e0e2f, type: 3}
+  FlowerIcon_Red: {fileID: -7115806580219000095, guid: 470315f4f0524a740ae77bbe723e0e2f, type: 3}
 --- !u!4 &1254287264
 Transform:
   m_ObjectHideFlags: 0
@@ -3329,7 +3375,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1348663927}
   m_Layer: 5
-  m_Name: ProfileImageN
+  m_Name: Profile_Kami
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3354,7 +3400,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 161, y: 725}
+  m_AnchoredPosition: {x: 56, y: 837}
   m_SizeDelta: {x: 100, y: 400}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1492058375
@@ -3442,7 +3488,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1539015957}
   m_Layer: 5
-  m_Name: Flower
+  m_Name: Flower_Shimo
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -4132,7 +4178,7 @@ GameObject:
   - component: {fileID: 1827708730}
   - component: {fileID: 1827708729}
   m_Layer: 5
-  m_Name: NicknameS
+  m_Name: Nickname_Shimo
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -4155,7 +4201,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: -75}
-  m_SizeDelta: {x: 0, y: -350}
+  m_SizeDelta: {x: 80, y: -350}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1827708729
 MonoBehaviour:
@@ -4170,7 +4216,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 0, b: 0, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -4178,12 +4224,12 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_FontData:
-    m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
-    m_FontSize: 20
+    m_Font: {fileID: 12800000, guid: 652f7165b7c30ab46af6c4aad90a639b, type: 2}
+    m_FontSize: 30
     m_FontStyle: 0
     m_BestFit: 0
-    m_MinSize: 2
-    m_MaxSize: 40
+    m_MinSize: 0
+    m_MaxSize: 50
     m_Alignment: 4
     m_AlignByGeometry: 0
     m_RichText: 1
@@ -4286,7 +4332,7 @@ GameObject:
   - component: {fileID: 1886950548}
   - component: {fileID: 1886950547}
   m_Layer: 5
-  m_Name: NicknameW
+  m_Name: Nickname_Toi
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -4309,7 +4355,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: -75}
-  m_SizeDelta: {x: 0, y: -350}
+  m_SizeDelta: {x: 80, y: -350}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1886950547
 MonoBehaviour:
@@ -4324,7 +4370,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 0, b: 0, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -4332,12 +4378,12 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_FontData:
-    m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
-    m_FontSize: 20
+    m_Font: {fileID: 12800000, guid: 652f7165b7c30ab46af6c4aad90a639b, type: 2}
+    m_FontSize: 30
     m_FontStyle: 0
     m_BestFit: 0
-    m_MinSize: 2
-    m_MaxSize: 40
+    m_MinSize: 0
+    m_MaxSize: 50
     m_Alignment: 4
     m_AlignByGeometry: 0
     m_RichText: 1
@@ -4437,8 +4483,10 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1927789868}
+  - component: {fileID: 1927789869}
+  - component: {fileID: 1927789870}
   m_Layer: 5
-  m_Name: FlowerImage
+  m_Name: FlowerImage_Toi
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -4460,9 +4508,47 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -25, y: 0}
-  m_SizeDelta: {x: -50, y: 0}
+  m_AnchoredPosition: {x: -32.5, y: 25}
+  m_SizeDelta: {x: -65, y: -50}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!222 &1927789869
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1927789867}
+  m_CullTransparentMesh: 1
+--- !u!114 &1927789870
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1927789867}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 21300000, guid: ebe873ec2586b4249bf2a61ef54f1614, type: 3}
+  m_Type: 0
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
 --- !u!1 &1928704776
 GameObject:
   m_ObjectHideFlags: 0
@@ -4472,8 +4558,10 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1928704777}
+  - component: {fileID: 1928704778}
+  - component: {fileID: 1928704779}
   m_Layer: 5
-  m_Name: FlowerImage
+  m_Name: FlowerImage_Shimo
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -4495,9 +4583,47 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -25, y: 0}
-  m_SizeDelta: {x: -50, y: 0}
+  m_AnchoredPosition: {x: -32.5, y: 25}
+  m_SizeDelta: {x: -65, y: -50}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!222 &1928704778
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1928704776}
+  m_CullTransparentMesh: 1
+--- !u!114 &1928704779
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1928704776}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 21300000, guid: ebe873ec2586b4249bf2a61ef54f1614, type: 3}
+  m_Type: 0
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
 --- !u!1 &1945982673
 GameObject:
   m_ObjectHideFlags: 0
@@ -4788,7 +4914,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2019630188}
   m_Layer: 5
-  m_Name: Flower
+  m_Name: Flower_Self
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -5004,8 +5130,10 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2139926243}
+  - component: {fileID: 2139926244}
+  - component: {fileID: 2139926245}
   m_Layer: 5
-  m_Name: FlowerImage
+  m_Name: FlowerImage_Self
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -5027,9 +5155,47 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -25, y: 0}
-  m_SizeDelta: {x: -50, y: 0}
+  m_AnchoredPosition: {x: -32.5, y: 25}
+  m_SizeDelta: {x: -65, y: -50}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!222 &2139926244
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2139926242}
+  m_CullTransparentMesh: 1
+--- !u!114 &2139926245
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2139926242}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 21300000, guid: ebe873ec2586b4249bf2a61ef54f1614, type: 3}
+  m_Type: 0
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -5042,4 +5208,3 @@ SceneRoots:
   - {fileID: 1581055772}
   - {fileID: 1254287264}
   - {fileID: 1753036465}
-  - {fileID: 79845151}
