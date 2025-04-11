@@ -83,9 +83,9 @@ namespace MCRGame.Common
 
     public static class RelativeSeatExtensions
     {
-        public static RelativeSeat CreateFromAbsoluteSeats(int currentSeat, int targetSeat)
+        public static RelativeSeat CreateFromAbsoluteSeats(AbsoluteSeat currentSeat, AbsoluteSeat targetSeat)
         {
-            return (RelativeSeat)(((targetSeat - currentSeat + 4) % 4));
+            return (RelativeSeat)((((int)targetSeat - (int)currentSeat + 4) % 4));
         }
 
         public static RelativeSeat NextSeat(this RelativeSeat seat)
