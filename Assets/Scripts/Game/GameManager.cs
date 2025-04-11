@@ -133,6 +133,7 @@ namespace MCRGame.Game
         private void InitRound()
         {
             leftTiles = MAX_TILES - (GameHand.FULL_HAND_SIZE - 1) * MAX_PLAYERS;
+            SetUIActive(true);
             UpdateLeftTiles(leftTiles);
 
             CurrentRound = Round.E1;
@@ -143,9 +144,6 @@ namespace MCRGame.Game
             UpdateScoreText();
             InitializeProfileUI();
             InitializeFlowerUI();
-
-            SetUIActive(true);
-
         }
 
 
