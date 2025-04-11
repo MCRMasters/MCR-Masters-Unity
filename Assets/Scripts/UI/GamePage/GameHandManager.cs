@@ -228,7 +228,7 @@ namespace MCRGame.UI
                 }
                 yield return new WaitForSeconds(0.1f);
             }
-
+ 
             SortTileList();
 
             // 모든 그룹 애니메이션 후 최종 정렬 애니메이션 실행
