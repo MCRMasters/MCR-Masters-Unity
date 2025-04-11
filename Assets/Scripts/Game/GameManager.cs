@@ -70,6 +70,7 @@ namespace MCRGame.Game
 
         [Header("Profile UI (SELF, SHIMO, TOI, KAMI 순서)")]
         [SerializeField] private Image[] profileImages = new Image[4];
+        [SerializeField] private Image[] profileFrameImages = new Image[4];
         [SerializeField] private Text[] nicknameTexts = new Text[4];
         [SerializeField] private Image[] flowerImages = new Image[4];
         [SerializeField] private Text[] flowerCountTexts = new Text[4];
@@ -79,6 +80,11 @@ namespace MCRGame.Game
         [SerializeField] private Sprite FlowerIcon_Red;
 
         private Dictionary<RelativeSeat, int> flowerCountMap = new();
+
+        // Inspector에서 할당할 기본 프레임
+        [Header("Default Profile Frame/Image")]
+        [SerializeField] private Sprite defaultFrameSprite;
+        [SerializeField] private Sprite defaultProfileImageSprite;
 
         private void Awake()
         {
@@ -110,6 +116,7 @@ namespace MCRGame.Game
             // ───────────────────────────────────────────────
             // Profile UI 토글
             foreach (var img in profileImages) if (img != null) img.gameObject.SetActive(active);
+            foreach (var frame in profileFrameImages) if (frame != null) frame.gameObject.SetActive(active);
             foreach (var txt in nicknameTexts) if (txt != null) txt.gameObject.SetActive(active);
             foreach (var img in flowerImages) if (img != null) img.gameObject.SetActive(active);
             foreach (var txt in flowerCountTexts) if (txt != null) txt.gameObject.SetActive(active);
@@ -195,32 +202,52 @@ namespace MCRGame.Game
         }
 
 
-        /// <summary>
-        /// RelativeSeat 순서대로 profile / nickname / flowerCount 초기 세팅
-        /// </summary>
-        private void InitializeProfileUI()
+
+    private void InitializeProfileUI()
+    {
+        for (int i = 0; i < 4; i++)
         {
-            for (int i = 0; i < 4; i++)
+            var rel = (RelativeSeat)i;
+            var abs = rel.ToAbsoluteSeat(MySeat);
+
+            if (!seatToPlayerIndex.TryGetValue(abs, out int idx) || idx < 0 || idx >= Players.Count)
+                continue;
+
+            var player = Players[idx];
+
+            // 1) 닉네임
+            if (nicknameTexts[i] != null)
+                nicknameTexts[i].text = player.Nickname;
+
+            // 2) 프로필 이미지
+            if (profileImages[i] != null)
+                profileImages[i].sprite = GetProfileImageSprite(player.Uid); // 필요시 구현
+
+            // 3) 프로필 프레임
+            if (profileFrameImages[i] != null)
             {
-                var rel = (RelativeSeat)i;
-                // 내 자리 기준 절대 좌석
-                var absSeat = rel.ToAbsoluteSeat(MySeat);
-                // 그 절대 좌석에 대응하는 플레이어 인덱스
-                if (!seatToPlayerIndex.TryGetValue(absSeat, out int idx) ||
-                    idx < 0 || idx >= Players.Count)
-                    continue;
-
-                var player = Players[idx];
-
-                // 1) 닉네임 세팅
-                if (nicknameTexts[i] != null)
-                    nicknameTexts[i].text = player.Nickname;
-
-                // 2) 프로필 이미지(필요시 Sprite 할당)
-                // if (profileImages[i] != null)
-                // profileImages[i].sprite = GetAvatarSprite(player.Uid);
+                profileFrameImages[i].sprite = GetFrameSprite(player.Uid); // 필요시 구현
+                profileFrameImages[i].gameObject.SetActive(true);
             }
+
+            // 4) 꽃 UI 초기화 (이미 InitializeFlowerUI 에서 처리됨)
         }
+    }
+
+        private Sprite GetProfileImageSprite(string uid)
+        {
+            return defaultProfileImageSprite;
+        }
+
+        // 플레이어별 프레임 스프라이트 반환 (예시: 모두 동일 프레임 사용하거나,
+        // Player 데이터에 frame 정보가 있으면 거기서 가져오면 됩니다)
+        private Sprite GetFrameSprite(string uid)
+        {
+            // TODO: uid별로 다른 프레임을 쓰려면 이곳에 로직 추가
+            // 지금은 Inspector에서 미리 할당한 기본 프레임을 반환하도록 하겠습니다.
+            return defaultFrameSprite;
+        }
+
 
         /// <summary>
         /// Round와 wind 정보를 바탕으로 seat<->player index 매핑 초기화
