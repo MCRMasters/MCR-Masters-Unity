@@ -5,6 +5,7 @@ using Newtonsoft.Json.Linq;
 using System;
 using MCRGame.Net;
 using MCRGame.Common;
+using System.Linq;
 
 namespace MCRGame.Game
 {
@@ -79,20 +80,39 @@ namespace MCRGame.Game
             {
                 case GameWSActionType.INIT_EVENT:
                     Debug.Log("[GameMessageMediator] Init event received.");
-                    if (message.Data["hand"] != null)
+
+                    // hand 파싱
+                    if (message.Data.TryGetValue("hand", out JToken handToken))
                     {
-                        Debug.Log("[GameMessageMediator] Hand: " + message.Data["hand"].ToString());
-                        List<int> handInts = message.Data["hand"].ToObject<List<int>>();
-                        List<GameTile> initTiles = new List<GameTile>();
-                        foreach (int i in handInts)
+                        var handInts = handToken.ToObject<List<int>>();
+                        var initTiles = handInts.Select(i => (GameTile)i).ToList();
+
+                        // tsumo_tile 파싱 (null 가능)
+                        GameTile? tsumoTile = null;
+                        if (message.Data.TryGetValue("tsumo_tile", out JToken tsumoToken)
+                            && tsumoToken.Type != JTokenType.Null)
                         {
-                            // int 값을 GameTile 열거형으로 캐스팅
-                            initTiles.Add((GameTile)i);
+                            int tsumoInt = tsumoToken.ToObject<int>();
+                            tsumoTile = (GameTile)tsumoInt;
+                            Debug.Log($"[GameMessageMediator] Tsumo tile: {tsumoTile}");
+
+                            // tsumoTile이 있으면 initTiles에서 제거
+                            if (tsumoTile.HasValue)
+                            {
+                                bool removed = initTiles.Remove(tsumoTile.Value);
+                                if (!removed)
+                                {
+                                    Debug.LogWarning($"[GameMessageMediator] initTiles에 {tsumoTile.Value}가 없어 제거하지 못했습니다.");
+                                }
+                            }
                         }
-                        // GameManager를 통해 손 초기화 처리
-                        GameManager.Instance.InitHandFromMessage(initTiles);
+
+                        // GameManager로 전달 (새 시그니처)
+                        GameManager.Instance.InitHandFromMessage(initTiles, tsumoTile);
                     }
                     break;
+
+
 
 
                 case GameWSActionType.GAME_START_INFO:
