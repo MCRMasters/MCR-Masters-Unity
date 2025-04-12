@@ -19,6 +19,8 @@ namespace MCRGame.Net
         TSUMO_ACTIONS,
         [EnumMember(Value = "discard_actions")]
         DISCARD_ACTIONS,
+        [EnumMember(Value = "robbing_kong_actions")]
+        ROBBING_KONG_ACTIONS,
         [EnumMember(Value = "discard")]
         DISCARD,
         [EnumMember(Value = "tsumo")]

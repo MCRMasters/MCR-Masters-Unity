@@ -186,6 +186,8 @@ namespace MCRGame.Game
                 {
                     image?.gameObject.SetActive(false);
                     text?.gameObject.SetActive(false);
+                    image.sprite = FlowerIcon_White;
+                    text.text = "X0";
                 }
                 else
                 {
@@ -204,7 +206,20 @@ namespace MCRGame.Game
             }
         }
 
+        private void setRelativeSeatFlowerUIActive(bool isActive, RelativeSeat seat)
+        {
+            int index = (int)seat;
 
+            // 유효성 검사
+            if (flowerImages.Length <= index || flowerCountTexts.Length <= index)
+                return;
+
+            var image = flowerImages[index];
+            var text = flowerCountTexts[index];
+
+            image?.gameObject.SetActive(isActive);
+            text?.gameObject.SetActive(isActive);
+        }
 
         private void InitializeProfileUI()
         {
@@ -460,19 +475,14 @@ namespace MCRGame.Game
 
         }
 
-        /// <summary>
-        /// INIT_FLOWER_REPLACEMENT 이벤트에 따라 화패 교체 이벤트를 시작합니다.
-        /// newTiles: 새로 지급될 타일 리스트  
-        /// appliedFlowers: 각 플레이어에게 적용된 화패 타일들 (전체 리스트)  
-        /// flowerCounts: 각 좌석(EAST, SOUTH, WEST, NORTH 순)의 꽃 개수  
-        /// </summary>
         public void StartFlowerReplacement(List<GameTile> newTiles, List<GameTile> appliedFlowers, List<int> flowerCounts)
         {
             StartCoroutine(FlowerReplacementCoroutine(newTiles, appliedFlowers, flowerCounts));
         }
+
         private IEnumerator FlowerReplacementCoroutine(List<GameTile> newTiles, List<GameTile> appliedFlowers, List<int> flowerCounts)
         {
-            // GameHandManager의 InitHand 완료 여부를 체크하여 대기합니다.
+            // GameHandManager의 InitHand 완료 여부 체크
             while (!gameHandManager.IsInitHandComplete)
             {
                 yield return null;
@@ -482,22 +492,25 @@ namespace MCRGame.Game
                 yield return new WaitForSeconds(0.4f);
             }
             Debug.Log("FlowerReplacementCoroutine: InitHand 완료 확인. 꽃 교체 이벤트 시작.");
-            yield return new WaitForSeconds(1.2f);
+            yield return new WaitForSeconds(0.7f);
 
-            // "Main 2D Canvas"라는 이름의 GameObject를 찾아 해당 Canvas의 자식으로 prefab을 Instantiate합니다.
+            // "Main 2D Canvas" 오브젝트를 찾아 그 자식으로 prefab을 Instantiate합니다.
             GameObject mainCanvasObject = GameObject.Find("Main 2D Canvas");
             Transform canvasTransform = mainCanvasObject != null ? mainCanvasObject.transform : transform;
 
-            // 0) 전체 꽃 교체 이벤트 시작 전 FLOWER PHASE 연출
+            // 0) FLOWER PHASE 연출: fade in 해서 유지
+            GameObject flowerEffect = null;
+            Image flowerPhaseImage = null;
             if (flowerPhaseEffectPrefab != null)
             {
-                GameObject flowerEffect = Instantiate(flowerPhaseEffectPrefab, canvasTransform);
-                Image flowerPhaseImage = flowerEffect.GetComponent<Image>();
+                flowerEffect = Instantiate(flowerPhaseEffectPrefab, canvasTransform);
+                flowerPhaseImage = flowerEffect.GetComponent<Image>();
                 if (flowerPhaseImage != null)
                 {
-                    yield return StartCoroutine(FadeInAndOut(flowerPhaseImage, 0.2f, 1f));
+                    // fade in (0.2초 동안 서서히 나타남)
+                    yield return StartCoroutine(FadeIn(flowerPhaseImage, 0.2f));
+                    // 이 후 flowerPhaseImage는 화면에 완전히 나타난 상태로 유지됩니다.
                 }
-                Destroy(flowerEffect);
             }
             else
             {
@@ -512,37 +525,68 @@ namespace MCRGame.Game
                 int count = flowerCounts[(int)absoluteSeat];
                 Debug.Log($"[FlowerReplacement] {absoluteSeat} 좌석 꽃 개수: {count}");
 
-                RelativeSeat relativeSeat = RelativeSeatExtensions.CreateFromAbsoluteSeats(MySeat, absoluteSeat); 
-
+                RelativeSeat relativeSeat = RelativeSeatExtensions.CreateFromAbsoluteSeats(MySeat, absoluteSeat);
                 if (relativeSeat == RelativeSeat.SELF)
                 {
+                    int currentFlowerCount = 0; // 초기 꽃 개수 (필요 시 기존 값 반영)
                     for (int i = 0; i < count; i++)
                     {
-                        yield return StartCoroutine(gameHandManager.ApplyFlower(appliedFlowers[i]));
-                        yield return StartCoroutine(gameHandManager.AddInitFlowerTsumo(newTiles[i]));
+                        int previousCount = currentFlowerCount;
+                        currentFlowerCount++;
+
+                        bool operationDone = false;
+                        bool animateDone = false;
+
+                        // 동시에 꽃 카운트 애니메이션 실행
+                        StartCoroutine(AnimateFlowerCount(relativeSeat, previousCount, currentFlowerCount, () => { animateDone = true; }));
+                        // 두 작업(ApplyFlower와 AddInitFlowerTsumo)을 순차 실행하는 코루틴 실행
+                        StartCoroutine(ProcessFlowerOperation(i, newTiles, appliedFlowers, () => { operationDone = true; }));
+
+                        // 두 작업 모두 완료될 때까지 기다림
+                        yield return new WaitUntil(() => operationDone && animateDone);
                     }
+                    SetFlowerCount(relativeSeat, currentFlowerCount);
                 }
                 else
                 {
+                    // 상대의 경우: Hand3DField를 이용해 요청
                     Hand3DField handField = playersHand3DFields[(int)relativeSeat];
+                    int currentFlowerCount = 0; // 상대 좌석의 초기 꽃 개수
                     for (int i = 0; i < count; i++)
                     {
-                        yield return StartCoroutine(handField.RequestDiscardRandom());
-                        yield return new WaitForSeconds(0.5f);
-                        yield return StartCoroutine(handField.RequestInitFlowerTsumo());
+                        int previousCount = currentFlowerCount;
+                        currentFlowerCount++;
+
+                        bool operationDone = false;
+                        bool animateDone = false;
+
+                        // 동시에 꽃 카운트 애니메이션 실행
+                        StartCoroutine(AnimateFlowerCount(relativeSeat, previousCount, currentFlowerCount, () => { animateDone = true; }));
+                        // Hand3DField의 RequestDiscardRandom과 RequestInitFlowerTsumo를 순차 실행하는 코루틴
+                        StartCoroutine(ProcessOpponentFlowerOperation(handField, () => { operationDone = true; }));
+
+                        yield return new WaitUntil(() => operationDone && animateDone);
                     }
+                    SetFlowerCount(relativeSeat, currentFlowerCount);
                 }
-                yield return new WaitForSeconds(0.5f);
+                yield return new WaitForSeconds(0.3f);
             }
 
-            // 2) 전체 화패 교체 이벤트 종료 후 ROUND START 연출
+            // 2) 모든 꽃 교체 완료 후, ROUND START 연출 직전에 FLOWER PHASE fade out 처리
+            if (flowerPhaseImage != null)
+            {
+                yield return StartCoroutine(FadeOut(flowerPhaseImage, 0.2f));
+                Destroy(flowerEffect);
+            }
+            yield return new WaitForSeconds(1f);
+            // 3) 전체 화패 교체 이벤트 종료 후 ROUND START 연출
             if (roundStartEffectPrefab != null)
             {
                 GameObject roundStartEffect = Instantiate(roundStartEffectPrefab, canvasTransform);
                 Image roundStartImage = roundStartEffect.GetComponent<Image>();
                 if (roundStartImage != null)
                 {
-                    yield return StartCoroutine(FadeInAndOut(roundStartImage, 0.2f, 1f));
+                    yield return StartCoroutine(FadeInAndOut(roundStartImage, 0.2f, 0.7f));
                 }
                 Destroy(roundStartEffect);
             }
@@ -555,6 +599,89 @@ namespace MCRGame.Game
             yield break;
         }
 
+
+        // SELF인 경우 두 작업(ApplyFlower와 AddInitFlowerTsumo)을 순차적으로 실행합니다.
+        private IEnumerator ProcessFlowerOperation(int index, List<GameTile> newTiles, List<GameTile> appliedFlowers, Action onComplete)
+        {
+            yield return StartCoroutine(gameHandManager.ApplyFlower(appliedFlowers[index]));
+            yield return StartCoroutine(gameHandManager.AddInitFlowerTsumo(newTiles[index]));
+            onComplete?.Invoke();
+        }
+
+        // 상대의 경우, Hand3DField의 RequestDiscardRandom()과 RequestInitFlowerTsumo()를 순차적으로 실행합니다.
+        private IEnumerator ProcessOpponentFlowerOperation(Hand3DField handField, Action onComplete)
+        {
+            yield return StartCoroutine(handField.RequestDiscardRandom());
+            yield return StartCoroutine(handField.RequestInitFlowerTsumo());
+            onComplete?.Invoke();
+        }
+        private IEnumerator AnimateFlowerCount(RelativeSeat rel, int fromValue, int toValue, Action onComplete)
+        {
+            float duration = 0.1f;
+            float elapsed = 0f;
+            // 해당 좌석의 꽃 카운트 텍스트를 가져옵니다.
+            Text flowerCountText = flowerCountTexts[(int)rel];
+            // 텍스트와 이미지가 동일한 부모 오브젝트에 있다고 가정합니다.
+            Transform container = flowerCountText.transform.parent;
+
+            // 부모 컨테이너의 원래 스케일을 저장합니다.
+            Vector3 originalScale = container.localScale;
+            // popScale : 중간에 도달할 최대 확대 비율 (예: 1.3배)
+            float popScale = 1.3f;
+
+            // UI 활성화 (필요 시)
+            setRelativeSeatFlowerUIActive(isActive: true, seat: rel);
+
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                float t = Mathf.Clamp01(elapsed / duration);
+                // 숫자 애니메이션: SmoothStep을 적용하여 fromValue에서 toValue로 보간
+                float eased = Mathf.SmoothStep(0f, 1f, t);
+                int displayValue = fromValue + Mathf.RoundToInt(eased * (toValue - fromValue));
+                flowerCountText.text = "X" + displayValue.ToString();
+
+                // 팝 효과: 4*t*(1-t)는 t=0과 t=1에서 0, t=0.5에서 최대값을 가지도록 함.
+                float scaleFactor = 1 + (popScale - 1) * (4 * t * (1 - t));
+                // 부모 컨테이너 스케일을 변경하면, 자식인 텍스트와 이미지 모두 영향을 받습니다.
+                container.localScale = originalScale * scaleFactor;
+                yield return null;
+            }
+            // 최종 값 적용 및 스케일 복귀
+            flowerCountText.text = "X" + toValue.ToString();
+            container.localScale = originalScale;
+            onComplete?.Invoke();
+        }
+
+        // 지정한 Image 컴포넌트가 fade in 효과로 나타나도록 처리 (fadeDuration 동안)
+        private IEnumerator FadeIn(Image img, float fadeDuration)
+        {
+            Color origColor = img.color;
+            float elapsed = 0f;
+            while (elapsed < fadeDuration)
+            {
+                elapsed += Time.deltaTime;
+                float t = Mathf.Clamp01(elapsed / fadeDuration);
+                img.color = new Color(origColor.r, origColor.g, origColor.b, t);
+                yield return null;
+            }
+            img.color = new Color(origColor.r, origColor.g, origColor.b, 1f);
+        }
+
+        // 지정한 Image 컴포넌트가 fade out 효과로 사라지도록 처리 (fadeDuration 동안)
+        private IEnumerator FadeOut(Image img, float fadeDuration)
+        {
+            Color origColor = img.color;
+            float elapsed = 0f;
+            while (elapsed < fadeDuration)
+            {
+                elapsed += Time.deltaTime;
+                float t = Mathf.Clamp01(elapsed / fadeDuration);
+                img.color = new Color(origColor.r, origColor.g, origColor.b, 1 - t);
+                yield return null;
+            }
+            img.color = new Color(origColor.r, origColor.g, origColor.b, 0f);
+        }
 
 
         /// <summary>

@@ -90,7 +90,13 @@ namespace MCRGame.UI
                 rt.anchorMax = new Vector2(0, 0.5f);
                 rt.pivot = new Vector2(0, 0.5f);
             }
-
+            var imageField = newTile.transform.Find("ImageField");
+            if (imageField != null)
+            {
+                var img = imageField.GetComponent<Image>();
+                if (img != null)
+                    img.color = new Color(img.color.r, img.color.g, img.color.b, 0f);
+            }
             tileObjects.Add(newTile);
             return newTile;
         }
@@ -267,7 +273,10 @@ namespace MCRGame.UI
                 tsumoTile = null;
 
             SortTileList();
+            var prevSlideDuration = slideDuration;
+            slideDuration = 0.1f;
             yield return StartCoroutine(AnimateReposition());
+            slideDuration = prevSlideDuration;
         }
 
         public IEnumerator AddTsumo(GameTile tile)
@@ -320,7 +329,7 @@ namespace MCRGame.UI
             tsumoRt.anchoredPosition = startPos;
 
             var img = tsumoTile.GetComponentInChildren<Image>();
-            Color origColor = img != null ? img.color : Color.white;
+            Color origColor = img != null ? new Color(img.color.r, img.color.g, img.color.b, 1f) : Color.white;
             if (img != null)
                 img.color = new Color(origColor.r, origColor.g, origColor.b, 0f);
 
@@ -422,8 +431,11 @@ namespace MCRGame.UI
             tsumoTile = null;
             SortTileList();
 
+            var prevSlideDuration = slideDuration;
+            slideDuration = 0.1f;
             // 4) 나머지 타일들 부드럽게 재배치
             yield return StartCoroutine(AnimateReposition());
+            slideDuration = prevSlideDuration;
         }
 
 
