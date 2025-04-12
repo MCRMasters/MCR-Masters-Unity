@@ -129,12 +129,12 @@ TextureImporter:
       name: FlowerButton_0
       rect:
         serializedVersion: 2
-        x: 91
-        y: 88
-        width: 873
-        height: 619
+        x: 74
+        y: 303
+        width: 907
+        height: 420
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -151,7 +151,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 
+    spriteID: 7b595338d78878048a38258e67313abb
     internalID: 0
     vertices: []
     indices: 

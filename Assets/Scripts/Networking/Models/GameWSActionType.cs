@@ -7,6 +7,10 @@ namespace MCRGame.Net
     [JsonConverter(typeof(StringEnumConverter))]
     public enum GameWSActionType
     {
+        
+        [EnumMember(Value = "game_event")]
+        GAME_EVENT,
+        
         [EnumMember(Value = "game_start_info")]
         GAME_START_INFO,
         [EnumMember(Value = "init_event")]
@@ -46,6 +50,10 @@ namespace MCRGame.Net
         [EnumMember(Value = "pong")]
         PONG,
         [EnumMember(Value = "user_joined")]
-        USER_JOINED
+        USER_JOINED,
+        [EnumMember(Value = "success")]
+        SUCCESS,
+        [EnumMember(Value = "error")]
+        ERROR,
     }
 }

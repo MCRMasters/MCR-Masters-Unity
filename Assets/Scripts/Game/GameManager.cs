@@ -7,6 +7,8 @@ using UnityEngine.UI;
 using System.Linq;
 using System;
 using System.Collections;
+using System.Threading.Tasks;
+using Newtonsoft.Json.Linq;
 
 namespace MCRGame.Game
 {
@@ -28,10 +30,10 @@ namespace MCRGame.Game
         public const int MAX_PLAYERS = 4;
         private int leftTiles;
         [SerializeField]
-        private UnityEngine.UI.Text leftTilesText;
+        private Text leftTilesText;
 
         [SerializeField]
-        private UnityEngine.UI.Text currentRoundText;
+        private Text currentRoundText;
 
         // 추가: Inspector에서 할당할 수 있는 4개의 Hand3DField 배열 (index 0~3 은 각 상대 좌석에 대응)
         [SerializeField]
@@ -91,6 +93,23 @@ namespace MCRGame.Game
         [SerializeField] private Sprite defaultFrameSprite;
         [SerializeField] private Sprite defaultProfileImageSprite;
 
+        [Header("Tsumo Action UI")]
+        [SerializeField] private RectTransform actionButtonPanel;    // 버튼을 담을 패널 (GridLayoutGroup 붙임)
+        [SerializeField] private GameObject actionButtonPrefab;      // 버튼 프리팹
+        [SerializeField] private Sprite skipButtonSprite;
+        [SerializeField] private Sprite chiiButtonSprite;
+        [SerializeField] private Sprite ponButtonSprite;
+        [SerializeField] private Sprite kanButtonSprite;
+        [SerializeField] private Sprite huButtonSprite;
+        [SerializeField] private Sprite flowerButtonSprite;
+
+        [Header("Timer UI")]
+        [SerializeField] private Text timerText;                     // 남은 시간 표시용
+        private float remainingTime;                                  // 내부 카운트다운
+        private int currentActionId;                                  // 서버가 준 action_id
+
+        private bool isGameStarted = false;
+
         private void Awake()
         {
             if (Instance != null && Instance != this)
@@ -101,6 +120,95 @@ namespace MCRGame.Game
             Instance = this;
 
             SetUIActive(false);
+            ClearActionUI();
+            isGameStarted = false;
+        }
+
+        void Update()
+        {
+            UpdateTimerText();
+        }
+
+
+        private void UpdateTimerText()
+        {
+            if (!timerText.IsActive())
+                return;
+            if (remainingTime > 0f)
+            {
+                remainingTime -= Time.deltaTime;
+                int sec = Mathf.Max(0, Mathf.FloorToInt(remainingTime));
+                if (timerText != null) timerText.text = sec.ToString();
+                if (remainingTime <= 0f) timerText.text = "0";
+            }
+        }
+
+        public void ProcessTsumoActions(JObject data)
+        {
+            // 1) 기존 버튼 전부 제거
+            foreach (Transform c in actionButtonPanel) Destroy(c.gameObject);
+
+            // 2) action_id, 남은 시간 초기화
+            currentActionId = data["action_id"].ToObject<int>();
+            remainingTime = data["left_time"].ToObject<float>();
+            if (timerText != null)
+            {
+                timerText.gameObject.SetActive(remainingTime > 0f);
+                timerText.text = Mathf.FloorToInt(remainingTime).ToString();
+            }
+
+            // 3) JSON.NET으로 GameAction 리스트로 바로 변환
+            var list = data["actions"].ToObject<List<GameAction>>();
+            list.Sort();
+
+            // 4) GridLayoutGroup에 맞춰 버튼 생성
+            foreach (var act in list)
+            {
+                var btnObj = Instantiate(actionButtonPrefab, actionButtonPanel);
+                btnObj.GetComponent<Image>().sprite = GetSpriteForAction(act.Type);
+                btnObj.GetComponent<Button>().onClick.AddListener(() => OnActionButtonClicked(act));
+            }
+
+            // 5) Skip 버튼 (마지막에)
+            if (list.Count > 0)
+            {
+                var skip = Instantiate(actionButtonPrefab, actionButtonPanel);
+                skip.GetComponent<Image>().sprite = skipButtonSprite;
+                skip.GetComponent<Button>().onClick.AddListener(OnSkipButtonClicked);
+            }
+        }
+
+        private Sprite GetSpriteForAction(GameActionType type)
+        {
+            return type switch
+            {
+                GameActionType.CHII => chiiButtonSprite,
+                GameActionType.PON => ponButtonSprite,
+                GameActionType.KAN => kanButtonSprite,
+                GameActionType.HU => huButtonSprite,
+                GameActionType.FLOWER => flowerButtonSprite,
+                _ => null
+            };
+        }
+
+        private void OnActionButtonClicked(GameAction action)
+        {
+            Debug.Log($"액션 선택: {action.Type} / 타일: {action.Tile}");
+            // TODO: 선택된 action_id와 action.Type, action.Tile 서버 전송
+            ClearActionUI();
+        }
+
+        private void OnSkipButtonClicked()
+        {
+            Debug.Log("Skip 선택");
+            // TODO: Skip 서버 전송
+            ClearActionUI();
+        }
+
+        private void ClearActionUI()
+        {
+            foreach (Transform c in actionButtonPanel) Destroy(c.gameObject);
+            if (timerText != null) timerText.gameObject.SetActive(false);
         }
 
         /// <summary>
@@ -137,11 +245,20 @@ namespace MCRGame.Game
 
         private void InitRound()
         {
-            leftTiles = MAX_TILES - (GameHand.FULL_HAND_SIZE - 1) * MAX_PLAYERS;
+            leftTiles = MAX_TILES - (GameHand.FULL_HAND_SIZE - 1) * MAX_PLAYERS - 1;
             SetUIActive(true);
+            ClearActionUI();
             UpdateLeftTiles(leftTiles);
 
-            CurrentRound = Round.E1;
+            if (isGameStarted){
+                if (CurrentRound.NextRound() != Round.END)
+                    CurrentRound = CurrentRound.NextRound();
+            }
+            else{
+                CurrentRound = Round.E1;
+                isGameStarted = true;
+            }
+            
             UpdateCurrentRoundUI();
             InitSeatIndexMapping();
 
@@ -542,6 +659,8 @@ namespace MCRGame.Game
                         // 두 작업(ApplyFlower와 AddInitFlowerTsumo)을 순차 실행하는 코루틴 실행
                         StartCoroutine(ProcessFlowerOperation(i, newTiles, appliedFlowers, () => { operationDone = true; }));
 
+                        leftTiles--;
+                        UpdateLeftTiles(leftTiles);
                         // 두 작업 모두 완료될 때까지 기다림
                         yield return new WaitUntil(() => operationDone && animateDone);
                     }
@@ -564,7 +683,8 @@ namespace MCRGame.Game
                         StartCoroutine(AnimateFlowerCount(relativeSeat, previousCount, currentFlowerCount, () => { animateDone = true; }));
                         // Hand3DField의 RequestDiscardRandom과 RequestInitFlowerTsumo를 순차 실행하는 코루틴
                         StartCoroutine(ProcessOpponentFlowerOperation(handField, () => { operationDone = true; }));
-
+                        leftTiles--;
+                        UpdateLeftTiles(leftTiles);
                         yield return new WaitUntil(() => operationDone && animateDone);
                     }
                     SetFlowerCount(relativeSeat, currentFlowerCount);
@@ -594,10 +714,19 @@ namespace MCRGame.Game
             {
                 Debug.LogWarning("roundStartEffectPrefab이 할당되지 않았습니다.");
             }
-
+            if (GameWS.Instance != null)
+            {
+                _ = GameWS.Instance.SendGameEventAsync(GameWSActionType.GAME_EVENT, new
+                {
+                    event_type = (int)GameEventType.INIT_FLOWER_OK,
+                    data = new Dictionary<string, object>()
+                });
+            }
             Debug.Log("[FlowerReplacement] 꽃 교체 이벤트 완료.");
             yield break;
         }
+
+
 
 
         // SELF인 경우 두 작업(ApplyFlower와 AddInitFlowerTsumo)을 순차적으로 실행합니다.

@@ -129,12 +129,12 @@ TextureImporter:
       name: ChiButton_0
       rect:
         serializedVersion: 2
-        x: 95
-        y: 32
-        width: 874
-        height: 987
+        x: 77
+        y: 320
+        width: 907
+        height: 420
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -151,7 +151,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 
+    spriteID: 21d4ce49614ccbb4c8e9937f3278494e
     internalID: 0
     vertices: []
     indices: 

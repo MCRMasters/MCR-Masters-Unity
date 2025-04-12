@@ -129,12 +129,12 @@ TextureImporter:
       name: SkipButton_0
       rect:
         serializedVersion: 2
-        x: 43
-        y: 24
-        width: 979
-        height: 995
+        x: 75
+        y: 309
+        width: 907
+        height: 420
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -151,7 +151,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 
+    spriteID: 81e1edc46e951d84ca3a527b369504f1
     internalID: 0
     vertices: []
     indices: 
