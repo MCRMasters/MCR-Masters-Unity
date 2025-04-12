@@ -46,7 +46,7 @@ namespace MCRGame.Common
             return new GameAction
             {
                 Type = (GameActionType)actionType,
-                SeatPriority = RelativeSeatExtensions.CreateFromAbsoluteSeats((int)currentPlayerSeat, (int)gameEvent.PlayerSeat),
+                SeatPriority = RelativeSeatExtensions.CreateFromAbsoluteSeats(currentPlayerSeat, gameEvent.PlayerSeat),
                 Tile = tile
             };
         }

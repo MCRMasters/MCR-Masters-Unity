@@ -33,6 +33,9 @@ namespace MCRGame.UI
         private bool isSliding = false;
 
 
+        // round가 끝나면 다음 round 초기화를 위해서 다시 false로 돌려놓아야 함
+        public bool IsInitHandComplete { get; private set; } = false;
+
         // 외부에서 접근 가능한 프로퍼티
         public GameHand GameHand => gameHand;
         public CallBlockField CallBlockField => callBlockField;
@@ -87,20 +90,20 @@ namespace MCRGame.UI
                 rt.anchorMax = new Vector2(0, 0.5f);
                 rt.pivot = new Vector2(0, 0.5f);
             }
-
+            var imageField = newTile.transform.Find("ImageField");
+            if (imageField != null)
+            {
+                var img = imageField.GetComponent<Image>();
+                if (img != null)
+                    img.color = new Color(img.color.r, img.color.g, img.color.b, 0f);
+            }
             tileObjects.Add(newTile);
             return newTile;
         }
 
-        /// <summary>
-        /// INIT_EVENT로 전달받은 손패 데이터를 이용하여 타일 오브젝트들을 생성 및 초기화한 후,
-        /// 4장씩 그룹으로 위에서 아래로 떨어지는 애니메이션을 실행하고,
-        /// 모든 그룹 애니메이션 종료 후 AnimateReposition()을 호출하여 최종 정렬합니다.
-        /// </summary>
-        /// <param name="initTiles">초기 손패에 해당하는 GameTile 리스트</param>
         public IEnumerator InitHand(List<GameTile> initTiles, GameTile? receivedTsumoTile)
         {
-            // 기존 타일 오브젝트 제거
+            // 기존 타일 오브젝트 제거 및 초기화
             foreach (GameObject tileObj in tileObjects)
             {
                 Destroy(tileObj);
@@ -140,9 +143,13 @@ namespace MCRGame.UI
             // tsumoTile이 있으면, 그 뒤에 추가
             if (receivedTsumoTile.HasValue)
             {
-                AddTsumo(receivedTsumoTile.Value);
+                yield return AddTsumo(receivedTsumoTile.Value);
             }
             yield return null;
+
+            // InitHand 완료 기록
+            IsInitHandComplete = true;
+            Debug.Log("GameHandManager: InitHand 코루틴 완료됨.");
         }
 
         private IEnumerator AnimateInitHand()
@@ -251,9 +258,28 @@ namespace MCRGame.UI
             yield return StartCoroutine(AnimateReposition());
         }
 
+        public IEnumerator AddInitFlowerTsumo(GameTile tile)
+        {
+            gameHand.ApplyTsumo(tile);
 
+            string tileName = tile.ToCustomString();
+            var newTileObj = AddTile(tileName);
+            tsumoTile = newTileObj;
+            yield return StartCoroutine(AnimateTsumoDrop());
 
-        public void AddTsumo(GameTile tile)
+            if (gameHand.HandSize == GameHand.FULL_HAND_SIZE)
+                tsumoTile = newTileObj;
+            else
+                tsumoTile = null;
+
+            SortTileList();
+            var prevSlideDuration = slideDuration;
+            slideDuration = 0.1f;
+            yield return StartCoroutine(AnimateReposition());
+            slideDuration = prevSlideDuration;
+        }
+
+        public IEnumerator AddTsumo(GameTile tile)
         {
             // 1) 데이터에 추가
             gameHand.ApplyTsumo(tile);
@@ -264,7 +290,7 @@ namespace MCRGame.UI
             tsumoTile = newTileObj;
 
             // 3) 슬라이드 애니메이션 대신 드롭 애니메이션 시작
-            StartCoroutine(AnimateTsumoDrop());
+            yield return StartCoroutine(AnimateTsumoDrop());
         }
 
         private IEnumerator AnimateTsumoDrop()
@@ -303,7 +329,7 @@ namespace MCRGame.UI
             tsumoRt.anchoredPosition = startPos;
 
             var img = tsumoTile.GetComponentInChildren<Image>();
-            Color origColor = img != null ? img.color : Color.white;
+            Color origColor = img != null ? new Color(img.color.r, img.color.g, img.color.b, 1f) : Color.white;
             if (img != null)
                 img.color = new Color(origColor.r, origColor.g, origColor.b, 0f);
 
@@ -383,6 +409,36 @@ namespace MCRGame.UI
             }
         }
 
+        public IEnumerator ApplyFlower(GameTile tile)
+        {
+            // 1) 이름으로 타일 오브젝트 찾기
+            string tileName = tile.ToCustomString(); // :contentReference[oaicite:0]{index=0}
+            int idx = tileObjects.FindIndex(go => go.name == tileName);
+            if (idx < 0)
+            {
+                Debug.LogWarning($"[GameHandManager] '{tileName}' 타일을 찾을 수 없습니다.");
+                yield break;
+            }
+
+            GameObject tileObj = tileObjects[idx];
+
+            // 2) GameHand 데이터에서도 해당 타일 제거
+            gameHand.ApplyDiscard(tile); // :contentReference[oaicite:1]{index=1}
+
+            // 3) UI 리스트에서 즉시 제거 및 오브젝트 파괴
+            tileObjects.RemoveAt(idx);
+            Destroy(tileObj);
+            tsumoTile = null;
+            SortTileList();
+
+            var prevSlideDuration = slideDuration;
+            slideDuration = 0.1f;
+            // 4) 나머지 타일들 부드럽게 재배치
+            yield return StartCoroutine(AnimateReposition());
+            slideDuration = prevSlideDuration;
+        }
+
+
 
         /// <summary>
         /// CallBlockData 기반으로 호출(Chi/Pon/Kan)을 처리합니다.
@@ -445,30 +501,53 @@ namespace MCRGame.UI
             // 3) 남은 tileObjects를 애니메이션으로 재배치
             yield return StartCoroutine(AnimateReposition());
         }
+
         private IEnumerator AnimateReposition()
         {
             if (tileObjects.Count == 0) yield break;
 
-            // 기준 타일 너비
+            // 기준 타일 너비 계산
             var firstRect = tileObjects[0].GetComponent<RectTransform>();
             float tileWidth = firstRect != null ? firstRect.rect.width : 1f;
 
-            // 초기/목표 위치 계산
+            // 초기 위치와 목표 위치를 계산할 딕셔너리 생성
             var initialPos = new Dictionary<GameObject, Vector2>();
             var targetPos = new Dictionary<GameObject, Vector2>();
 
-            for (int i = 0; i < tileObjects.Count; i++)
+            // tsumo 타일을 제외한 일반 타일들의 순서를 위한 인덱스
+            int idx = 0;
+            foreach (var go in tileObjects)
             {
-                var go = tileObjects[i];
                 var rt = go.GetComponent<RectTransform>();
                 if (rt == null) continue;
 
+                // 각 타일의 현재 위치 저장
                 initialPos[go] = rt.anchoredPosition;
 
-                targetPos[go] = new Vector2(i * (tileWidth + gap), 0f);
+                if (go == tsumoTile)
+                {
+                    // tsumo 타일은 나중에 처리
+                    continue;
+                }
+
+                // tsumo 타일이 아닌 경우: 순차적으로 배치 (idx * (타일너비 + gap))
+                targetPos[go] = new Vector2(idx * (tileWidth + gap), 0f);
+                idx++;
             }
 
-            // SmoothStep 이징 애니메이션
+            // tsumo 타일이 있다면, extra gap을 반영하여 최종 위치 계산 (예: tileWidth*0.2f 추가)
+            if (tsumoTile != null)
+            {
+                Vector2 tsumoTarget = new Vector2(idx * (tileWidth + gap) + tileWidth * 0.2f, 0f);
+                var tsumoRect = tsumoTile.GetComponent<RectTransform>();
+                if (tsumoRect != null)
+                {
+                    initialPos[tsumoTile] = tsumoRect.anchoredPosition;
+                }
+                targetPos[tsumoTile] = tsumoTarget;
+            }
+
+            // SmoothStep 이징 애니메이션을 통해 각 타일을 목표 위치로 이동
             float elapsed = 0f;
             while (elapsed < slideDuration)
             {
@@ -483,18 +562,19 @@ namespace MCRGame.UI
                     if (rt == null) continue;
                     rt.anchoredPosition = Vector2.Lerp(initialPos[go], kv.Value, easeT);
                 }
-
                 yield return null;
             }
 
-            // 최종 위치 확정
+            // 애니메이션 종료 후 최종 위치 확정
             foreach (var kv in targetPos)
             {
                 var go = kv.Key;
                 var rt = go.GetComponent<RectTransform>();
-                if (rt != null) rt.anchoredPosition = kv.Value;
+                if (rt != null)
+                    rt.anchoredPosition = kv.Value;
             }
         }
+
 
         /// <summary>
         /// TileManager로부터 호출(discard) 요청이 들어오면, 해당 타일은 애니메이션 큐에 등록되어,
