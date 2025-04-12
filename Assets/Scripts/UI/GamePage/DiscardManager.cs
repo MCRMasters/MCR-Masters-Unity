@@ -28,10 +28,25 @@ namespace MCRGame.UI
 
         void Awake()
         {
-            kawas[RelativeSeat.SELF]  = new List<GameObject>();
+            kawas[RelativeSeat.SELF] = new List<GameObject>();
             kawas[RelativeSeat.SHIMO] = new List<GameObject>();
-            kawas[RelativeSeat.TOI]   = new List<GameObject>();
-            kawas[RelativeSeat.KAMI]  = new List<GameObject>();
+            kawas[RelativeSeat.TOI] = new List<GameObject>();
+            kawas[RelativeSeat.KAMI] = new List<GameObject>();
+        }
+
+        public void InitRound()
+        {
+            foreach (var kvp in kawas)
+            {
+                List<GameObject> list = kvp.Value;
+                foreach (var go in list)
+                {
+                    if (go != null)
+                        Destroy(go);
+                }
+                list.Clear();
+            }
+            tileObjectDictionary.Clear();
         }
 
         public void DiscardTile(RelativeSeat seat, GameTile tile)
@@ -39,11 +54,11 @@ namespace MCRGame.UI
             Transform origin = GetDiscardPosition(seat);
 
             int index = kawas[seat].Count;
-            int row   = index / maxTilesPerRow;
-            int col   = index % maxTilesPerRow;
+            int row = index / maxTilesPerRow;
+            int col = index % maxTilesPerRow;
 
             // 최종 위치 오프셋
-            Vector3 offset   = ComputeOffset(seat, col, row);
+            Vector3 offset = ComputeOffset(seat, col, row);
             Vector3 finalPos = origin.position + offset;
             Quaternion finalRot = origin.rotation;
 
@@ -76,11 +91,11 @@ namespace MCRGame.UI
         {
             return seat switch
             {
-                RelativeSeat.SELF  => Vector3.right  * (col * tileSpacing) + Vector3.back    * (row * rowSpacing),
-                RelativeSeat.SHIMO => Vector3.forward * (col * tileSpacing) + Vector3.right   * (row * rowSpacing),
-                RelativeSeat.TOI   => Vector3.left   * (col * tileSpacing) + Vector3.forward * (row * rowSpacing),
-                RelativeSeat.KAMI  => Vector3.left   * (row * rowSpacing) + Vector3.back    * (col * tileSpacing),
-                _                  => Vector3.zero,
+                RelativeSeat.SELF => Vector3.right * (col * tileSpacing) + Vector3.back * (row * rowSpacing),
+                RelativeSeat.SHIMO => Vector3.forward * (col * tileSpacing) + Vector3.right * (row * rowSpacing),
+                RelativeSeat.TOI => Vector3.left * (col * tileSpacing) + Vector3.forward * (row * rowSpacing),
+                RelativeSeat.KAMI => Vector3.left * (row * rowSpacing) + Vector3.back * (col * tileSpacing),
+                _ => Vector3.zero,
             };
         }
 
@@ -97,10 +112,10 @@ namespace MCRGame.UI
             Vector3 dirCol, dirRow;
             switch (seat)
             {
-                case RelativeSeat.SELF:  dirCol = Vector3.right;  dirRow = Vector3.back;    break;
-                case RelativeSeat.SHIMO: dirCol = Vector3.forward; dirRow = Vector3.right;   break;
-                case RelativeSeat.TOI:   dirCol = Vector3.left;   dirRow = Vector3.forward; break;
-                default:                  dirCol = Vector3.back;   dirRow = Vector3.left;    break;
+                case RelativeSeat.SELF: dirCol = Vector3.right; dirRow = Vector3.back; break;
+                case RelativeSeat.SHIMO: dirCol = Vector3.forward; dirRow = Vector3.right; break;
+                case RelativeSeat.TOI: dirCol = Vector3.left; dirRow = Vector3.forward; break;
+                default: dirCol = Vector3.back; dirRow = Vector3.left; break;
             }
             Vector3 startOffset = dirCol * (col * tileSpacing)
                                 + dirRow * ((row + extraRowOffset) * rowSpacing);
@@ -124,14 +139,14 @@ namespace MCRGame.UI
             }
 
             // 3) 낙하 + 페이드인
-            float elapsed   = 0f;
+            float elapsed = 0f;
             float totalTime = dropDuration;
             float y0 = startPos.y;
             float y1 = finalPos.y;
-            float a  = 2f * (y1 - y0) / (totalTime * totalTime);
+            float a = 2f * (y1 - y0) / (totalTime * totalTime);
 
             Vector3 horizStart = new Vector3(startPos.x, 0f, startPos.z);
-            Vector3 horizEnd   = new Vector3(finalPos.x, 0f, finalPos.z);
+            Vector3 horizEnd = new Vector3(finalPos.x, 0f, finalPos.z);
 
             while (elapsed < totalTime)
             {
@@ -203,11 +218,11 @@ namespace MCRGame.UI
 
         private Transform GetDiscardPosition(RelativeSeat seat) => seat switch
         {
-            RelativeSeat.SELF  => discardPosSELF,
+            RelativeSeat.SELF => discardPosSELF,
             RelativeSeat.SHIMO => discardPosSHIMO,
-            RelativeSeat.TOI   => discardPosTOI,
-            RelativeSeat.KAMI  => discardPosKAMI,
-            _                  => null,
+            RelativeSeat.TOI => discardPosTOI,
+            RelativeSeat.KAMI => discardPosKAMI,
+            _ => null,
         };
     }
 }

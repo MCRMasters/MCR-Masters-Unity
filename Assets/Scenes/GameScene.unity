@@ -3476,6 +3476,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   gameHandManager: {fileID: 866534060}
+  discardManager: {fileID: 1753036464}
   leftTilesText: {fileID: 84894197}
   currentRoundText: {fileID: 2007157733}
   playersHand3DFields:
@@ -3537,6 +3538,7 @@ MonoBehaviour:
   huButtonSprite: {fileID: -6029327314112583697, guid: 3684b43708472426488051f0e9d114c5, type: 3}
   flowerButtonSprite: {fileID: 3227129927260279833, guid: 215e0120c1bce4f9d8f00dacce484176, type: 3}
   timerText: {fileID: 2123852926}
+  IsMyTurn: 0
 --- !u!4 &1254287264
 Transform:
   m_ObjectHideFlags: 0
