@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Newtonsoft.Json;
 
 namespace MCRGame.Common
 {
@@ -16,21 +17,27 @@ namespace MCRGame.Common
         }
     }
 
+    [JsonObject(MemberSerialization.OptIn)]
     public class GameAction : IComparable<GameAction>
     {
+        [JsonProperty("type")]
         public GameActionType Type { get; set; }
+
+        [JsonProperty("seatPriority")]
         public RelativeSeat SeatPriority { get; set; }
+
+        [JsonProperty("tile")]
         public GameTile Tile { get; set; }
 
         public int CompareTo(GameAction other)
         {
-            // 간단한 정렬 예시: 타입, 좌석 우선순위, 타일 순으로 비교
             int cmp = Type.CompareTo(other.Type);
             if (cmp != 0) return cmp;
             cmp = SeatPriority.CompareTo(other.SeatPriority);
             if (cmp != 0) return cmp;
             return Tile.CompareTo(other.Tile);
         }
+
 
         public static GameAction CreateFromGameEvent(GameEvent gameEvent, AbsoluteSeat currentPlayerSeat)
         {

@@ -13,7 +13,8 @@ namespace MCRGame.Common
         INIT_HAIPAI = 8,
         INIT_FLOWER = 9,
         HU = 10,
-        ROBBING_KONG = 11
+        ROBBING_KONG = 11,
+        INIT_FLOWER_OK = 12
     }
 
     public static class GameEventTypeExtensions
@@ -36,6 +37,7 @@ namespace MCRGame.Common
                 case GameEventType.FLOWER:
                 case GameEventType.ROBBING_KONG:
                 case GameEventType.INIT_FLOWER:
+                case GameEventType.INIT_FLOWER_OK:
                     return GameEventType.TSUMO;
                 case GameEventType.HU:
                     return null;
@@ -79,7 +81,7 @@ namespace MCRGame.Common
 
     public static class GameActionTypeExtensions
     {
-            public static GameActionType? CreateFromGameEventType(this GameEventType eventType)
+        public static GameActionType? CreateFromGameEventType(this GameEventType eventType)
         {
             switch (eventType)
             {

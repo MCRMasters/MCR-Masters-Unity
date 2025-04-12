@@ -112,9 +112,6 @@ namespace MCRGame.Game
                     }
                     break;
 
-
-
-
                 case GameWSActionType.GAME_START_INFO:
                     Debug.Log("[GameMessageMediator] GAME_START_INFO event received.");
                     Debug.Log("[GameMessageMediator] Data: " + message.Data.ToString());
@@ -126,12 +123,10 @@ namespace MCRGame.Game
                     }
                     break;
 
-                case GameWSActionType.DISCARD:
-                    Debug.Log("[GameMessageMediator] Discard event received.");
-                    break;
-
                 case GameWSActionType.TSUMO_ACTIONS:
                     Debug.Log("[GameMessageMediator] Tsumo actions received.");
+                    // message.Data는 JObject이므로 바로 넘겨줌
+                    GameManager.Instance.ProcessTsumoActions((JObject)message.Data);
                     break;
 
                 case GameWSActionType.INIT_FLOWER_REPLACEMENT:
@@ -179,6 +174,17 @@ namespace MCRGame.Game
                     }
                     break;
 
+                case GameWSActionType.SUCCESS:
+                    Debug.Log("[GameMessageMediator] Success event received.");
+                    Debug.Log("[GameMessageMediator] Success data: " + message.Data.ToString());
+                    // 필요 시 성공 메시지를 UI 업데이트 등으로 전달
+                    break;
+
+                case GameWSActionType.ERROR:
+                    Debug.Log("[GameMessageMediator] Error event received.");
+                    Debug.Log("[GameMessageMediator] Error data: " + message.Data.ToString());
+                    // 필요 시 에러 메시지 처리
+                    break;
 
                 default:
                     Debug.Log("[GameMessageMediator] Unhandled event: " + message.Event);
