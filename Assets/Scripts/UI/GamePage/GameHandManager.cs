@@ -97,9 +97,17 @@ namespace MCRGame.UI
         /// </summary>
         public void ConfirmDiscard(GameTile tile)
         {
-            if (requestedDiscardTile.gameObject.name != tile.ToCustomString())
+            if (requestedDiscardTile == null || requestedDiscardTile.gameObject.name != tile.ToCustomString())
             {
-                Debug.LogWarning("[GameHandManager.ConfirmDiscard] Wrong tile name");
+                for (int i = tileObjects.Count - 1; i >= 0; --i)
+                {
+                    if (tileObjects[i].gameObject.name == tile.ToCustomString())
+                    {
+                        DiscardTile(tileObjects[i].GetComponent<TileManager>());
+                        requestedDiscardTile = null;
+                        return;
+                    }
+                }
             }
             DiscardTile(requestedDiscardTile);
             requestedDiscardTile = null;
@@ -133,6 +141,16 @@ namespace MCRGame.UI
             }
             tileObjects.Add(newTile);
             return newTile;
+        }
+
+        public void clear()
+        {
+            foreach (GameObject tileObj in tileObjects)
+            {
+                Destroy(tileObj);
+            }
+            tileObjects.Clear();
+            tsumoTile = null;
         }
 
         public IEnumerator InitHand(List<GameTile> initTiles, GameTile? receivedTsumoTile)
@@ -621,7 +639,8 @@ namespace MCRGame.UI
                 if (rt != null)
                     rt.anchoredPosition = kv.Value;
             }
-            if (alreadyAnimating == false){
+            if (alreadyAnimating == false)
+            {
                 IsAnimating = false;
             }
         }

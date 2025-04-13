@@ -7,15 +7,12 @@ namespace MCRGame.UI
 {
     public class CallBlock : MonoBehaviour
     {
-        // MCRGame.Common.CallBlockData를 통해 데이터 관리
         public CallBlockData Data;
         public List<GameObject> Tiles = new List<GameObject>();
 
-        /// <summary>
-        /// CallBlockData를 기반으로 CallBlock을 초기화하여 타일들을 생성 및 배치합니다.
-        /// 타일을 오른쪽에서 왼쪽 순서로 놓되, 각 타일의 '오른쪽 모서리'를 기준으로 배치합니다.
-        /// 회전된 타일도 정확히 오른쪽이 offsetX에 맞춰지므로, 왼쪽으로 밀리는 문제를 해결합니다.
-        /// </summary>
+        // SHOMIN_KONG 적용 시, 회전된 타일 위쪽(로컬 Y 방향)으로 배치할 오프셋 값
+        public float shominKongOffset = 10f;
+
         public void InitializeCallBlock()
         {
             if (Data == null)
@@ -32,7 +29,6 @@ namespace MCRGame.UI
 
         private void ClearExistingTiles()
         {
-            // 기존 자식 타일 제거
             foreach (Transform child in transform)
             {
                 Destroy(child.gameObject);
@@ -48,19 +44,34 @@ namespace MCRGame.UI
             for (int i = 0; i < tileCount; i++)
             {
                 GameTile tileValue = GetTileValueForIndex(i, chiiIndices);
+                // 만약 AN_KONG 타입이라면 무조건 타일 값은 5z 즉, Z5로 강제 변경합니다.
+                if (Data.Type == CallBlockType.AN_KONG)
+                {
+                    tileValue = GameTile.Z5;  // GameTile.Z5는 Honor 타일 5번 (즉, 5z)를 의미합니다.
+                }
                 GameObject tileObj = Create3DTile(tileValue);
                 if (tileObj != null)
                 {
+                    // 부모의 로컬 좌표계에 종속되도록 초기화
                     tileObj.transform.localPosition = Vector3.zero;
                     tileObj.transform.localRotation = Quaternion.identity;
+                    // AN_KONG 타입이면 앞면 대신 뒷면처럼 보이도록 x축으로 180도 회전 적용
+                    if (Data.Type == CallBlockType.AN_KONG)
+                    {
+                        tileObj.transform.localRotation = Quaternion.Euler(180f, 0f, 0f);
+                    }
                     Tiles.Add(tileObj);
                 }
             }
+            // 기본적으로 오른쪽에서 왼쪽 순서로 배치하도록 Reverse
             Tiles.Reverse();
         }
 
         private int GetTileCount()
         {
+            // AN_KONG의 경우 4장, 나머지는 CHII,PUNG은 3장, 그 외에는 4장
+            if (Data.Type == CallBlockType.AN_KONG)
+                return 4;
             return (Data.Type == CallBlockType.CHII || Data.Type == CallBlockType.PUNG) ? 3 : 4;
         }
 
@@ -100,22 +111,29 @@ namespace MCRGame.UI
             return tileObj;
         }
 
+
+        // 기존의 RotateSourceTile()는 필요에 따라 호출됩니다.
         private void RotateSourceTile()
         {
             int rotateIndex = GetRotateIndex();
             if (rotateIndex >= 0 && rotateIndex < Tiles.Count)
             {
-                Tiles[rotateIndex].transform.localRotation = Quaternion.Euler(0f, 0f, 90f);
+                // 필요하면 해당 타일에 대한 추가 회전을 적용 (AN_KONG은 이미 180도 회전했으므로 건너뛰거나 따로 처리)
+                if (Data.Type != CallBlockType.AN_KONG)
+                {
+                    Tiles[rotateIndex].transform.localRotation = Quaternion.Euler(0f, 0f, 90f);
+                }
             }
         }
 
+        // PUNG 블록에서 회전된 타일의 인덱스를 반환합니다.
         private int GetRotateIndex()
         {
             switch (Data.SourceSeat)
             {
-                case RelativeSeat.KAMI: return Tiles.Count - 1;
-                case RelativeSeat.TOI: return Tiles.Count - 2;
-                case RelativeSeat.SHIMO: return 0;
+                case RelativeSeat.KAMI: return 0;
+                case RelativeSeat.TOI: return 1;
+                case RelativeSeat.SHIMO: return Tiles.Count - 1;
                 case RelativeSeat.SELF: return -1;
                 default: return -1;
             }
@@ -127,57 +145,144 @@ namespace MCRGame.UI
             for (int i = 0; i < Tiles.Count; i++)
             {
                 if (Tiles[i] == null) continue;
-
                 PositionTile(Tiles[i], ref offsetX);
             }
         }
 
         private void PositionTile(GameObject tile, ref float offsetX)
         {
-            // 초기 위치 설정
+            // 초기 localPosition을 offsetX로 설정
             tile.transform.localPosition = new Vector3(offsetX, 0f, 0f);
 
-            Renderer rend = tile.GetComponent<Renderer>();
-            if (rend == null)
+            // 각 타일의 부모(로컬) 좌표계 내 경계값 계산
+            var bounds = GetTileLocalBounds(tile);
+            if (bounds == null)
             {
                 offsetX -= 1f;
                 return;
             }
+            Vector3 tileMin = bounds.Value.min;
+            Vector3 tileMax = bounds.Value.max;
 
-            AdjustRightEdge(tile, rend, ref offsetX);
-            AdjustBottom(tile, rend);
-            UpdateOffsetX(tile, rend, ref offsetX);
+            AdjustRightEdge(tile, ref offsetX, tileMax);
+            AdjustBottom(tile, tileMin);
+            UpdateOffsetX(ref offsetX, tileMin, tileMax);
         }
 
-        private void AdjustRightEdge(GameObject tile, Renderer rend, ref float offsetX)
+        // 타일의 MeshFilter.mesh.bounds는 타일 자체 로컬 공간의 경계를 제공합니다.
+        // 이를 tile의 local TRS 행렬에 곱해 부모의 로컬 좌표 내 코너들을 계산합니다.
+        private (Vector3 min, Vector3 max)? GetTileLocalBounds(GameObject tile)
         {
-            Vector3 minWorld = rend.bounds.min;
-            Vector3 maxWorld = rend.bounds.max;
-            Vector3 minLocal = transform.InverseTransformPoint(minWorld);
-            Vector3 maxLocal = transform.InverseTransformPoint(maxWorld);
+            MeshFilter mf = tile.GetComponent<MeshFilter>();
+            if (mf == null) return null;
 
-            float deltaX = offsetX - maxLocal.x;
+            Bounds meshBounds = mf.mesh.bounds; // 타일의 로컬 공간 경계
+            Vector3 min = meshBounds.min;
+            Vector3 max = meshBounds.max;
+
+            // 8개의 모서리 좌표 계산
+            Vector3[] corners = new Vector3[8];
+            corners[0] = new Vector3(min.x, min.y, min.z);
+            corners[1] = new Vector3(min.x, min.y, max.z);
+            corners[2] = new Vector3(min.x, max.y, min.z);
+            corners[3] = new Vector3(min.x, max.y, max.z);
+            corners[4] = new Vector3(max.x, min.y, min.z);
+            corners[5] = new Vector3(max.x, min.y, max.z);
+            corners[6] = new Vector3(max.x, max.y, min.z);
+            corners[7] = new Vector3(max.x, max.y, max.z);
+
+            // tile의 local TRS 행렬 구성 (localPosition, localRotation, localScale 반영)
+            Matrix4x4 m = Matrix4x4.TRS(tile.transform.localPosition, tile.transform.localRotation, tile.transform.localScale);
+            Vector3 localMin = new Vector3(float.MaxValue, float.MaxValue, float.MaxValue);
+            Vector3 localMax = new Vector3(float.MinValue, float.MinValue, float.MinValue);
+            for (int i = 0; i < 8; i++)
+            {
+                Vector3 p = m.MultiplyPoint3x4(corners[i]);
+                localMin = Vector3.Min(localMin, p);
+                localMax = Vector3.Max(localMax, p);
+            }
+            return (localMin, localMax);
+        }
+
+        private void AdjustRightEdge(GameObject tile, ref float offsetX, Vector3 tileMax)
+        {
+            float deltaX = offsetX - tileMax.x;
             tile.transform.localPosition += new Vector3(deltaX, 0f, 0f);
         }
 
-        private void AdjustBottom(GameObject tile, Renderer rend)
+        private void AdjustBottom(GameObject tile, Vector3 tileMin)
         {
-            Vector3 minWorld = rend.bounds.min;
-            Vector3 minLocal = transform.InverseTransformPoint(minWorld);
-
-            float deltaY = 0f - minLocal.y;
+            float deltaY = 0f - tileMin.y;
             tile.transform.localPosition += new Vector3(0f, deltaY, 0f);
         }
 
-        private void UpdateOffsetX(GameObject tile, Renderer rend, ref float offsetX)
+        private void UpdateOffsetX(ref float offsetX, Vector3 tileMin, Vector3 tileMax)
         {
-            Vector3 minWorld = rend.bounds.min;
-            Vector3 maxWorld = rend.bounds.max;
-            Vector3 minLocal = transform.InverseTransformPoint(minWorld);
-            Vector3 maxLocal = transform.InverseTransformPoint(maxWorld);
-
-            float widthLocal = maxLocal.x - minLocal.x;
+            float widthLocal = tileMax.x - tileMin.x;
             offsetX -= widthLocal;
         }
+        /// <summary>
+        /// PUNG 타입인 경우에만 호출됩니다.
+        /// SHOMIN_KONG 효과를 적용하여, 회전된 타일(rotate된 타일)의 위쪽(로컬 Y 방향)에 동일한 회전 상태의 새 타일을 추가하고,
+        /// Data.Type을 SHOMIN_KONG으로 변경합니다.
+        /// </summary>
+        public void ApplyShominKong()
+        {
+            // 현재 타입이 PUNG이 아니면 실행되지 않음
+            if (Data.Type != CallBlockType.PUNG)
+            {
+                Debug.LogWarning("ApplyShominKong은 PUNG 타입에서만 적용 가능합니다.");
+                return;
+            }
+
+            // PUNG 블록은 3장의 타일이 있어야 함
+            if (Tiles.Count != 3)
+            {
+                Debug.LogWarning($"ApplyShominKong: PUNG 블록은 3장의 타일이어야 합니다. 현재 타일 수: {Tiles.Count}");
+                return;
+            }
+
+            // 회전된 타일의 인덱스를 가져옵니다.
+            int rotatedIndex = GetRotateIndex();
+            if (rotatedIndex < 0 || rotatedIndex >= Tiles.Count)
+            {
+                Debug.LogWarning("ApplyShominKong: 유효한 회전 타일 인덱스가 아닙니다.");
+                return;
+            }
+
+            // 새 타일 생성 : PUNG의 Data.FirstTile을 기준으로 생성
+            GameObject newTile = Create3DTile(Data.FirstTile);
+            if (newTile == null)
+            {
+                Debug.LogError("ApplyShominKong: 새 타일 생성 실패");
+                return;
+            }
+            newTile.transform.SetParent(transform, false);
+            newTile.transform.localRotation = Tiles[rotatedIndex].transform.localRotation;
+
+            // 대상 타일(회전된 타일)의 로컬 경계에서 Y축 높이를 측정
+            var bounds = GetTileLocalBounds(Tiles[rotatedIndex]);
+            float yOffset = 0f;
+            if (bounds.HasValue)
+            {
+                yOffset = bounds.Value.max.y - bounds.Value.min.y;
+            }
+            else
+            {
+                Debug.LogWarning("ApplyShominKong: 회전된 타일의 경계 계산 실패, 기본 offset 사용");
+                yOffset = shominKongOffset;
+            }
+
+            // 회전된 타일의 위치 위쪽(로컬 Y 방향)으로 yOffset 만큼 오프셋 적용
+            Vector3 basePos = Tiles[rotatedIndex].transform.localPosition;
+            newTile.transform.localPosition = basePos + new Vector3(0f, yOffset, 0f);
+
+            // 새 타일을 Tiles 리스트에 추가
+            Tiles.Add(newTile);
+
+            // 타입 업데이트: PUNG -> SHOMIN_KONG
+            Data.Type = CallBlockType.SHOMIN_KONG;
+        }
+
     }
 }

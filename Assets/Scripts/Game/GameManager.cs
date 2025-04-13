@@ -9,6 +9,7 @@ using System;
 using System.Collections;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
+using System.Threading;
 
 namespace MCRGame.Game
 {
@@ -18,7 +19,7 @@ namespace MCRGame.Game
         // 게임 관련 데이터
         public List<Player> Players { get; private set; }
         public AbsoluteSeat MySeat { get; private set; }
-        public AbsoluteSeat CurrentTurnSeat { get; private set; }
+        public RelativeSeat CurrentTurnSeat { get; private set; }
         public Round CurrentRound { get; private set; }
 
         // Inspector에서 할당하는 GameHandManager 오브젝트를 통해 GameHand를 관리합니다.
@@ -41,6 +42,8 @@ namespace MCRGame.Game
         // 추가: Inspector에서 할당할 수 있는 4개의 Hand3DField 배열 (index 0~3 은 각 상대 좌석에 대응)
         [SerializeField]
         private Hand3DField[] playersHand3DFields;
+        [SerializeField]
+        private CallBlockField[] callBlockFields;
 
         private Dictionary<AbsoluteSeat, int> seatToPlayerIndex;
         private Dictionary<int, AbsoluteSeat> playerIndexToSeat;
@@ -107,13 +110,30 @@ namespace MCRGame.Game
         [SerializeField] private Sprite flowerButtonSprite;
 
         [Header("Timer UI")]
-        [SerializeField] private Text timerText;                     // 남은 시간 표시용
-        private float remainingTime;                                  // 내부 카운트다운
-        private int currentActionId;                                  // 서버가 준 action_id
+        [SerializeField] private Text timerText;
+        private float remainingTime;
+        private int currentActionId;
 
         private bool isGameStarted = false;
 
         public bool IsMyTurn;
+
+        public RelativeSeat currentTurnSeat;
+
+        private void moveTurn(RelativeSeat seat)
+        {
+            if (seat == RelativeSeat.SELF)
+            {
+                IsMyTurn = true;
+                gameHandManager.CanClick = true;
+            }
+            else
+            {
+                IsMyTurn = false;
+                gameHandManager.CanClick = false;
+            }
+            currentTurnSeat = seat;
+        }
 
         private void Awake()
         {
@@ -151,7 +171,163 @@ namespace MCRGame.Game
             };
             await GameWS.Instance.SendGameEventAsync(GameWSActionType.GAME_EVENT, payload);
         }
+        public void UpdateActionId(int actionId)
+        {
+            currentActionId = actionId;
+        }
 
+        public void SetTimer(object data)
+        {
+            
+        }
+
+        /// <summary>
+        /// 서버에서 전달한 호출(CallBlock) 데이터를 파싱합니다.
+        /// data는 JSON 형태로 { "seat": <seat>, "call_block_data": <CallBlockData JSON> }를 포함합니다.
+        /// </summary>
+        public void ConfirmCallBlock(object data)
+        {
+            try
+            {
+                JObject jData = data as JObject;
+                if (jData == null)
+                {
+                    Debug.LogWarning("ConfirmCallBlock: Data is not a valid JObject");
+                    return;
+                }
+                // "seat" 값을 파싱 (예: 정수 형태로 전달)
+                int seatInt = jData["seat"].ToObject<int>();
+                AbsoluteSeat seat = (AbsoluteSeat)seatInt;
+
+                // "call_block_data" 값을 파싱 (null일 수도 있음)
+                JToken callBlockToken = jData["call_block_data"];
+                CallBlockData callBlockData = null;
+                if (callBlockToken != null && callBlockToken.Type != JTokenType.Null)
+                {
+                    callBlockData = callBlockToken.ToObject<CallBlockData>();
+                }
+
+                bool has_tsumo_tile = false;
+                JToken hasTsumoTileToken = jData["has_tsumo_tile"];
+                if (hasTsumoTileToken != null && (callBlockData.Type == CallBlockType.AN_KONG || callBlockData.Type == CallBlockType.SHOMIN_KONG))
+                {
+                    has_tsumo_tile = hasTsumoTileToken.ToObject<bool>();
+                }
+
+                Debug.Log($"ConfirmCallBlock: seat = {seat}, callBlockData = {(callBlockData != null ? callBlockData.FirstTile.ToString() : "null")}");
+                RelativeSeat relativeSeat = RelativeSeatExtensions.CreateFromAbsoluteSeats(currentSeat: MySeat, targetSeat: seat);
+                moveTurn(relativeSeat);
+                AbsoluteSeat sourceAbsoluteSeat = callBlockData.SourceSeat.ToAbsoluteSeat(mySeat: seat);
+                RelativeSeat sourceRelativeSeat = RelativeSeatExtensions.CreateFromAbsoluteSeats(currentSeat: MySeat, targetSeat: sourceAbsoluteSeat);
+                if (relativeSeat == RelativeSeat.SELF)
+                {
+                    gameHandManager.ApplyCall(cbData: callBlockData);
+                }
+                else
+                {
+                    callBlockFields[(int)relativeSeat].AddCallBlock(data: callBlockData);
+                    if (callBlockData.Type == CallBlockType.CHII || callBlockData.Type == CallBlockType.PUNG)
+                    {
+                        StartCoroutine(playersHand3DFields[(int)relativeSeat].RequestDiscardMultiple(count: 2));
+                    }
+                    else if (callBlockData.Type == CallBlockType.DAIMIN_KONG)
+                    {
+                        StartCoroutine(playersHand3DFields[(int)relativeSeat].RequestDiscardMultiple(count: 3));
+                    }
+                    else if (callBlockData.Type == CallBlockType.AN_KONG)
+                    {
+                        if (has_tsumo_tile)
+                        {
+                            StartCoroutine(playersHand3DFields[(int)relativeSeat].RequestDiscardRightmost());
+                            StartCoroutine(playersHand3DFields[(int)relativeSeat].RequestDiscardMultiple(count: 3));
+                        }
+                        else
+                        {
+                            StartCoroutine(playersHand3DFields[(int)relativeSeat].RequestDiscardMultiple(count: 4));
+                        }
+                    }
+                    else if (callBlockData.Type == CallBlockType.SHOMIN_KONG)
+                    {
+                        if (has_tsumo_tile)
+                        {
+                            StartCoroutine(playersHand3DFields[(int)relativeSeat].RequestDiscardRightmost());
+                        }
+                        else
+                        {
+                            StartCoroutine(playersHand3DFields[(int)relativeSeat].RequestDiscardMultiple(count: 1));
+                        }
+                    }
+                }
+                if (callBlockData.Type == CallBlockType.CHII ||
+                    callBlockData.Type == CallBlockType.PUNG ||
+                    callBlockData.Type == CallBlockType.DAIMIN_KONG)
+                {
+                    discardManager.RemoveLastDiscard(seat: sourceRelativeSeat);
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError("ConfirmCallBlock parsing error: " + ex.Message);
+            }
+        }
+
+        public void ConfirmTsumo(JObject data)
+        {
+            ClearActionUI();
+            AbsoluteSeat TsumoSeat = (AbsoluteSeat)data["seat"].ToObject<int>();
+            if (TsumoSeat == MySeat)
+            {
+                return;
+            }
+
+            RelativeSeat relativeTsumoSeat = RelativeSeatExtensions.CreateFromAbsoluteSeats(currentSeat: MySeat, targetSeat: TsumoSeat);
+
+            moveTurn(seat: relativeTsumoSeat);
+
+            if (playersHand3DFields[(int)relativeTsumoSeat].handTiles.Count >= GameHandManager.FULL_HAND_SIZE)
+            {
+                return;
+            }
+            StartCoroutine(playersHand3DFields[(int)relativeTsumoSeat].RequestTsumo());
+        }
+        public IEnumerator ConfirmFlower(JObject data)
+        {
+            ClearActionUI();
+            GameTile floweredTile = (GameTile)data["tile"].ToObject<int>();
+            AbsoluteSeat floweredSeat = (AbsoluteSeat)data["seat"].ToObject<int>();
+            RelativeSeat floweredRelativeSeat = RelativeSeatExtensions.CreateFromAbsoluteSeats(currentSeat: MySeat, targetSeat: floweredSeat);
+            if (floweredRelativeSeat == RelativeSeat.SELF)
+            {
+                int currentFlowerCount = flowerCountMap[floweredRelativeSeat];
+                int previousCount = currentFlowerCount;
+                currentFlowerCount++;
+
+                bool animateDone = false;
+
+                StartCoroutine(AnimateFlowerCount(floweredRelativeSeat, previousCount, currentFlowerCount, () => { animateDone = true; }));
+                yield return StartCoroutine(gameHandManager.ApplyFlower(tile: floweredTile));
+                yield return new WaitUntil(() => animateDone);
+                SetFlowerCount(floweredRelativeSeat, currentFlowerCount);
+            }
+            else
+            {
+                // 상대의 경우: Hand3DField를 이용해 요청
+                Hand3DField handField = playersHand3DFields[(int)floweredRelativeSeat];
+                int currentFlowerCount = flowerCountMap[floweredRelativeSeat];
+                int previousCount = currentFlowerCount;
+                currentFlowerCount++;
+
+                bool animateDone = false;
+
+                // 동시에 꽃 카운트 애니메이션 실행
+                StartCoroutine(AnimateFlowerCount(floweredRelativeSeat, previousCount, currentFlowerCount, () => { animateDone = true; }));
+                // Hand3DField의 RequestDiscardRandom과 RequestInitFlowerTsumo를 순차 실행하는 코루틴
+                yield return StartCoroutine(handField.RequestDiscardRandom());
+                yield return new WaitUntil(() => animateDone);
+
+                SetFlowerCount(floweredRelativeSeat, currentFlowerCount);
+            }
+        }
 
         public void ConfirmDiscard(JObject data)
         {
@@ -164,13 +340,15 @@ namespace MCRGame.Game
             {
                 gameHandManager.ConfirmDiscard(tile: discardTile);
             }
-            else{
-                RelativeSeat enemyDiscardSeat = RelativeSeatExtensions.CreateFromAbsoluteSeats(currentSeat:MySeat, targetSeat: discardedSeat);
+            else
+            {
+                RelativeSeat enemyDiscardSeat = RelativeSeatExtensions.CreateFromAbsoluteSeats(currentSeat: MySeat, targetSeat: discardedSeat);
                 if (is_tsumogiri)
                 {
                     StartCoroutine(playersHand3DFields[(int)enemyDiscardSeat].RequestDiscardRightmost());
                 }
-                else{
+                else
+                {
                     StartCoroutine(playersHand3DFields[(int)enemyDiscardSeat].RequestDiscardRandom());
                 }
                 discardManager.DiscardTile(seat: enemyDiscardSeat, tile: discardTile);
@@ -203,15 +381,6 @@ namespace MCRGame.Game
             var list = data["actions"].ToObject<List<GameAction>>();
             list.Sort();
 
-            // 4) GridLayoutGroup에 맞춰 버튼 생성
-            foreach (var act in list)
-            {
-                var btnObj = Instantiate(actionButtonPrefab, actionButtonPanel);
-                btnObj.GetComponent<Image>().sprite = GetSpriteForAction(act.Type);
-                btnObj.GetComponent<Button>().onClick.AddListener(() => OnActionButtonClicked(act));
-            }
-
-            // 5) Skip 버튼 (마지막에)
             if (list.Count > 0)
             {
                 var skip = Instantiate(actionButtonPrefab, actionButtonPanel);
@@ -223,12 +392,20 @@ namespace MCRGame.Game
                     timerText.text = Mathf.FloorToInt(remainingTime).ToString();
                 }
             }
+            // 4) GridLayoutGroup에 맞춰 버튼 생성
+            foreach (var act in list)
+            {
+                var btnObj = Instantiate(actionButtonPrefab, actionButtonPanel);
+                btnObj.GetComponent<Image>().sprite = GetSpriteForAction(act.Type);
+                btnObj.GetComponent<Button>().onClick.AddListener(() => OnActionButtonClicked(act));
+            }
+
+
         }
 
         public void ProcessTsumoActions(JObject data)
         {
-            IsMyTurn = true;
-            gameHandManager.CanClick = true;
+            moveTurn(RelativeSeat.SELF);
             // 1) 기존 버튼 전부 제거
             foreach (Transform c in actionButtonPanel) Destroy(c.gameObject);
 
@@ -290,12 +467,13 @@ namespace MCRGame.Game
 
         private async Task SendSelectedAction(GameAction action)
         {
-            var payload = new {
+            var payload = new
+            {
                 action_type = action.Type,
                 action_tile = action.Tile,
                 action_id = currentActionId,
             };
-            await GameWS.Instance.SendGameEventAsync(action:GameWSActionType.RETURN_ACTION, payload: payload);
+            await GameWS.Instance.SendGameEventAsync(action: GameWSActionType.RETURN_ACTION, payload: payload);
         }
 
         private void OnSkipButtonClicked()
@@ -354,6 +532,11 @@ namespace MCRGame.Game
             ClearActionUI();
             discardManager.InitRound();
             UpdateLeftTiles(leftTiles);
+            foreach (var CBField in callBlockFields)
+            {
+                CBField.ClearAllCallBlocks();
+            }
+            gameHandManager.clear();
 
             if (isGameStarted)
             {
@@ -525,6 +708,7 @@ namespace MCRGame.Game
                 playerIndexToSeat[mapped] = kv.Key;
             }
             MySeat = playerIndexToSeat[playerUidToIndex[PlayerDataManager.Instance.Uid]];
+            CurrentTurnSeat = RelativeSeatExtensions.CreateFromAbsoluteSeats(currentSeat: MySeat, targetSeat: AbsoluteSeat.EAST);
         }
 
         public void UpdateLeftTiles(int newValue)

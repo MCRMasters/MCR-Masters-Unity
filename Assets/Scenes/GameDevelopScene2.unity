@@ -2341,10 +2341,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 605c07d79f13a410c99fe777c9af25bb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  discardPosE: {fileID: 1961428348}
-  discardPosS: {fileID: 2080316148}
-  discardPosW: {fileID: 580933697}
-  discardPosN: {fileID: 176786618}
+  discardPosSELF: {fileID: 0}
+  discardPosSHIMO: {fileID: 0}
+  discardPosTOI: {fileID: 0}
+  discardPosKAMI: {fileID: 0}
   tileSpacing: 14
   rowSpacing: 20
   maxTilesPerRow: 6

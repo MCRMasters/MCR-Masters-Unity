@@ -48,6 +48,47 @@ namespace MCRGame.UI
             }
             tileObjectDictionary.Clear();
         }
+        
+        public void RemoveLastDiscard(RelativeSeat seat)
+        {
+            // kawas에서 해당 좌석의 폐기 타일 리스트 가져오기
+            if (!kawas.TryGetValue(seat, out List<GameObject> discardList) || discardList.Count == 0)
+            {
+                Debug.LogWarning($"RemoveLastDiscard: No discarded tile for seat {seat}");
+                return;
+            }
+
+            // 리스트의 마지막 요소(가장 최근에 추가된 타일)를 가져오기
+            int lastIndex = discardList.Count - 1;
+            GameObject lastDiscard = discardList[lastIndex];
+            discardList.RemoveAt(lastIndex);
+
+            // 타일 이름을 이용해 GameTile으로 파싱 (미리 prefabTileName으로 설정했던 값)
+            string tileName = lastDiscard.name;
+            if (GameTileExtensions.TryParseCustom(tileName, out GameTile tile))
+            {
+                // tileObjectDictionary 업데이트: 해당 GameTile에 해당하는 List<GameObject>에서 삭제
+                if (tileObjectDictionary.TryGetValue(tile, out List<GameObject> tileList))
+                {
+                    bool removed = tileList.Remove(lastDiscard);
+                    if (!removed)
+                    {
+                        Debug.LogWarning($"RemoveLastDiscard: Could not remove tile {tile} from dictionary list");
+                    }
+                }
+                else
+                {
+                    Debug.LogWarning($"RemoveLastDiscard: tileObjectDictionary does not contain tile {tile}");
+                }
+            }
+            else
+            {
+                Debug.LogWarning($"RemoveLastDiscard: Cannot parse GameTile from tile name '{tileName}'");
+            }
+
+            // 마지막 타일 Destroy 처리
+            Destroy(lastDiscard);
+        }
 
         public void DiscardTile(RelativeSeat seat, GameTile tile)
         {
