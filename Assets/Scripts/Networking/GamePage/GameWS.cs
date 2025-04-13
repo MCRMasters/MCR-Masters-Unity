@@ -156,8 +156,8 @@ namespace MCRGame.Net
             // 예: { "event": "game_event", "data": { "event_type": 12, "action_id": 0, "data": { ... } } }
             var messageObj = new
             {
-                @event = action == GameWSActionType.GAME_EVENT ? "game_event" : action.ToString().ToLowerInvariant(),
-                data = payload
+                @event = action,
+                data = payload,
             };
 
             string jsonMessage = JsonConvert.SerializeObject(messageObj);

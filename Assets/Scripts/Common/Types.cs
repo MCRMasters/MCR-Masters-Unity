@@ -14,7 +14,8 @@ namespace MCRGame.Common
         INIT_FLOWER = 9,
         HU = 10,
         ROBBING_KONG = 11,
-        INIT_FLOWER_OK = 12
+        INIT_FLOWER_OK = 12,
+        SKIP = 13,
     }
 
     public static class GameEventTypeExtensions

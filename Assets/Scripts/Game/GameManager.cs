@@ -198,11 +198,6 @@ namespace MCRGame.Game
             // 2) action_id, 남은 시간 초기화
             currentActionId = data["action_id"].ToObject<int>();
             remainingTime = data["left_time"].ToObject<float>();
-            GameTile newTsumoTile = (GameTile)data["tile"].ToObject<int>();
-            if (gameHandManager.GameHand.HandSize < GameHand.FULL_HAND_SIZE)
-            {
-                StartCoroutine(gameHandManager.AddTsumo(newTsumoTile));
-            }
 
             // 3) JSON.NET으로 GameAction 리스트로 바로 변환
             var list = data["actions"].ToObject<List<GameAction>>();
@@ -289,13 +284,28 @@ namespace MCRGame.Game
         {
             Debug.Log($"액션 선택: {action.Type} / 타일: {action.Tile}");
             // TODO: 선택된 action_id와 action.Type, action.Tile 서버 전송
+            _ = SendSelectedAction(action: action);
             ClearActionUI();
+        }
+
+        private async Task SendSelectedAction(GameAction action)
+        {
+            var payload = new {
+                action_type = action.Type,
+                action_tile = action.Tile,
+                action_id = currentActionId,
+            };
+            await GameWS.Instance.SendGameEventAsync(action:GameWSActionType.RETURN_ACTION, payload: payload);
         }
 
         private void OnSkipButtonClicked()
         {
             Debug.Log("Skip 선택");
-            // TODO: Skip 서버 전송
+            GameAction SkipAction = new GameAction();
+            SkipAction.Type = GameActionType.SKIP;
+            SkipAction.Tile = GameTile.M1;
+            SkipAction.SeatPriority = RelativeSeat.SELF;
+            _ = SendSelectedAction(action: SkipAction);
             ClearActionUI();
         }
 

@@ -23,7 +23,7 @@ namespace MCRGame.Common
         [JsonProperty("type")]
         public GameActionType Type { get; set; }
 
-        [JsonProperty("seatPriority")]
+        [JsonProperty("seat_priority")]
         public RelativeSeat SeatPriority { get; set; }
 
         [JsonProperty("tile")]
