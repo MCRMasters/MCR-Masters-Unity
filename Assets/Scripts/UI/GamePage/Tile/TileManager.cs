@@ -1,45 +1,31 @@
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
+using MCRGame.Game;
 
 namespace MCRGame.UI
 {
     public class TileManager : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler
     {
-        [SerializeField] private string tileName; 
-
+        private string tileName;
         private Transform imageField;
         private RectTransform imageFieldRect;
         private Image imageComponent;
-
         private Vector2 originalPos;
+
+        private GameHandManager gameHandManager;
 
         private void Awake()
         {
+            // 부모에서 GameHandManager 찾아두기
+            gameHandManager = GetComponentInParent<GameHandManager>();
+
             imageField = transform.Find("ImageField");
             if (imageField != null)
             {
                 imageFieldRect = imageField.GetComponent<RectTransform>();
                 imageComponent = imageField.GetComponent<Image>();
-                if (imageComponent == null)
-                {
-                    Debug.LogWarning("[TileManager] 'ImageField' 오브젝트에 Image 컴포넌트가 없습니다.");
-                }
             }
-            else
-            {
-                Debug.LogWarning("[TileManager] 자식 오브젝트 'ImageField'를 찾을 수 없습니다.");
-            }
-        }
-
-        private void Start()
-        {
-            if (imageFieldRect != null)
-            {
-                originalPos = imageFieldRect.anchoredPosition;
-            }
-
-            UpdateSprite();
         }
 
         public void SetTileName(string newName)
@@ -49,69 +35,53 @@ namespace MCRGame.UI
             UpdateSprite();
         }
 
-        private void UpdateSprite()
-        {
-            if (string.IsNullOrEmpty(tileName))
-            {
-                Debug.LogWarning("[TileManager] tileName이 비어 있습니다.");
-                return;
-            }
-
-            if (Tile2DManager.Instance == null)
-            {
-                Debug.LogWarning("[TileManager] TileImageManager.Instance가 없습니다.");
-                return;
-            }
-
-            Sprite foundSprite = Tile2DManager.Instance.get_sprite_by_name(tileName);
-            if (foundSprite == null)
-            {
-                Debug.LogWarning($"[TileManager] '{tileName}' 스프라이트를 찾을 수 없습니다.");
-                return;
-            }
-
-            if (imageComponent != null)
-            {
-                imageComponent.sprite = foundSprite;
-                imageComponent.color = Color.white;
-            }
-        }
-
+        // Hover 시작
         public void OnPointerEnter(PointerEventData eventData)
         {
-            if (imageFieldRect == null) return;
+            // 애니메이션 중이거나 호버 불가 시 무시
+            if (gameHandManager == null || !gameHandManager.CanHover) return;
 
             float moveUp = imageFieldRect.rect.height / 3f;
             imageFieldRect.anchoredPosition = originalPos + new Vector2(0, moveUp);
-
-            //Debug.Log($"[TileManager] 마우스가 '{tileName}' 위로 올라감 -> ImageField 이동");
         }
 
+        // Hover 끝
         public void OnPointerExit(PointerEventData eventData)
         {
-            if (imageFieldRect == null) return;
+            if (gameHandManager == null || !gameHandManager.CanHover) return;
 
             imageFieldRect.anchoredPosition = originalPos;
-
-            //Debug.Log($"[TileManager] 마우스가 '{tileName}' 영역에서 벗어남 -> ImageField 원위치");
         }
-        
-        
+
+        // 클릭
         public void OnPointerClick(PointerEventData eventData)
         {
-            if (eventData.button != PointerEventData.InputButton.Left)
-                return;
-            
-            // 부모 GameHandManager 컴포넌트에 접근하여 DiscardTile(this)를 호출합니다.
-            GameHandManager gameHandManager = GetComponentInParent<GameHandManager>();
-            if (gameHandManager != null)
+            if (eventData.button != PointerEventData.InputButton.Left) return;
+            if (gameHandManager == null || !gameHandManager.CanClick) return;
+            gameHandManager.CanClick = false;
+            // 서버 검증 요청
+            gameHandManager.RequestDiscard(this);
+        }
+
+        private void UpdateSprite()
+        {
+            if (string.IsNullOrEmpty(tileName)) return;
+            var sprite = Tile2DManager.Instance?.get_sprite_by_name(tileName);
+            if (sprite != null && imageComponent != null)
             {
-                gameHandManager.DiscardTile(this);
+                imageComponent.sprite = sprite;
+                imageComponent.color = Color.white;
             }
-            else
-            {
-                Debug.LogWarning("[TileManager] 부모 GameHandManager를 찾을 수 없습니다.");
-            }
+        }
+        public void UpdateTransparent()
+        {
+            imageComponent.color = new Color(1f, 1f, 1f, 0f);
+        }
+
+        private void Start()
+        {
+            if (imageFieldRect != null)
+                originalPos = imageFieldRect.anchoredPosition;
         }
     }
 }

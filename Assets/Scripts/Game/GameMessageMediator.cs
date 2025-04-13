@@ -126,9 +126,16 @@ namespace MCRGame.Game
                 case GameWSActionType.TSUMO_ACTIONS:
                     Debug.Log("[GameMessageMediator] Tsumo actions received.");
                     // message.Data는 JObject이므로 바로 넘겨줌
-                    GameManager.Instance.ProcessTsumoActions((JObject)message.Data);
+                    GameManager.Instance.ProcessTsumoActions(message.Data);
                     break;
-
+                case GameWSActionType.DISCARD_ACTIONS:
+                    Debug.Log("[GameMessageMediator] Discard actions received.");
+                    GameManager.Instance.ProcessDiscardActions(message.Data);
+                    break;
+                case GameWSActionType.DISCARD:
+                    Debug.Log("[GameMessageMediator] Discard Confirmed.");
+                    GameManager.Instance.ConfirmDiscard(message.Data);
+                    break;
                 case GameWSActionType.INIT_FLOWER_REPLACEMENT:
                     Debug.Log("[GameMessageMediator] INIT_FLOWER_REPLACEMENT event received.");
 

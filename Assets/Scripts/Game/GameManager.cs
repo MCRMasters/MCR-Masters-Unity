@@ -26,6 +26,9 @@ namespace MCRGame.Game
         private GameHandManager gameHandManager;
         public GameHand GameHand => gameHandManager != null ? gameHandManager.GameHand : null;
 
+        [SerializeField]
+        private DiscardManager discardManager;
+
         public const int MAX_TILES = 144;
         public const int MAX_PLAYERS = 4;
         private int leftTiles;
@@ -110,6 +113,8 @@ namespace MCRGame.Game
 
         private bool isGameStarted = false;
 
+        public bool IsMyTurn;
+
         private void Awake()
         {
             if (Instance != null && Instance != this)
@@ -130,6 +135,48 @@ namespace MCRGame.Game
         }
 
 
+        /// <summary>
+        /// TileManager 클릭 시 호출: 서버로 검증 요청
+        /// </summary>
+        public async void RequestDiscard(GameTile tile, bool is_tsumogiri)
+        {
+            var payload = new
+            {
+                event_type = (int)GameEventType.DISCARD,
+                data = new
+                {
+                    tile = (int)tile,
+                    is_tsumogiri,
+                }
+            };
+            await GameWS.Instance.SendGameEventAsync(GameWSActionType.GAME_EVENT, payload);
+        }
+
+
+        public void ConfirmDiscard(JObject data)
+        {
+            Debug.Log($"[GameManager.ConfirmDiscard] discard tile successfully");
+            ClearActionUI();
+            GameTile discardTile = (GameTile)data["tile"].ToObject<int>();
+            AbsoluteSeat discardedSeat = (AbsoluteSeat)data["seat"].ToObject<int>();
+            bool is_tsumogiri = data["is_tsumogiri"].ToObject<bool>();
+            if (discardedSeat == MySeat)
+            {
+                gameHandManager.ConfirmDiscard(tile: discardTile);
+            }
+            else{
+                RelativeSeat enemyDiscardSeat = RelativeSeatExtensions.CreateFromAbsoluteSeats(currentSeat:MySeat, targetSeat: discardedSeat);
+                if (is_tsumogiri)
+                {
+                    StartCoroutine(playersHand3DFields[(int)enemyDiscardSeat].RequestDiscardRightmost());
+                }
+                else{
+                    StartCoroutine(playersHand3DFields[(int)enemyDiscardSeat].RequestDiscardRandom());
+                }
+                discardManager.DiscardTile(seat: enemyDiscardSeat, tile: discardTile);
+            }
+        }
+
         private void UpdateTimerText()
         {
             if (!timerText.IsActive())
@@ -143,7 +190,7 @@ namespace MCRGame.Game
             }
         }
 
-        public void ProcessTsumoActions(JObject data)
+        public void ProcessDiscardActions(JObject data)
         {
             // 1) 기존 버튼 전부 제거
             foreach (Transform c in actionButtonPanel) Destroy(c.gameObject);
@@ -151,12 +198,59 @@ namespace MCRGame.Game
             // 2) action_id, 남은 시간 초기화
             currentActionId = data["action_id"].ToObject<int>();
             remainingTime = data["left_time"].ToObject<float>();
+            GameTile newTsumoTile = (GameTile)data["tile"].ToObject<int>();
+            if (gameHandManager.GameHand.HandSize < GameHand.FULL_HAND_SIZE)
+            {
+                StartCoroutine(gameHandManager.AddTsumo(newTsumoTile));
+            }
+
+            // 3) JSON.NET으로 GameAction 리스트로 바로 변환
+            var list = data["actions"].ToObject<List<GameAction>>();
+            list.Sort();
+
+            // 4) GridLayoutGroup에 맞춰 버튼 생성
+            foreach (var act in list)
+            {
+                var btnObj = Instantiate(actionButtonPrefab, actionButtonPanel);
+                btnObj.GetComponent<Image>().sprite = GetSpriteForAction(act.Type);
+                btnObj.GetComponent<Button>().onClick.AddListener(() => OnActionButtonClicked(act));
+            }
+
+            // 5) Skip 버튼 (마지막에)
+            if (list.Count > 0)
+            {
+                var skip = Instantiate(actionButtonPrefab, actionButtonPanel);
+                skip.GetComponent<Image>().sprite = skipButtonSprite;
+                skip.GetComponent<Button>().onClick.AddListener(OnSkipButtonClicked);
+                if (timerText != null)
+                {
+                    timerText.gameObject.SetActive(remainingTime > 0f);
+                    timerText.text = Mathf.FloorToInt(remainingTime).ToString();
+                }
+            }
+        }
+
+        public void ProcessTsumoActions(JObject data)
+        {
+            IsMyTurn = true;
+            gameHandManager.CanClick = true;
+            // 1) 기존 버튼 전부 제거
+            foreach (Transform c in actionButtonPanel) Destroy(c.gameObject);
+
+            // 2) action_id, 남은 시간 초기화
+            currentActionId = data["action_id"].ToObject<int>();
+            remainingTime = data["left_time"].ToObject<float>();
+
+            GameTile newTsumoTile = (GameTile)data["tile"].ToObject<int>();
+            if (gameHandManager.GameHand.HandSize < GameHand.FULL_HAND_SIZE)
+            {
+                StartCoroutine(gameHandManager.AddTsumo(newTsumoTile));
+            }
             if (timerText != null)
             {
                 timerText.gameObject.SetActive(remainingTime > 0f);
                 timerText.text = Mathf.FloorToInt(remainingTime).ToString();
             }
-
             // 3) JSON.NET으로 GameAction 리스트로 바로 변환
             var list = data["actions"].ToObject<List<GameAction>>();
             list.Sort();
@@ -248,17 +342,20 @@ namespace MCRGame.Game
             leftTiles = MAX_TILES - (GameHand.FULL_HAND_SIZE - 1) * MAX_PLAYERS - 1;
             SetUIActive(true);
             ClearActionUI();
+            discardManager.InitRound();
             UpdateLeftTiles(leftTiles);
 
-            if (isGameStarted){
+            if (isGameStarted)
+            {
                 if (CurrentRound.NextRound() != Round.END)
                     CurrentRound = CurrentRound.NextRound();
             }
-            else{
+            else
+            {
                 CurrentRound = Round.E1;
                 isGameStarted = true;
             }
-            
+
             UpdateCurrentRoundUI();
             InitSeatIndexMapping();
 
