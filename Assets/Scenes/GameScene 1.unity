@@ -2197,6 +2197,50 @@ Transform:
   - {fileID: 1668335932}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &799206937
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 799206939}
+  - component: {fileID: 799206938}
+  m_Layer: 0
+  m_Name: WStester
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &799206938
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 799206937}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: daf0c555471b5bf4c9b21c26ba82c04a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!4 &799206939
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 799206937}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1019.93945, y: 552.1305, z: -105.547935}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &810373925
 GameObject:
   m_ObjectHideFlags: 0
@@ -2305,13 +2349,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 80d129e651921eb438401a8e556319be, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  subCanvas: {fileID: 1668335931}
-  winningPopupPrefab: {fileID: 746178161457754257, guid: e8e4ed1923016904ea47e6580790db25, type: 3}
-  testCharacterSprite: {fileID: 21300000, guid: d11972fc99e0542bb9bd7b3e404d01ed, type: 3}
-  testNickname: "\uD14C\uC2A4\uD2B8\uD50C\uB808\uC774\uC5B4"
-  testSingleScore: 8000
-  testTotalScore: 32000
-  testFlowerCount: 2
 --- !u!4 &834641067
 Transform:
   m_ObjectHideFlags: 0
@@ -3338,11 +3375,66 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gameHandManager: {fileID: 866534060}
   leftTilesText: {fileID: 84894197}
+  currentRoundText: {fileID: 0}
   playersHand3DFields:
   - {fileID: 747411122}
   - {fileID: 665667696}
   - {fileID: 1202111115}
   - {fileID: 1683828336}
+  scoreText_Self: {fileID: 0}
+  scoreText_Shimo: {fileID: 0}
+  scoreText_Toi: {fileID: 0}
+  scoreText_Kami: {fileID: 0}
+  positiveScoreColor: {r: 0, g: 0.0941, b: 0.7373, a: 1}
+  zeroScoreColor: {r: 1, g: 1, b: 1, a: 1}
+  negativeScoreColor: {r: 0.7804, g: 0.7569, b: 0.3186, a: 1}
+  windText_Self: {fileID: 0}
+  windText_Shimo: {fileID: 0}
+  windText_Toi: {fileID: 0}
+  windText_Kami: {fileID: 0}
+  eastWindColor: {r: 0.7961, g: 0, b: 0, a: 1}
+  otherWindColor: {r: 0, g: 0, b: 0, a: 1}
+  profileImages:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  profileFrameImages:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  nicknameTexts:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  flowerImages:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  flowerCountTexts:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  FlowerIcon_White: {fileID: 0}
+  FlowerIcon_Yellow: {fileID: 0}
+  FlowerIcon_Red: {fileID: 0}
+  flowerPhaseEffectPrefab: {fileID: 0}
+  roundStartEffectPrefab: {fileID: 0}
+  defaultFrameSprite: {fileID: 0}
+  defaultProfileImageSprite: {fileID: 0}
+  actionButtonPanel: {fileID: 0}
+  actionButtonPrefab: {fileID: 0}
+  skipButtonSprite: {fileID: 0}
+  chiiButtonSprite: {fileID: 0}
+  ponButtonSprite: {fileID: 0}
+  kanButtonSprite: {fileID: 0}
+  huButtonSprite: {fileID: 0}
+  flowerButtonSprite: {fileID: 0}
+  timerText: {fileID: 0}
 --- !u!4 &1254287264
 Transform:
   m_ObjectHideFlags: 0
@@ -3427,6 +3519,50 @@ RectTransform:
   m_AnchoredPosition: {x: 161, y: 725}
   m_SizeDelta: {x: 100, y: 400}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!1 &1450322763
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1450322765}
+  - component: {fileID: 1450322764}
+  m_Layer: 0
+  m_Name: WSmediator
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1450322764
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1450322763}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56c7fc9f1a415b34e975b179b8006f9b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!4 &1450322765
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1450322763}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 735.84796, y: 451.47592, z: -107.19844}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1492058375
 GameObject:
   m_ObjectHideFlags: 0
@@ -5114,3 +5250,5 @@ SceneRoots:
   - {fileID: 1753036465}
   - {fileID: 834641067}
   - {fileID: 150743121}
+  - {fileID: 799206939}
+  - {fileID: 1450322765}

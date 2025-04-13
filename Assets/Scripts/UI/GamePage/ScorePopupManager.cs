@@ -2,25 +2,51 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
 
-
 namespace MCRGame.UI
 {
     public class ScorePopupManager : MonoBehaviour
     {
-        public Canvas subCanvas; // 서브 캔버스 (Sort Order = 100)
-        public GameObject winningScorePrefab; // WinningScreen-ScorePanel 프리팹
+        //public Canvas subCanvas;
+        public GameObject winningScorePrefab;
+
+        public static ScorePopupManager Instance { get; private set; }
+
+        private void Awake()
+        {
+            if (Instance != null && Instance != this)
+            {
+                Destroy(gameObject);
+                return;
+            }
+
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+            
+        }
 
         public void ShowWinningPopup(WinningScoreData data)
         {
-            // 기존 팝업 제거 (중복 방지)
-            foreach (Transform child in subCanvas.transform)
+
+            if (winningScorePrefab == null)
             {
-                Destroy(child.gameObject);
+                Debug.LogError("ScorePopupManager references not set!");
+                return;
             }
 
-            // 팝업 생성 및 초기화
-            var popup = Instantiate(winningScorePrefab, subCanvas.transform);
-            popup.GetComponent<WinningScorePopup>().Initialize(data);
+            GameObject oldPopup = GameObject.Find("Score Popup");
+            if (oldPopup != null){
+                Destroy(oldPopup);
+            }
+            
+            var popup = Instantiate(winningScorePrefab);
+            popup.name = "Score Popup";
+            if (!popup.TryGetComponent<WinningScorePopup>(out var popupComponent))
+            {
+                Debug.LogError("WinningScorePopup component missing!");
+                return;
+            }
+            
+            popupComponent.Initialize(data);
         }
     }
 }
