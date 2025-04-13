@@ -10,7 +10,8 @@ namespace MCRGame.Net
         
         [EnumMember(Value = "game_event")]
         GAME_EVENT,
-        
+        [EnumMember(Value = "return_action")]
+        RETURN_ACTION,
         [EnumMember(Value = "game_start_info")]
         GAME_START_INFO,
         [EnumMember(Value = "init_event")]
