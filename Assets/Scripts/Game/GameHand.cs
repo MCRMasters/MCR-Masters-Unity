@@ -94,6 +94,8 @@ namespace MCRGame.Game
             }
         }
 
+
+
         // 손 크기: 보유한 타일 수 + 호출 블록 수 * 3 (호출은 3장 조합으로 간주)
         public int HandSize
         {

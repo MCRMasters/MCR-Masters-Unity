@@ -56,5 +56,9 @@ namespace MCRGame.Net
         SUCCESS,
         [EnumMember(Value = "error")]
         ERROR,
+        [EnumMember(Value = "update_action_id")]
+        UPDATE_ACTION_ID,
+        [EnumMember(Value = "set_timer")]
+        SET_TIMER,
     }
 }

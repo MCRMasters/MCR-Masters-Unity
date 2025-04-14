@@ -107,13 +107,12 @@ namespace MCRGame.Game
                             }
                         }
 
-                        // GameManager로 전달 (새 시그니처)
                         GameManager.Instance.InitHandFromMessage(initTiles, tsumoTile);
                     }
                     break;
 
                 case GameWSActionType.GAME_START_INFO:
-                    Debug.Log("[GameMessageMediator] GAME_START_INFO event received.");
+                    Debug.Log("[GameMessageMediator] UPDATE_ACTION_ID event received.");
                     Debug.Log("[GameMessageMediator] Data: " + message.Data.ToString());
                     GameStartInfoData startInfo = message.Data.ToObject<GameStartInfoData>();
                     if (startInfo != null)
@@ -123,6 +122,24 @@ namespace MCRGame.Game
                     }
                     break;
 
+
+                case GameWSActionType.UPDATE_ACTION_ID:
+                    Debug.Log("[GameMessageMediator] GAME_START_INFO event received.");
+                    Debug.Log("[GameMessageMediator] Data: " + message.Data.ToString());
+                    if (message.Data.TryGetValue("action_id", out JToken actionIdToken))
+                    {
+                        int actionId = actionIdToken.ToObject<int>();
+                        GameManager.Instance.UpdateActionId(actionId);
+                    }
+                    else
+                    {
+                        Debug.LogWarning("[GameMessageMediator] UPDATE_ACTION_ID: applied_flowers 키가 없습니다.");
+                    }
+                    break;
+                case GameWSActionType.SET_TIMER:
+                    Debug.Log("[GameMessageMediator] set timer event received.");
+                    GameManager.Instance.SetTimer(message.Data);
+                    break;
                 case GameWSActionType.TSUMO_ACTIONS:
                     Debug.Log("[GameMessageMediator] Tsumo actions received.");
                     // message.Data는 JObject이므로 바로 넘겨줌
@@ -135,6 +152,22 @@ namespace MCRGame.Game
                 case GameWSActionType.DISCARD:
                     Debug.Log("[GameMessageMediator] Discard Confirmed.");
                     GameManager.Instance.ConfirmDiscard(message.Data);
+                    break;
+                case GameWSActionType.FLOWER:
+                    Debug.Log("[GameMessageMediator] Flower Confirmed.");
+                    StartCoroutine(GameManager.Instance.ConfirmFlower(message.Data));
+                    break;
+                case GameWSActionType.PON:
+                case GameWSActionType.CHII:
+                case GameWSActionType.DAIMIN_KAN:
+                case GameWSActionType.SHOMIN_KAN:
+                case GameWSActionType.AN_KAN:
+                    Debug.Log($"[GameMessageMediator] {message.Event} received");
+                    GameManager.Instance.ConfirmCallBlock(message.Data);
+                    break;
+                case GameWSActionType.TSUMO:
+                    Debug.Log("[GameMessageMediator] broadcasted enemy tsumo");
+                    GameManager.Instance.ConfirmTsumo(message.Data);
                     break;
                 case GameWSActionType.INIT_FLOWER_REPLACEMENT:
                     Debug.Log("[GameMessageMediator] INIT_FLOWER_REPLACEMENT event received.");

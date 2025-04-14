@@ -59,12 +59,19 @@ namespace MCRGame.Common
         }
     }
 
-    [Serializable]
+    [JsonObject(MemberSerialization.OptIn)]
     public class CallBlockData
     {
+        [JsonProperty("type")]
         public CallBlockType Type { get; set; }
+
+        [JsonProperty("first_tile")]
         public GameTile FirstTile { get; set; }
+
+        [JsonProperty("source_seat")]
         public RelativeSeat SourceSeat { get; set; }
+
+        [JsonProperty("source_tile_index")]
         public int SourceTileIndex { get; set; }
 
         public CallBlockData() { }
