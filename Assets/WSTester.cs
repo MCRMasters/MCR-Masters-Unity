@@ -25,11 +25,11 @@ public class HUHandTest : MonoBehaviour
         var scoreResult = new ScoreResult
         {
             total_score = 24,
-            yaku_score_list = new List<List<int>>()
+            yaku_score_list = new List<YakuScore>()
             {
-                new List<int> { 41, 8 },
-                new List<int> { 42, 8 },
-                new List<int> { 43, 8 }
+                new YakuScore(41, 8),
+                new YakuScore(42, 8),
+                new YakuScore(43, 8)
             }
         };
         
