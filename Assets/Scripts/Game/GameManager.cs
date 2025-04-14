@@ -834,8 +834,6 @@ namespace MCRGame.Game
         }
 
 
-
-
         // SELF인 경우 두 작업(ApplyFlower와 AddInitFlowerTsumo)을 순차적으로 실행합니다.
         private IEnumerator ProcessFlowerOperation(int index, List<GameTile> newTiles, List<GameTile> appliedFlowers, Action onComplete)
         {
@@ -945,6 +943,16 @@ namespace MCRGame.Game
                 img.color = new Color(origColor.r, origColor.g, origColor.b, 1 - t);
                 yield return null;
             }
+        }
+
+        public void ProcessHuHand(List<GameTile> handTiles, List<CallBlockData> callBlocks, ScoreResult scoreResult, AbsoluteSeat winPlayerSeat, AbsoluteSeat currentPlayerSeat, int flowerCount)
+        {
+            
+            int singleScore = scoreResult.total_score;
+            int total_score = (winPlayerSeat == currentPlayerSeat ? singleScore * 3 : singleScore) + 24;
+            WinningScoreData wsd = new WinningScoreData(handTiles, callBlocks, singleScore, total_score, scoreResult.yaku_score_list, winPlayerSeat, flowerCount);
+            ScorePopupManager.Instance.ShowWinningPopup(wsd);
+            Debug.Log("processed hu hand.");
         }
     }
 }

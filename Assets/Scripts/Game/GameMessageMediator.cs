@@ -55,7 +55,7 @@ namespace MCRGame.Game
         /// <returns>조건이 충족되면 true</returns>
         private bool IsGameSceneReady()
         {
-            return SceneManager.GetActiveScene().name == "GameScene" && GameManager.Instance != null;
+            return SceneManager.GetActiveScene().name == "GameScene 1" && GameManager.Instance != null;
         }
 
         /// <summary>
@@ -192,6 +192,69 @@ namespace MCRGame.Game
                     Debug.Log("[GameMessageMediator] Error data: " + message.Data.ToString());
                     // 필요 시 에러 메시지 처리
                     break;
+                case GameWSActionType.HU_HAND:
+                    Debug.Log("[GameMessageMediator] HU_HAND event received.");
+                    try
+                    {
+                        // 핸드 타일 파싱
+                        List<GameTile> handTiles = new List<GameTile>();
+                        if (message.Data.TryGetValue("hand", out JToken winHandToken))
+                        {
+                            var handInts = winHandToken.ToObject<List<int>>();
+                            handTiles = handInts.Select(i => (GameTile)i).ToList();
+                            Debug.Log($"[GameMessageMediator] Hu hand tiles: {string.Join(", ", handTiles)}");
+                        }
+
+                        // 콜 블록 파싱
+                        List<CallBlockData> callBlocks = new List<CallBlockData>();
+                        if (message.Data.TryGetValue("call_blocks", out JToken blocksToken))
+                        {
+                            callBlocks = blocksToken.ToObject<List<CallBlockData>>();
+                            Debug.Log($"[GameMessageMediator] Call blocks count: {callBlocks.Count}");
+                        }
+
+                        // 점수 결과 파싱
+                        ScoreResult scoreResult = null;
+                        if (message.Data.TryGetValue("score_result", out JToken scoreToken))
+                        {
+                            scoreResult = scoreToken.ToObject<ScoreResult>();
+                            Debug.Log($"[GameMessageMediator] Score result: {scoreResult}");
+                        }
+
+                        // 플레이어 좌석 파싱
+                        AbsoluteSeat playerSeat = 0;
+                        if (message.Data.TryGetValue("player_seat", out JToken seatToken))
+                        {
+                            playerSeat = seatToken.ToObject<AbsoluteSeat>();
+                            Debug.Log($"[GameMessageMediator] Hu player seat: {playerSeat}");
+                        }
+
+                        AbsoluteSeat currentPlayerSeat = 0;
+                        if (message.Data.TryGetValue("current_player_seat", out JToken currSeatToken))
+                        {
+                            currentPlayerSeat = seatToken.ToObject<AbsoluteSeat>();
+                            Debug.Log($"[GameMessageMediator] Current player seat: {currentPlayerSeat}");
+                        }
+
+                        int flowerCount = 0;
+                        if (message.Data.TryGetValue("flower_count", out JToken flowerCountToken))
+                        {
+                            flowerCount = seatToken.ToObject<int>();
+                            Debug.Log($"[GameMessageMediator] flower count: {flowerCount}");
+                        }
+
+                        // GameManager로 전달
+                        if (handTiles != null && callBlocks != null && scoreResult != null)
+                        {
+                            GameManager.Instance.ProcessHuHand(handTiles, callBlocks, scoreResult, playerSeat, currentPlayerSeat, flowerCount);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        //Debug.LogError($"{ex.StackTrace}");
+                        Debug.LogError($"[GameMessageMediator] Error parsing HU_HAND message: {ex.Message}");
+                    }
+                    break;
 
                 default:
                     Debug.Log("[GameMessageMediator] Unhandled event: " + message.Event);
@@ -199,4 +262,6 @@ namespace MCRGame.Game
             }
         }
     }
+
+
 }

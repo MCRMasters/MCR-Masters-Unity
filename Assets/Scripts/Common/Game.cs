@@ -76,5 +76,33 @@ namespace MCRGame.Common
             SourceSeat = sourceSeat;
             SourceTileIndex = sourceTileIndex;
         }
+
+        public override string ToString()
+        {
+            string ret = "";
+            switch (Type){
+                case CallBlockType.CHII:
+                    ret += Enum.GetName(typeof(GameTile), FirstTile);
+                    ret += Enum.GetName(typeof(GameTile), FirstTile + 1);
+                    ret += Enum.GetName(typeof(GameTile), FirstTile + 2);
+                    break;
+                case CallBlockType.PUNG:
+                    ret += Enum.GetName(typeof(GameTile), FirstTile);
+                    ret += Enum.GetName(typeof(GameTile), FirstTile);
+                    ret += Enum.GetName(typeof(GameTile), FirstTile);
+                    break;
+                case CallBlockType.AN_KONG:
+                case CallBlockType.SHOMIN_KONG:
+                case CallBlockType.DAIMIN_KONG:
+                    ret += Enum.GetName(typeof(GameTile), FirstTile);
+                    ret += Enum.GetName(typeof(GameTile), FirstTile);
+                    ret += Enum.GetName(typeof(GameTile), FirstTile);
+                    ret += Enum.GetName(typeof(GameTile), FirstTile);
+                    break;
+                default:
+                    break;
+            }
+            return $"{Enum.GetName(typeof(CallBlockType), Type)} {ret}";
+        }
     }
 }
