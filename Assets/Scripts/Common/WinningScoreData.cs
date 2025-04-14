@@ -11,11 +11,11 @@ public class WinningScoreData
     public int singleScore;
     public int totalScore;
 
-    public List<Tuple<int, int>> yaku_score_list;
+    public List<List<int>> yaku_score_list;
     public AbsoluteSeat winnerSeat;
     public int flowerCount;
 
-    public WinningScoreData(List<GameTile> handTiles, List<CallBlockData> callBlocks, int singleScore, int totalScore, List<Tuple<int, int>> yaku_score_list, AbsoluteSeat winnerSeat, int flowerCount)
+    public WinningScoreData(List<GameTile> handTiles, List<CallBlockData> callBlocks, int singleScore, int totalScore, List<List<int>> yaku_score_list, AbsoluteSeat winnerSeat, int flowerCount)
     {
         this.handTiles = handTiles;
         this.callBlocks = callBlocks;

@@ -5,7 +5,7 @@ using System.Collections.Generic;
 public class ScoreResult
 {
     public int total_score;
-    public List<Tuple<int, int>> yaku_score_list;
+    public List<List<int>> yaku_score_list;
 
     public override string ToString()
     {
