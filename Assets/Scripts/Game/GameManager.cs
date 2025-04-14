@@ -9,7 +9,7 @@ using System;
 using System.Collections;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
-using System.Threading;
+using TMPro;
 
 namespace MCRGame.Game
 {
@@ -34,10 +34,10 @@ namespace MCRGame.Game
         public const int MAX_PLAYERS = 4;
         private int leftTiles;
         [SerializeField]
-        private Text leftTilesText;
+        private TextMeshProUGUI leftTilesText;
 
         [SerializeField]
-        private Text currentRoundText;
+        private TextMeshProUGUI currentRoundText;
 
         // 추가: Inspector에서 할당할 수 있는 4개의 Hand3DField 배열 (index 0~3 은 각 상대 좌석에 대응)
         [SerializeField]
@@ -51,10 +51,10 @@ namespace MCRGame.Game
 
 
         [Header("Score Label Texts (RelativeSeat 순서)")]
-        [SerializeField] private Text scoreText_Self;
-        [SerializeField] private Text scoreText_Shimo;
-        [SerializeField] private Text scoreText_Toi;
-        [SerializeField] private Text scoreText_Kami;
+        [SerializeField] private TextMeshProUGUI scoreText_Self;
+        [SerializeField] private TextMeshProUGUI scoreText_Shimo;
+        [SerializeField] private TextMeshProUGUI scoreText_Toi;
+        [SerializeField] private TextMeshProUGUI scoreText_Kami;
 
         [Header("Score Colors")]
         [Tooltip("양의 점수일 때 텍스트 색상")]
@@ -65,10 +65,10 @@ namespace MCRGame.Game
         [SerializeField] private Color negativeScoreColor = new Color(0.7804f, 0.7569f, 0.3186f); // #C7C151
 
         [Header("Wind Label Texts (RelativeSeat 순서)")]
-        [SerializeField] private Text windText_Self;
-        [SerializeField] private Text windText_Shimo;
-        [SerializeField] private Text windText_Toi;
-        [SerializeField] private Text windText_Kami;
+        [SerializeField] private TextMeshProUGUI windText_Self;
+        [SerializeField] private TextMeshProUGUI windText_Shimo;
+        [SerializeField] private TextMeshProUGUI windText_Toi;
+        [SerializeField] private TextMeshProUGUI windText_Kami;
 
         [Header("Wind Colors")]
         [Tooltip("동풍(E)일 때 텍스트 색상")]
@@ -79,9 +79,9 @@ namespace MCRGame.Game
         [Header("Profile UI (SELF, SHIMO, TOI, KAMI 순서)")]
         [SerializeField] private Image[] profileImages = new Image[4];
         [SerializeField] private Image[] profileFrameImages = new Image[4];
-        [SerializeField] private Text[] nicknameTexts = new Text[4];
+        [SerializeField] private TextMeshProUGUI[] nicknameTexts = new TextMeshProUGUI[4];
         [SerializeField] private Image[] flowerImages = new Image[4];
-        [SerializeField] private Text[] flowerCountTexts = new Text[4];
+        [SerializeField] private TextMeshProUGUI[] flowerCountTexts = new TextMeshProUGUI[4];
 
         [SerializeField] private Sprite FlowerIcon_White;
         [SerializeField] private Sprite FlowerIcon_Yellow;
@@ -110,7 +110,7 @@ namespace MCRGame.Game
         [SerializeField] private Sprite flowerButtonSprite;
 
         [Header("Timer UI")]
-        [SerializeField] private Text timerText;
+        [SerializeField] private TextMeshProUGUI timerText;
         private float remainingTime;
         private int currentActionId;
 
@@ -133,6 +133,7 @@ namespace MCRGame.Game
                 gameHandManager.CanClick = false;
             }
             currentTurnSeat = seat;
+            Debug.Log($"Current turn: {currentTurnSeat.ToString()}");
         }
 
         private void Awake()
@@ -175,11 +176,36 @@ namespace MCRGame.Game
         {
             currentActionId = actionId;
         }
-
         public void SetTimer(object data)
         {
-            
+            try
+            {
+                // 1) data를 JObject로 변환
+                var jData = data as JObject;
+                if (jData == null)
+                {
+                    Debug.LogError("[SetTimer] data가 JObject가 아닙니다.");
+                    return;
+                }
+
+                currentActionId = jData.Value<int>("action_id");
+                remainingTime = jData.Value<float>("remaining_time");
+
+                // 3) 파싱된 값 사용 예시
+                Debug.Log($"[SetTimer] action_id: {currentActionId}, remaining_time: {remainingTime}");
+
+                if (timerText != null)
+                {
+                    timerText.gameObject.SetActive(remainingTime > 0f);
+                    timerText.text = Mathf.FloorToInt(remainingTime).ToString();
+                }
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogError($"[SetTimer] JSON 파싱 중 오류: {ex.Message}");
+            }
         }
+
 
         /// <summary>
         /// 서버에서 전달한 호출(CallBlock) 데이터를 파싱합니다.
@@ -726,7 +752,7 @@ namespace MCRGame.Game
 
         public void UpdateScoreText()
         {
-            var scoreMap = new Dictionary<RelativeSeat, Text>
+            var scoreMap = new Dictionary<RelativeSeat, TextMeshProUGUI>
     {
         { RelativeSeat.SELF,  scoreText_Self  },
         { RelativeSeat.SHIMO, scoreText_Shimo },
@@ -790,7 +816,7 @@ namespace MCRGame.Game
 
         public void UpdateSeatLabels()
         {
-            var windMap = new Dictionary<RelativeSeat, Text>
+            var windMap = new Dictionary<RelativeSeat, TextMeshProUGUI>
             {
                 { RelativeSeat.SELF,  windText_Self  },
                 { RelativeSeat.SHIMO, windText_Shimo },
@@ -1038,7 +1064,7 @@ namespace MCRGame.Game
             float duration = 0.1f;
             float elapsed = 0f;
             // 해당 좌석의 꽃 카운트 텍스트를 가져옵니다.
-            Text flowerCountText = flowerCountTexts[(int)rel];
+            TextMeshProUGUI flowerCountText = flowerCountTexts[(int)rel];
             // 텍스트와 이미지가 동일한 부모 오브젝트에 있다고 가정합니다.
             Transform container = flowerCountText.transform.parent;
 
