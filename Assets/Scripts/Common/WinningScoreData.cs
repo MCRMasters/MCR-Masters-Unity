@@ -1,0 +1,28 @@
+using System;
+using System.Collections.Generic;
+using MCRGame.Common;
+
+// 점수 데이터 전용 클래스 (구조체로도 가능)
+[Serializable]
+public class WinningScoreData
+{
+    public List<GameTile> handTiles;
+    public List<CallBlockData> callBlocks;
+    public int singleScore;
+    public int totalScore;
+
+    public List<Tuple<int, int>> yaku_score_list;
+    public AbsoluteSeat winnerSeat;
+    public int flowerCount;
+
+    public WinningScoreData(List<GameTile> handTiles, List<CallBlockData> callBlocks, int singleScore, int totalScore, List<Tuple<int, int>> yaku_score_list, AbsoluteSeat winnerSeat, int flowerCount)
+    {
+        this.handTiles = handTiles;
+        this.callBlocks = callBlocks;
+        this.singleScore = singleScore;
+        this.totalScore = totalScore;
+        this.yaku_score_list = yaku_score_list;
+        this.winnerSeat = winnerSeat;
+        this.flowerCount = flowerCount;
+    }
+}

@@ -38,7 +38,6 @@ namespace MCRGame.Game
                 return;
             }
             messageQueue.Enqueue(message);
-            Debug.Log("ASDFD");
         }
 
         private void Update()
@@ -66,7 +65,6 @@ namespace MCRGame.Game
         {
             while (messageQueue.Count > 0)
             {
-                Debug.Log("asfdasdgas");
                 GameWSMessage message = messageQueue.Dequeue();
                 ProcessMessage(message);
             }
@@ -258,15 +256,5 @@ namespace MCRGame.Game
         }
     }
 
-    [Serializable]
-    public class ScoreResult
-    {
-        public int total_score;
-        public List<Tuple<int, int>> yaku_score_list;
 
-        public override string ToString()
-        {
-            return $"Total: {total_score}, yaku_score_list: {string.Join(",", yaku_score_list)}";
-        }
-    }
 }

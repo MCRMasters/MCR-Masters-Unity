@@ -37,10 +37,8 @@ namespace MCRGame.UI
             // 점수 표시
             singleScoreText.text = $"{scoreData.singleScore:N0}";
             totalScoreText.text = $"{scoreData.totalScore:N0}";
-            Debug.Log("a");
             winningTilesText.text = ConvertHandTilesToString(scoreData.handTiles);
             callBlocksText.text = ConvertCallBlocksToString(scoreData.callBlocks);
-            Debug.Log("b");
             // 승자 정보
             //winnerNicknameText.text = GameManager.Instance.Players[(int)scoreData.winnerSeat].Nickname;
             //characterImage.sprite = scoreData.characterSprite;
@@ -148,29 +146,5 @@ namespace MCRGame.UI
             divider.rectTransform.anchoredPosition = new Vector2(0, currentY);
         }
 
-    }
-    // 점수 데이터 전용 클래스 (구조체로도 가능)
-    [System.Serializable]
-    public class WinningScoreData
-    {
-        public List<GameTile> handTiles;
-        public List<CallBlockData> callBlocks;
-        public int singleScore;
-        public int totalScore;
-
-        public List<Tuple<int, int>> yaku_score_list;
-        public AbsoluteSeat winnerSeat;
-        public int flowerCount;
-
-        public WinningScoreData(List<GameTile> handTiles, List<CallBlockData> callBlocks, int singleScore, int totalScore, List<Tuple<int, int>> yaku_score_list, AbsoluteSeat winnerSeat, int flowerCount)
-        {
-            this.handTiles = handTiles;
-            this.callBlocks = callBlocks;
-            this.singleScore = singleScore;
-            this.totalScore = totalScore;
-            this.yaku_score_list = yaku_score_list;
-            this.winnerSeat = winnerSeat;
-            this.flowerCount = flowerCount;
-        }
     }
 }
