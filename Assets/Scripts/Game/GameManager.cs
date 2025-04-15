@@ -120,6 +120,14 @@ namespace MCRGame.Game
 
         public RelativeSeat currentTurnSeat;
 
+        public void UpdatePlayerScores(List<int> playersScores)
+        {
+            for (int i = 0; i < playersScores.Count; ++i)
+            {
+                Players[i].Score = playersScores[i];
+            }
+        }
+
         private void moveTurn(RelativeSeat seat)
         {
             if (seat == RelativeSeat.SELF)
@@ -301,6 +309,7 @@ namespace MCRGame.Game
         {
             ClearActionUI();
             AbsoluteSeat TsumoSeat = (AbsoluteSeat)data["seat"].ToObject<int>();
+            UpdateLeftTilesByDelta(-1);
             if (TsumoSeat == MySeat)
             {
                 return;
@@ -353,6 +362,7 @@ namespace MCRGame.Game
 
                 SetFlowerCount(floweredRelativeSeat, currentFlowerCount);
             }
+            UpdateLeftTilesByDelta(-1);
         }
 
         public void ConfirmDiscard(JObject data)
@@ -432,6 +442,7 @@ namespace MCRGame.Game
         public void ProcessTsumoActions(JObject data)
         {
             moveTurn(RelativeSeat.SELF);
+            UpdateLeftTilesByDelta(-1);
             // 1) 기존 버튼 전부 제거
             foreach (Transform c in actionButtonPanel) Destroy(c.gameObject);
 
@@ -453,6 +464,13 @@ namespace MCRGame.Game
             var list = data["actions"].ToObject<List<GameAction>>();
             list.Sort();
 
+            // 5) Skip 버튼 (마지막에)
+            if (list.Count > 0)
+            {
+                var skip = Instantiate(actionButtonPrefab, actionButtonPanel);
+                skip.GetComponent<Image>().sprite = skipButtonSprite;
+                skip.GetComponent<Button>().onClick.AddListener(OnSkipButtonClicked);
+            }
             // 4) GridLayoutGroup에 맞춰 버튼 생성
             foreach (var act in list)
             {
@@ -461,13 +479,6 @@ namespace MCRGame.Game
                 btnObj.GetComponent<Button>().onClick.AddListener(() => OnActionButtonClicked(act));
             }
 
-            // 5) Skip 버튼 (마지막에)
-            if (list.Count > 0)
-            {
-                var skip = Instantiate(actionButtonPrefab, actionButtonPanel);
-                skip.GetComponent<Image>().sprite = skipButtonSprite;
-                skip.GetComponent<Button>().onClick.AddListener(OnSkipButtonClicked);
-            }
         }
 
         private Sprite GetSpriteForAction(GameActionType type)
@@ -737,6 +748,10 @@ namespace MCRGame.Game
             CurrentTurnSeat = RelativeSeatExtensions.CreateFromAbsoluteSeats(currentSeat: MySeat, targetSeat: AbsoluteSeat.EAST);
         }
 
+        public void UpdateLeftTilesByDelta(int delta)
+        {
+            UpdateLeftTiles(leftTiles + delta);
+        }
         public void UpdateLeftTiles(int newValue)
         {
             leftTiles = newValue;

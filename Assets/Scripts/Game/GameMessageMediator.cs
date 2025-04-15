@@ -55,7 +55,7 @@ namespace MCRGame.Game
         /// <returns>조건이 충족되면 true</returns>
         private bool IsGameSceneReady()
         {
-            return SceneManager.GetActiveScene().name == "GameScene 1" && GameManager.Instance != null;
+            return SceneManager.GetActiveScene().name == "GameScene" && GameManager.Instance != null;
         }
 
         /// <summary>
@@ -105,6 +105,18 @@ namespace MCRGame.Game
                                     Debug.LogWarning($"[GameMessageMediator] initTiles에 {tsumoTile.Value}가 없어 제거하지 못했습니다.");
                                 }
                             }
+                        }
+
+                        // players_score 파싱 (추가된 부분)
+                        if (message.Data.TryGetValue("players_score", out JToken scoreToken))
+                        {
+                            var playersScores = scoreToken.ToObject<List<int>>();
+                            Debug.Log($"[GameMessageMediator] Players scores: {string.Join(", ", playersScores)}");
+                            GameManager.Instance.UpdatePlayerScores(playersScores);
+                        }
+                        else
+                        {
+                            Debug.LogWarning("[GameMessageMediator] INIT_EVENT 메시지에 players_score 필드가 없습니다.");
                         }
 
                         GameManager.Instance.InitHandFromMessage(initTiles, tsumoTile);
