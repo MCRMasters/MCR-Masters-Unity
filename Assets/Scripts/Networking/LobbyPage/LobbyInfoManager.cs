@@ -31,6 +31,7 @@ namespace MCRGame.Net
             {
                 // 인증 헤더 추가
                 www.SetRequestHeader("Authorization", $"Bearer {token}");
+                www.certificateHandler = new BypassCertificateHandler();
                 yield return www.SendWebRequest();
 
                 if (www.result == UnityWebRequest.Result.Success)

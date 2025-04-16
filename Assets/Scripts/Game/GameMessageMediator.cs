@@ -222,7 +222,7 @@ namespace MCRGame.Game
                     if (newTiles != null && appliedFlowers != null && flowerCounts != null)
                     {
                         // GameManager의 화패 교체 이벤트 시작 (코루틴 내부에서 전체 이벤트 연출 진행)
-                        GameManager.Instance.StartFlowerReplacement(newTiles, appliedFlowers, flowerCounts);
+                        StartCoroutine(GameManager.Instance.StartFlowerReplacement(newTiles, appliedFlowers, flowerCounts));
                     }
                     break;
 
@@ -236,6 +236,20 @@ namespace MCRGame.Game
                     Debug.Log("[GameMessageMediator] Error event received.");
                     Debug.Log("[GameMessageMediator] Error data: " + message.Data.ToString());
                     // 필요 시 에러 메시지 처리
+                    break;
+                case GameWSActionType.DRAW:
+                    Debug.Log("[GameMessageMediator] DRAW event received");
+                    List<List<GameTile>> anKanInfo2 = new List<List<GameTile>>();
+                    if (message.Data.TryGetValue("an_kan_infos", out JToken anKanToken2))
+                    {
+                        var infoIntsList = anKanToken2.ToObject<List<List<int>>>();
+                        foreach (var listInt in infoIntsList)
+                        {
+                            anKanInfo2.Add(listInt.Select(i => (GameTile)i).ToList());
+                        }
+                        Debug.Log($"[GameMessageMediator] an_kan_infos count: {anKanInfo2.Count}");
+                    }
+                    StartCoroutine(GameManager.Instance.ProcessDraw(anKanInfo2));
                     break;
                 case GameWSActionType.HU_HAND:
                     Debug.Log("[GameMessageMediator] HU_HAND event received.");
@@ -288,18 +302,61 @@ namespace MCRGame.Game
                             Debug.Log($"[GameMessageMediator] flower count: {flowerCount}");
                         }
 
-                        // GameManager로 전달
+                        // tsumo tile 파싱
+                        GameTile? tsumoTile = null;
+                        if (message.Data.TryGetValue("tsumo_tile", out JToken tsumoTileToken) && tsumoTileToken.Type != JTokenType.Null)
+                        {
+                            int? tsumoInt = tsumoTileToken.ToObject<int?>();
+                            if (tsumoInt.HasValue)
+                            {
+                                tsumoTile = (GameTile)tsumoInt.Value;
+                                Debug.Log($"[GameMessageMediator] Hu tsumo tile: {tsumoTile}");
+                            }
+                            else
+                            {
+                                tsumoTile = null;
+                                Debug.Log("[GameMessageMediator] tsumo_tile 값이 null입니다.");
+                            }
+                        }
+                        else
+                        {
+                            tsumoTile = null;
+                            Debug.Log("[GameMessageMediator] tsumo_tile 키가 없거나 null입니다.");
+                        }
+
+                        // an_kan_infos 파싱
+                        List<List<GameTile>> anKanInfos = new List<List<GameTile>>();
+                        if (message.Data.TryGetValue("an_kan_infos", out JToken anKanToken))
+                        {
+                            var infoIntsList = anKanToken.ToObject<List<List<int>>>();
+                            foreach (var listInt in infoIntsList)
+                            {
+                                anKanInfos.Add(listInt.Select(i => (GameTile)i).ToList());
+                            }
+                            Debug.Log($"[GameMessageMediator] an_kan_infos count: {anKanInfos.Count}");
+                        }
+
+                        // GameManager로 전달 (필요한 모든 정보 포함)
                         if (handTiles != null && callBlocks != null && scoreResult != null)
                         {
-                            GameManager.Instance.ProcessHuHand(handTiles, callBlocks, scoreResult, playerSeat, currentPlayerSeat, flowerCount);
+                            StartCoroutine(GameManager.Instance.ProcessHuHand(
+                                handTiles,
+                                callBlocks,
+                                scoreResult,
+                                playerSeat,
+                                currentPlayerSeat,
+                                flowerCount,
+                                tsumoTile,
+                                anKanInfos
+                            ));
                         }
                     }
                     catch (Exception ex)
                     {
-                        //Debug.LogError($"{ex.StackTrace}");
-                        Debug.LogError($"[GameMessageMediator] Error parsing HU_HAND message: {ex.Message}");
+                        Debug.LogError($"[GameMessageMediator] HU_HAND 처리 오류: {ex.Message}");
                     }
                     break;
+
 
                 default:
                     Debug.Log("[GameMessageMediator] Unhandled event: " + message.Event);

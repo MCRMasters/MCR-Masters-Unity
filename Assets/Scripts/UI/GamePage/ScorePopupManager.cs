@@ -23,6 +23,15 @@ namespace MCRGame.UI
             
         }
 
+        public void DeleteWinningPopup()
+        {
+            GameObject oldPopup = GameObject.Find("Score Popup");
+            if (oldPopup != null){
+                Destroy(oldPopup);
+                oldPopup = null;
+            }
+        }
+
         public void ShowWinningPopup(WinningScoreData data)
         {
 
@@ -35,6 +44,7 @@ namespace MCRGame.UI
             GameObject oldPopup = GameObject.Find("Score Popup");
             if (oldPopup != null){
                 Destroy(oldPopup);
+                oldPopup = null;
             }
             
             var popup = Instantiate(winningScorePrefab);

@@ -44,6 +44,7 @@ namespace MCRGame.Net
         {
             using (UnityWebRequest www = UnityWebRequest.Get(backendLoginUrl))
             {
+                www.certificateHandler = new BypassCertificateHandler();
                 yield return www.SendWebRequest();
 
                 if (www.result == UnityWebRequest.Result.Success)
@@ -75,6 +76,7 @@ namespace MCRGame.Net
                 string url = $"{backendStatusUrl}?session_id={sessionId}";
                 using (UnityWebRequest www = UnityWebRequest.Get(url))
                 {
+                    www.certificateHandler = new BypassCertificateHandler();
                     yield return www.SendWebRequest();
 
                     if (www.result == UnityWebRequest.Result.Success)

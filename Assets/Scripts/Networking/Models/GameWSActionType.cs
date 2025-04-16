@@ -60,5 +60,7 @@ namespace MCRGame.Net
         UPDATE_ACTION_ID,
         [EnumMember(Value = "set_timer")]
         SET_TIMER,
+        [EnumMember(Value = "draw")]
+        DRAW,
     }
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 
 namespace MCRGame.Common
 {
+    [Serializable]
     public enum Yaku
     {
         ERROR = -1,

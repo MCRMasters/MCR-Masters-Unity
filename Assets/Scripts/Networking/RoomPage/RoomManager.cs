@@ -67,7 +67,15 @@ namespace MCRGame.Net
                 if (isHost)
                 {
                     // host의 슬롯은 RoomDataManager.Instance.HostSlotIndex로 설정
+                    RoomUserData[] players = RoomDataManager.Instance.Players;
                     RoomDataManager.Instance.mySlotIndex = RoomDataManager.Instance.HostSlotIndex;
+                    players[RoomDataManager.Instance.mySlotIndex] = new RoomUserData
+                    {
+                        uid = PlayerDataManager.Instance.Uid,
+                        nickname = PlayerDataManager.Instance.Nickname,
+                        isReady = false,
+                        slot_index = RoomDataManager.Instance.mySlotIndex
+                    };
                     playerReady[RoomDataManager.Instance.mySlotIndex] = true;
                     isReady = true;
                 }
@@ -202,6 +210,7 @@ namespace MCRGame.Net
                 request.downloadHandler = new DownloadHandlerBuffer();
                 request.SetRequestHeader("Content-Type", "application/json");
                 request.SetRequestHeader("Authorization", $"Bearer {PlayerDataManager.Instance.AccessToken}");
+                request.certificateHandler = new BypassCertificateHandler();
 
                 yield return request.SendWebRequest();
 

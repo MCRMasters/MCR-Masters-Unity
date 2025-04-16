@@ -2,8 +2,11 @@ namespace MCRGame.Net
 {
     public static class CoreServerConfig
     {
-        public static string HttpBaseUrl = "http://localhost";
-        public static string WebSocketBaseUrl = "ws://localhost";
+        // public static string HttpBaseUrl = "http://localhost";
+        // public static string WebSocketBaseUrl = "ws://localhost";
+        public static string HttpBaseUrl = "http://mcrs.duckdns.org";
+        public static string WebSocketBaseUrl = "ws://mcrs.duckdns.org";
+        
         
         public static int Port = 8000;
         

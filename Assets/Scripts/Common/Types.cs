@@ -16,6 +16,7 @@ namespace MCRGame.Common
         ROBBING_KONG = 11,
         INIT_FLOWER_OK = 12,
         SKIP = 13,
+        NEXT_ROUND_CONFIRM = 14,
     }
 
     public static class GameEventTypeExtensions

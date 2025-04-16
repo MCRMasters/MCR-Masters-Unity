@@ -145,12 +145,19 @@ namespace MCRGame.UI
 
         public void clear()
         {
+            if (tileObjects == null){
+                return;
+            }
             foreach (GameObject tileObj in tileObjects)
             {
+                if (tileObj == null){
+                    continue;
+                }
                 Destroy(tileObj);
             }
             tileObjects.Clear();
             tsumoTile = null;
+            callBlockField.InitializeCallBlockField();
         }
 
         public IEnumerator InitHand(List<GameTile> initTiles, GameTile? receivedTsumoTile)
@@ -207,6 +214,8 @@ namespace MCRGame.UI
         private IEnumerator AnimateInitHand()
         {
             IsAnimating = true;
+            bool prevCanClick = CanClick;
+            CanClick = false;
             int count = tileObjects.Count;
             if (count <= 0)
             {
@@ -310,6 +319,7 @@ namespace MCRGame.UI
 
             yield return StartCoroutine(AnimateReposition());
             IsAnimating = false;
+            CanClick = prevCanClick;
         }
 
         public IEnumerator AddInitFlowerTsumo(GameTile tile)
@@ -556,6 +566,9 @@ namespace MCRGame.UI
                 if (idx >= 0)
                 {
                     GameObject go = tileObjects[idx];
+                    if (go == tsumoTile){
+                        tsumoTile = null;
+                    }
                     tileObjects.RemoveAt(idx);
                     Destroy(go);
                 }

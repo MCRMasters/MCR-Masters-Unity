@@ -18,9 +18,7 @@ namespace MCRGame.UI
         private struct HandRequest
         {
             public RequestType Type;
-            // 기존의 discardRightmost: 단일 폐기 요청에서만 사용됨
             public bool discardRightmost;
-            // DiscardMultiple 요청 시 삭제할 타일 개수
             public int discardCount;
             public HandRequest(RequestType type, bool discardRightmost = false, int discardCount = 1)
             {
@@ -283,6 +281,16 @@ namespace MCRGame.UI
             return Tile3DManager.Instance.Make3DTile(white.ToCustomString(), transform);
         }
 
+        private GameObject CreateRealTile(GameTile tile)
+        {
+            if (Tile3DManager.Instance == null)
+            {
+                Debug.LogError("Tile3DManager 인스턴스가 없습니다.");
+                return null;
+            }
+            return Tile3DManager.Instance.Make3DTile(tile.ToCustomString(), transform);
+        }
+
         /// <summary>
         /// handTiles 리스트에 담긴 모든 타일을 즉시 재배치합니다.
         /// </summary>
@@ -293,6 +301,56 @@ namespace MCRGame.UI
                 if (handTiles[i] == null) continue;
                 handTiles[i].transform.localPosition = ComputeTargetLocalPositionForIndex(i);
             }
+        }
+
+        public void clear()
+        {
+            foreach (var tile in handTiles)
+            {
+                if (tile != null)
+                    Destroy(tile);
+            }
+            handTiles.Clear();
+            tsumoTile = null;
+        }
+
+        public void MakeRealHand(GameTile? tsumoTileValue, List<GameTile> originalHandTiles)
+        {
+            // 기존 타일 모두 제거
+            clear();
+
+            // originalHandTiles의 복사본 생성
+            List<GameTile> tilesForRealHand = new List<GameTile>(originalHandTiles);
+            // tsumoTile과 동일한 타일 한 개를 제거하여 일반 핸드에서 제외
+            if (tsumoTileValue.HasValue && tilesForRealHand.Contains((GameTile)tsumoTileValue))
+            {
+                tilesForRealHand.Remove((GameTile)tsumoTileValue);
+            }
+
+            // 일반 핸드 타일 생성 (실제 타일 생성 메서드 사용)
+            foreach (var tile in tilesForRealHand)
+            {
+                GameObject tileObj = CreateRealTile(tile); // 기존 CreateRealTile 메서드 사용
+                if (tileObj != null)
+                {
+                    handTiles.Add(tileObj);
+                }
+            }
+            // 일반 타일들 즉시 재배치 (애니메이션 없이)
+            RepositionTiles();
+
+            if (tsumoTileValue.HasValue)
+            {
+                // 마지막에 tsumoTile 생성 및 추가
+                GameObject tsumoTileObj = CreateRealTile((GameTile)tsumoTileValue);
+                if (tsumoTileObj != null)
+                {
+                    handTiles.Add(tsumoTileObj);
+                    tsumoTile = tsumoTileObj;
+                }
+            }
+            // tsumoTile에 extra gap가 적용되도록 재배치 (ComputeTargetLocalPositionForIndex에서 extra 처리)
+            RepositionTiles();
         }
 
         // ---------------------------
@@ -328,5 +386,159 @@ namespace MCRGame.UI
             // 즉시 재배치 (애니메이션 없이)
             RepositionTiles();
         }
+        private IEnumerator AnimateTileRotation(GameObject tile, float baseDuration, int handScore)
+        {
+            if (tile == null) yield break;
+
+            // --- 1) 회전 파트 (기존) ---
+            Quaternion startRot = tile.transform.localRotation;
+            Quaternion targetRot = Quaternion.Euler(-90f, startRot.eulerAngles.y, startRot.eulerAngles.z);
+            float rotationDuration = baseDuration / (1f + handScore / 10f);
+
+            float elapsed = 0f;
+            while (elapsed < rotationDuration)
+            {
+                elapsed += Time.deltaTime;
+                float t = Mathf.Clamp01(elapsed / rotationDuration);
+                float easedT = t * t;
+                float angle = Mathf.Lerp(0f, -90f, easedT);
+                tile.transform.localRotation = Quaternion.Euler(angle, startRot.eulerAngles.y, startRot.eulerAngles.z);
+                yield return null;
+            }
+            tile.transform.localRotation = targetRot;
+
+            // --- 2) 튕김 파트 (y축 + z축) ---
+            Vector3 startPos = tile.transform.localPosition;
+            float bounceDuration = baseDuration * Random.Range(0.9f, 1.1f);
+            float amplitudeY = Mathf.Max(1f, handScore);
+            float frequency = Mathf.PI * 4f * Random.Range(0.8f, 1.2f);
+            float dampingY = 3f * Random.Range(0.8f, 1.2f);
+            float dampingZ = 2f * Random.Range(0.8f, 1.2f); // z축 감쇠 속도 (클수록 빨리 줄어듬)
+
+            float prevY = 0f;
+            float currentZOffset = 0f;
+
+            elapsed = 0f;
+            while (elapsed < bounceDuration)
+            {
+                elapsed += Time.deltaTime;
+                float tt = Mathf.Clamp01(elapsed / bounceDuration);
+
+                // y축 튕김: 댐핑된 사인파
+                float y = amplitudeY * Mathf.Exp(-dampingY * tt) * Mathf.Abs(Mathf.Sin(frequency * tt));
+
+                // 바닥에 닿았을 때(prevY > 0 && y <= 0)마다 새로운 Z 오프셋 생성
+                if (prevY > 0f && y <= 0f)
+                {
+                    // 기본 Z 오프셋 크기: y축 amplitude의 10~30%
+                    float baseZ = amplitudeY * Random.Range(0.2f, 0.5f);
+                    // 랜덤 방향
+                    float sign = Random.value < 0.5f ? -1f : 1f;
+                    // 감쇠 적용: 진행률 tt에 따라 줄어들게
+                    currentZOffset = baseZ * sign * Mathf.Exp(-dampingZ * tt);
+                }
+
+                // 위치 적용
+                tile.transform.localPosition = startPos + new Vector3(0f, y, currentZOffset);
+
+                prevY = y;
+                yield return null;
+            }
+
+            // 최종 고정: 원위치로 복귀
+            tile.transform.localPosition = startPos;
+            tile.transform.localRotation = targetRot;
+        }
+
+
+        // EaseOutBounce 이징 함수 (로버트 페너 공식 참고)
+        private float EaseOutBounce(float t)
+        {
+            if (t < (1f / 2.75f))
+            {
+                return 7.5625f * t * t;
+            }
+            else if (t < (2f / 2.75f))
+            {
+                t -= 1.5f / 2.75f;
+                return 7.5625f * t * t + 0.75f;
+            }
+            else if (t < (2.5f / 2.75f))
+            {
+                t -= 2.25f / 2.75f;
+                return 7.5625f * t * t + 0.9375f;
+            }
+            else
+            {
+                t -= 2.625f / 2.75f;
+                return 7.5625f * t * t + 0.984375f;
+            }
+        }
+        // ★ 추가: 개별 타일 애니메이션 완료 후 완료 콜백을 호출하는 래퍼 코루틴
+        private IEnumerator AnimateTileRotationWithCallback(GameObject tile, float duration, int handScore, System.Action onComplete)
+        {
+            yield return StartCoroutine(AnimateTileRotation(tile, duration, handScore));
+            onComplete?.Invoke();
+        }
+
+        // ★ 수정: handTiles 전체를 도미노 효과로 순차적으로 시작하면서, 동시에 실행된 후 모든 애니메이션 종료 대기
+        public IEnumerator AnimateAllTilesRotationDomino(float baseDuration, int handScore)
+        {
+            float delayBetweenTiles = baseDuration / 30f;
+            Debug.Log("AnimateAllTilesRotationDomino 시작 - 총 타일 수: " + handTiles.Count + ", 기본 지속 시간: " + baseDuration + ", 타일 간 딜레이: " + delayBetweenTiles);
+
+            int count = handTiles.Count;
+            // 각 타일의 완료 여부를 추적하기 위한 배열
+            bool[] doneFlags = new bool[count];
+
+            // 각 타일에 대해 도미노 효과 시작 (순차적으로 시작되지만, 이전 코루틴을 기다리지 않고 바로 다음 코루틴을 시작)
+            for (int i = 0; i < count; i++)
+            {
+                int index = i;  // 지역 변수로 복사
+                GameObject tile = handTiles[index];
+                if (tile != null)
+                {
+                    Debug.Log("AnimateTileRotation 시작 (domino): " + tile.name + " (Index " + index + ")");
+                    StartCoroutine(AnimateTileRotationWithCallback(tile, baseDuration, handScore, () =>
+                    {
+                        Debug.Log("AnimateTileRotation 완료: " + tile.name + " (Index " + index + ")");
+                        doneFlags[index] = true;
+                    }));
+                }
+                else
+                {
+                    Debug.Log("AnimateTileRotation 건너뛰기 - null 타일 발견 (Index " + index + ")");
+                    doneFlags[index] = true;
+                }
+                // 타일 간 딜레이만큼 기다림 (이전 코루틴이 끝날 때까지 기다리지 않음)
+                yield return new WaitForSeconds(delayBetweenTiles);
+            }
+
+            // 모든 타일 애니메이션 코루틴이 완료될 때까지 대기
+            yield return new WaitUntil(() =>
+            {
+                for (int i = 0; i < count; i++)
+                {
+                    if (!doneFlags[i])
+                        return false;
+                }
+                return true;
+            });
+
+            Debug.Log("AnimateAllTilesRotationDomino 완료");
+        }
+
+        // ★ 추가: 모든 타일의 회전을 초기화(0도로 리셋)
+        public void ResetTileRotations()
+        {
+            foreach (var tile in handTiles)
+            {
+                if (tile != null)
+                {
+                    tile.transform.localRotation = Quaternion.identity;
+                }
+            }
+        }
+
     }
 }

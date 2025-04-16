@@ -28,6 +28,7 @@ namespace MCRGame.Net
                 request.downloadHandler = new DownloadHandlerBuffer();
                 request.SetRequestHeader("Content-Type", "application/json");
                 request.SetRequestHeader("Authorization", $"Bearer {accessToken}");
+                request.certificateHandler = new BypassCertificateHandler();
 
                 yield return request.SendWebRequest();
 

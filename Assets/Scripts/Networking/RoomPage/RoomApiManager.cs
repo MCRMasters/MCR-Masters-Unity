@@ -15,6 +15,7 @@ namespace MCRGame.Net
         // CoreServerConfig를 사용하여 기본 방 URL 구성 (예: http://localhost:8000/api/v1/room)
         private string baseRoomUrl = CoreServerConfig.GetHttpUrl("/room");
 
+
         /// <summary>
         /// 서버에서 방 목록을 가져옵니다.
         /// 서버 응답이 JSON 배열 형태라면, JsonUtility의 제한을 위해 래퍼 객체로 감싸서 파싱합니다.
@@ -27,6 +28,7 @@ namespace MCRGame.Net
             {
                 request.SetRequestHeader("Content-Type", "application/json");
                 request.SetRequestHeader("Authorization", $"Bearer {PlayerDataManager.Instance.AccessToken}");
+                request.certificateHandler = new BypassCertificateHandler();
 
                 yield return request.SendWebRequest();
 
@@ -74,6 +76,7 @@ namespace MCRGame.Net
                 request.downloadHandler = new DownloadHandlerBuffer();
                 request.SetRequestHeader("Content-Type", "application/json");
                 request.SetRequestHeader("Authorization", $"Bearer {PlayerDataManager.Instance.AccessToken}");
+                request.certificateHandler = new BypassCertificateHandler();
 
                 yield return request.SendWebRequest();
 
@@ -105,6 +108,7 @@ namespace MCRGame.Net
                 request.downloadHandler = new DownloadHandlerBuffer();
                 request.SetRequestHeader("Content-Type", "application/json");
                 request.SetRequestHeader("Authorization", $"Bearer {PlayerDataManager.Instance.AccessToken}");
+                request.certificateHandler = new BypassCertificateHandler();
 
                 yield return request.SendWebRequest();
 

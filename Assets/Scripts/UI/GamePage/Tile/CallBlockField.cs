@@ -25,6 +25,23 @@ namespace MCRGame.UI
         [Tooltip("바로 직전 블록의 너비에 대한 간격 비율")]
         public float gapRatio = 0.1f;
 
+        /// <summary>
+        /// CallBlockField를 초기화합니다.
+        /// 기존의 callBlocks 리스트를 초기화하고 모든 블록을 제거합니다.
+        /// </summary>
+        public void InitializeCallBlockField()
+        {
+            Debug.Log("CallBlockField: Initializing call block field.");
+            if (callBlocks == null)
+            {
+                callBlocks = new List<GameObject>();
+            }
+            else
+            {
+                ClearAllCallBlocks();
+            }
+        }
+
         public void AddCallBlock(CallBlockData data)
         {
             if (data.Type == CallBlockType.SHOMIN_KONG)
@@ -32,8 +49,10 @@ namespace MCRGame.UI
                 foreach (var call_block in callBlocks)
                 {
                     CallBlock cb = call_block.GetComponent<CallBlock>();
-                    if (cb != null){
-                        if (cb.Data.Type == CallBlockType.PUNG && cb.Data.FirstTile == data.FirstTile){
+                    if (cb != null)
+                    {
+                        if (cb.Data.Type == CallBlockType.PUNG && cb.Data.FirstTile == data.FirstTile)
+                        {
                             cb.ApplyShominKong();
                             break;
                         }

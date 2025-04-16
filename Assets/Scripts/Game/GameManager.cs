@@ -1,8 +1,5 @@
 using System.Collections.Generic;
 using UnityEngine;
-using MCRGame.Common;
-using MCRGame.UI;
-using MCRGame.Net;
 using UnityEngine.UI;
 using System.Linq;
 using System;
@@ -10,6 +7,12 @@ using System.Collections;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using TMPro;
+
+using MCRGame.Common;
+using MCRGame.UI;
+using MCRGame.Net;
+using MCRGame.View;
+
 
 namespace MCRGame.Game
 {
@@ -49,6 +52,8 @@ namespace MCRGame.Game
         private Dictionary<int, AbsoluteSeat> playerIndexToSeat;
         private Dictionary<string, int> playerUidToIndex;
 
+        [Header("Camera")]
+        [SerializeField] private CameraResultAnimator cameraResultAnimator;
 
         [Header("Score Label Texts (RelativeSeat 순서)")]
         [SerializeField] private TextMeshProUGUI scoreText_Self;
@@ -221,62 +226,119 @@ namespace MCRGame.Game
         /// </summary>
         public void ConfirmCallBlock(object data)
         {
+            ClearActionUI();
             try
             {
+                Debug.Log("ConfirmCallBlock: Step 1 - Casting data to JObject");
                 JObject jData = data as JObject;
                 if (jData == null)
                 {
                     Debug.LogWarning("ConfirmCallBlock: Data is not a valid JObject");
                     return;
                 }
-                // "seat" 값을 파싱 (예: 정수 형태로 전달)
-                int seatInt = jData["seat"].ToObject<int>();
-                AbsoluteSeat seat = (AbsoluteSeat)seatInt;
 
-                // "call_block_data" 값을 파싱 (null일 수도 있음)
+                Debug.Log("ConfirmCallBlock: Step 2 - Parsing 'seat' value");
+                int seatInt = jData["seat"].ToObject<int>();
+                Debug.Log("ConfirmCallBlock: seatInt = " + seatInt);
+                AbsoluteSeat seat = (AbsoluteSeat)seatInt;
+                Debug.Log("ConfirmCallBlock: seat = " + seat.ToString());
+
+                Debug.Log("ConfirmCallBlock: Step 3 - Parsing 'call_block_data'");
                 JToken callBlockToken = jData["call_block_data"];
                 CallBlockData callBlockData = null;
                 if (callBlockToken != null && callBlockToken.Type != JTokenType.Null)
                 {
+                    Debug.Log("ConfirmCallBlock: call_block_data token exists, type: " + callBlockToken.Type);
                     callBlockData = callBlockToken.ToObject<CallBlockData>();
+                    if (callBlockData != null)
+                    {
+                        Debug.Log("ConfirmCallBlock: callBlockData parsed successfully. FirstTile = " + callBlockData.FirstTile.ToString());
+                    }
+                    else
+                    {
+                        Debug.LogWarning("ConfirmCallBlock: callBlockData parsed as null.");
+                    }
+                }
+                else
+                {
+                    Debug.Log("ConfirmCallBlock: 'call_block_data' is null.");
                 }
 
+                Debug.Log("ConfirmCallBlock: Step 4 - Parsing 'has_tsumo_tile'");
                 bool has_tsumo_tile = false;
                 JToken hasTsumoTileToken = jData["has_tsumo_tile"];
-                if (hasTsumoTileToken != null && (callBlockData.Type == CallBlockType.AN_KONG || callBlockData.Type == CallBlockType.SHOMIN_KONG))
+                if (hasTsumoTileToken != null)
+                {
+                    Debug.Log("ConfirmCallBlock: has_tsumo_tile token exists.");
+                }
+                else
+                {
+                    Debug.Log("ConfirmCallBlock: has_tsumo_tile token is null.");
+                }
+                if (hasTsumoTileToken != null && callBlockData != null &&
+                    (callBlockData.Type == CallBlockType.AN_KONG || callBlockData.Type == CallBlockType.SHOMIN_KONG))
                 {
                     has_tsumo_tile = hasTsumoTileToken.ToObject<bool>();
+                    Debug.Log("ConfirmCallBlock: has_tsumo_tile parsed as " + has_tsumo_tile);
+                }
+                else
+                {
+                    Debug.Log("ConfirmCallBlock: Skipping has_tsumo_tile parsing.");
                 }
 
+                Debug.Log("ConfirmCallBlock: Step 5 - Logging parsed values");
                 Debug.Log($"ConfirmCallBlock: seat = {seat}, callBlockData = {(callBlockData != null ? callBlockData.FirstTile.ToString() : "null")}");
+
+                Debug.Log("ConfirmCallBlock: Step 6 - Determining relative seat");
                 RelativeSeat relativeSeat = RelativeSeatExtensions.CreateFromAbsoluteSeats(currentSeat: MySeat, targetSeat: seat);
+                Debug.Log("ConfirmCallBlock: relativeSeat = " + relativeSeat);
+
                 moveTurn(relativeSeat);
-                AbsoluteSeat sourceAbsoluteSeat = callBlockData.SourceSeat.ToAbsoluteSeat(mySeat: seat);
+
+                Debug.Log("ConfirmCallBlock: Step 7 - Accessing callBlockData.SourceSeat");
+                RelativeSeat CallBlockSourceSeat = RelativeSeat.SELF;
+                if (callBlockData != null)
+                {
+                    CallBlockSourceSeat = callBlockData.SourceSeat;
+                }
+                AbsoluteSeat sourceAbsoluteSeat = CallBlockSourceSeat.ToAbsoluteSeat(mySeat: seat);
+                Debug.Log("ConfirmCallBlock: sourceAbsoluteSeat = " + sourceAbsoluteSeat);
                 RelativeSeat sourceRelativeSeat = RelativeSeatExtensions.CreateFromAbsoluteSeats(currentSeat: MySeat, targetSeat: sourceAbsoluteSeat);
+                Debug.Log("ConfirmCallBlock: sourceRelativeSeat = " + sourceRelativeSeat);
+
                 if (relativeSeat == RelativeSeat.SELF)
                 {
+                    Debug.Log("ConfirmCallBlock: Applying call for SELF.");
                     gameHandManager.ApplyCall(cbData: callBlockData);
                 }
                 else
                 {
-                    callBlockFields[(int)relativeSeat].AddCallBlock(data: callBlockData);
+                    Debug.Log("ConfirmCallBlock: Adding call block to callBlockFields for relativeSeat: " + relativeSeat);
+                    if (callBlockData != null)
+                    {
+                        callBlockFields[(int)relativeSeat].AddCallBlock(data: callBlockData);
+                    }
                     if (callBlockData.Type == CallBlockType.CHII || callBlockData.Type == CallBlockType.PUNG)
                     {
+                        Debug.Log("ConfirmCallBlock: Starting RequestDiscardMultiple(count: 2)");
                         StartCoroutine(playersHand3DFields[(int)relativeSeat].RequestDiscardMultiple(count: 2));
                     }
                     else if (callBlockData.Type == CallBlockType.DAIMIN_KONG)
                     {
+                        Debug.Log("ConfirmCallBlock: Starting RequestDiscardMultiple(count: 3)");
                         StartCoroutine(playersHand3DFields[(int)relativeSeat].RequestDiscardMultiple(count: 3));
                     }
                     else if (callBlockData.Type == CallBlockType.AN_KONG)
                     {
                         if (has_tsumo_tile)
                         {
+                            Debug.Log("ConfirmCallBlock: AN_KONG with tsumo tile, starting RequestDiscardRightmost and RequestDiscardMultiple(count: 3)");
                             StartCoroutine(playersHand3DFields[(int)relativeSeat].RequestDiscardRightmost());
                             StartCoroutine(playersHand3DFields[(int)relativeSeat].RequestDiscardMultiple(count: 3));
                         }
                         else
                         {
+                            Debug.Log("ConfirmCallBlock: AN_KONG without tsumo tile, starting RequestDiscardMultiple(count: 4)");
                             StartCoroutine(playersHand3DFields[(int)relativeSeat].RequestDiscardMultiple(count: 4));
                         }
                     }
@@ -284,19 +346,24 @@ namespace MCRGame.Game
                     {
                         if (has_tsumo_tile)
                         {
+                            Debug.Log("ConfirmCallBlock: SHOMIN_KONG with tsumo tile, starting RequestDiscardRightmost");
                             StartCoroutine(playersHand3DFields[(int)relativeSeat].RequestDiscardRightmost());
                         }
                         else
                         {
+                            Debug.Log("ConfirmCallBlock: SHOMIN_KONG without tsumo tile, starting RequestDiscardMultiple(count: 1)");
                             StartCoroutine(playersHand3DFields[(int)relativeSeat].RequestDiscardMultiple(count: 1));
                         }
                     }
-                }
-                if (callBlockData.Type == CallBlockType.CHII ||
-                    callBlockData.Type == CallBlockType.PUNG ||
-                    callBlockData.Type == CallBlockType.DAIMIN_KONG)
-                {
-                    discardManager.RemoveLastDiscard(seat: sourceRelativeSeat);
+
+                    if (callBlockData.Type == CallBlockType.CHII ||
+                        callBlockData.Type == CallBlockType.PUNG ||
+                        callBlockData.Type == CallBlockType.DAIMIN_KONG)
+                    {
+                        Debug.Log("ConfirmCallBlock: Removing last discard for sourceRelativeSeat = " + sourceRelativeSeat);
+                        discardManager.RemoveLastDiscard(seat: sourceRelativeSeat);
+                    }
+
                 }
             }
             catch (Exception ex)
@@ -304,6 +371,7 @@ namespace MCRGame.Game
                 Debug.LogError("ConfirmCallBlock parsing error: " + ex.Message);
             }
         }
+
 
         public void ConfirmTsumo(JObject data)
         {
@@ -474,10 +542,11 @@ namespace MCRGame.Game
             // 4) GridLayoutGroup에 맞춰 버튼 생성
             foreach (var act in list)
             {
-                var btnObj = Instantiate(actionButtonPrefab, actionButtonPanel);
-                btnObj.GetComponent<Image>().sprite = GetSpriteForAction(act.Type);
-                btnObj.GetComponent<Button>().onClick.AddListener(() => OnActionButtonClicked(act));
+                var skip = Instantiate(actionButtonPrefab, actionButtonPanel);
+                skip.GetComponent<Image>().sprite = skipButtonSprite;
+                skip.GetComponent<Button>().onClick.AddListener(OnSkipButtonClicked);
             }
+
 
         }
 
@@ -571,10 +640,14 @@ namespace MCRGame.Game
             UpdateLeftTiles(leftTiles);
             foreach (var CBField in callBlockFields)
             {
-                CBField.ClearAllCallBlocks();
+                CBField.InitializeCallBlockField();
             }
             gameHandManager.clear();
 
+            foreach (var hand3DField in playersHand3DFields)
+            {
+                hand3DField.clear();
+            }
             if (isGameStarted)
             {
                 if (CurrentRound.NextRound() != Round.END)
@@ -924,9 +997,14 @@ namespace MCRGame.Game
 
         }
 
-        public void StartFlowerReplacement(List<GameTile> newTiles, List<GameTile> appliedFlowers, List<int> flowerCounts)
+        public IEnumerator StartFlowerReplacement(List<GameTile> newTiles, List<GameTile> appliedFlowers, List<int> flowerCounts)
         {
-            StartCoroutine(FlowerReplacementCoroutine(newTiles, appliedFlowers, flowerCounts));
+            gameHandManager.IsAnimating = true;
+            bool prevCanClick = gameHandManager.CanClick;
+            gameHandManager.CanClick = false;
+            yield return StartCoroutine(FlowerReplacementCoroutine(newTiles, appliedFlowers, flowerCounts));
+            gameHandManager.IsAnimating = false;
+            gameHandManager.CanClick = prevCanClick;
         }
 
         private IEnumerator FlowerReplacementCoroutine(List<GameTile> newTiles, List<GameTile> appliedFlowers, List<int> flowerCounts)
@@ -1170,14 +1248,64 @@ namespace MCRGame.Game
             }
         }
 
-        public void ProcessHuHand(List<GameTile> handTiles, List<CallBlockData> callBlocks, ScoreResult scoreResult, AbsoluteSeat winPlayerSeat, AbsoluteSeat currentPlayerSeat, int flowerCount)
+        public IEnumerator ProcessDraw(
+            List<List<GameTile>> anKanInfos
+        )
         {
-            
+            yield return StartCoroutine(cameraResultAnimator.PlayResultAnimation());
+            yield return new WaitForSeconds(3f);
+            cameraResultAnimator.ResetCameraState();
+        }
+
+        public IEnumerator ProcessHuHand(
+            List<GameTile> handTiles,
+            List<CallBlockData> callBlocks,
+            ScoreResult scoreResult,
+            AbsoluteSeat winPlayerSeat,
+            AbsoluteSeat currentPlayerSeat,
+            int flowerCount,
+            GameTile? tsumoTile,
+            List<List<GameTile>> anKanInfos)
+        {
             int singleScore = scoreResult.total_score;
             int total_score = (winPlayerSeat == currentPlayerSeat ? singleScore * 3 : singleScore) + 24;
             WinningScoreData wsd = new WinningScoreData(handTiles, callBlocks, singleScore, total_score, scoreResult.yaku_score_list, winPlayerSeat, flowerCount);
+
+
+            // 3D 핸드 필드 새로 생성: 승리한 플레이어의 핸드 필드를 클리어하고 실제 타일로 재구성
+            // (tsumoTile과 동일한 타일 한 개는 표시하지 않고, 마지막에 tsumoTile을 추가하여 extra gap이 적용되도록)
+            Hand3DField targetHandField = playersHand3DFields[(int)RelativeSeatExtensions.CreateFromAbsoluteSeats(currentSeat: MySeat, targetSeat: winPlayerSeat)];
+            targetHandField.clear();
+            targetHandField.MakeRealHand(tsumoTile, handTiles);
+            // "Main 2D Canvas" 이름의 GameObject 찾기
+            GameObject canvas = GameObject.Find("Main 2D Canvas");
+            if (canvas == null)
+            {
+                Debug.LogWarning("Main 2D Canvas를 찾을 수 없습니다.");
+                yield break;
+            }
+            canvas.SetActive(false);
+            Debug.Log("Canvas 비활성화 완료.");
+            yield return StartCoroutine(cameraResultAnimator.PlayResultAnimation());
+            yield return StartCoroutine(targetHandField.AnimateAllTilesRotationDomino(baseDuration:0.4f, handScore:singleScore));
+            yield return new WaitForSeconds(5f);
             ScorePopupManager.Instance.ShowWinningPopup(wsd);
             Debug.Log("processed hu hand.");
+            yield return new WaitForSeconds(5f);
+            cameraResultAnimator.ResetCameraState();
+            ScorePopupManager.Instance.DeleteWinningPopup();
+            canvas.SetActive(true);
+            Debug.Log("Canvas 활성화 완료.");
+
+            if (GameWS.Instance != null)
+            {
+                _ = GameWS.Instance.SendGameEventAsync(GameWSActionType.GAME_EVENT, new
+                {
+                    event_type = (int)GameEventType.NEXT_ROUND_CONFIRM,
+                    data = new Dictionary<string, object>()
+                });
+            }
         }
+
     }
 }
