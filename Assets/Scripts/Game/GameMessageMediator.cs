@@ -55,7 +55,7 @@ namespace MCRGame.Game
         /// <returns>조건이 충족되면 true</returns>
         private bool IsGameSceneReady()
         {
-            return SceneManager.GetActiveScene().name == "GameScene 1" && GameManager.Instance != null;
+            return SceneManager.GetActiveScene().name == "GameScene" && GameManager.Instance != null;
         }
 
         /// <summary>
