@@ -277,14 +277,14 @@ namespace MCRGame.Game
                         AbsoluteSeat currentPlayerSeat = 0;
                         if (message.Data.TryGetValue("current_player_seat", out JToken currSeatToken))
                         {
-                            currentPlayerSeat = seatToken.ToObject<AbsoluteSeat>();
+                            currentPlayerSeat = currSeatToken.ToObject<AbsoluteSeat>();
                             Debug.Log($"[GameMessageMediator] Current player seat: {currentPlayerSeat}");
                         }
 
                         int flowerCount = 0;
                         if (message.Data.TryGetValue("flower_count", out JToken flowerCountToken))
                         {
-                            flowerCount = seatToken.ToObject<int>();
+                            flowerCount = flowerCountToken.ToObject<int>();
                             Debug.Log($"[GameMessageMediator] flower count: {flowerCount}");
                         }
 

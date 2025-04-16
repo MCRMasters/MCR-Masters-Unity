@@ -105,7 +105,7 @@ namespace MCRGame.UI
         }
         // 사용 예시:
         // DisplayYakuScores(scorePanel, scoreTextPrefab, yakuScoreList);
-        public static void DisplayYakuScores(RectTransform panel, TMP_Text textPrefab, List<Tuple<int, int>> yakuScores)
+        public static void DisplayYakuScores(RectTransform panel, TMP_Text textPrefab, List<YakuScore> yakuScores)
         {
             float spacing = 30f;
             float startOffset = 20f;
@@ -132,8 +132,10 @@ namespace MCRGame.UI
             currentY -= spacing;
 
             // 각 야쿠 점수 표시
-            foreach (var (yakuId, score) in yakuScores)
+            foreach (YakuScore yakuInfo in yakuScores)
             {
+                Yaku yakuId = yakuInfo.YakuId;
+                int score = yakuInfo.Score;
                 TMP_Text entry = Instantiate(textPrefab, panel);
                 entry.text = $"<b>{Enum.GetName(typeof(Yaku), yakuId)}</b>: {score.ToString("N0")}점";
                 entry.rectTransform.anchoredPosition = new Vector2(0, currentY);
