@@ -542,9 +542,9 @@ namespace MCRGame.Game
             // 4) GridLayoutGroup에 맞춰 버튼 생성
             foreach (var act in list)
             {
-                var skip = Instantiate(actionButtonPrefab, actionButtonPanel);
-                skip.GetComponent<Image>().sprite = skipButtonSprite;
-                skip.GetComponent<Button>().onClick.AddListener(OnSkipButtonClicked);
+                var btnObj = Instantiate(actionButtonPrefab, actionButtonPanel);
+                btnObj.GetComponent<Image>().sprite = GetSpriteForAction(act.Type);
+                btnObj.GetComponent<Button>().onClick.AddListener(() => OnActionButtonClicked(act));
             }
 
 
