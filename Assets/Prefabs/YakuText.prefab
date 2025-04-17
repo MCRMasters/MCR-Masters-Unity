@@ -65,19 +65,17 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'asfdasfd
-
-'
+  m_text: "\uC5ED \uC810\uC218"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: a6dd0e12e47d24943a22ca6a6131c990, type: 2}
-  m_sharedMaterial: {fileID: -1342172195032511888, guid: a6dd0e12e47d24943a22ca6a6131c990, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: d54a21133cf0408498d545f27812e3bd, type: 2}
+  m_sharedMaterial: {fileID: 2100000, guid: 056e566f301d247478ab2adfd18ce1a3, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4283585263
-  m_fontColor: {r: 0.93710685, g: 0.3212094, b: 0.3212094, a: 1}
+    rgba: 4294967295
+  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:

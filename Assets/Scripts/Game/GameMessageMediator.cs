@@ -323,7 +323,14 @@ namespace MCRGame.Game
                             tsumoTile = null;
                             Debug.Log("[GameMessageMediator] tsumo_tile 키가 없거나 null입니다.");
                         }
-
+                        GameTile winningTile = GameTile.F0;
+                        if (message.Data.TryGetValue("winning_tile", out JToken winningTileToken))
+                        {
+                            int winningInt = winningTileToken.ToObject<int>();
+                            winningTile = (GameTile)winningInt;
+                            Debug.Log($"[GameMessageMediator] Hu winning tile: {winningTile}");
+                        }
+                        
                         // an_kan_infos 파싱
                         List<List<GameTile>> anKanInfos = new List<List<GameTile>>();
                         if (message.Data.TryGetValue("an_kan_infos", out JToken anKanToken))
@@ -347,7 +354,8 @@ namespace MCRGame.Game
                                 currentPlayerSeat,
                                 flowerCount,
                                 tsumoTile,
-                                anKanInfos
+                                anKanInfos,
+                                winningTile
                             ));
                         }
                     }

@@ -158,6 +158,8 @@ namespace MCRGame.UI
             tileObjects.Clear();
             tsumoTile = null;
             callBlockField.InitializeCallBlockField();
+            CanClick = false;
+            IsAnimating = true;
         }
 
         public IEnumerator InitHand(List<GameTile> initTiles, GameTile? receivedTsumoTile)
@@ -214,9 +216,10 @@ namespace MCRGame.UI
         private IEnumerator AnimateInitHand()
         {
             IsAnimating = true;
-            bool prevCanClick = CanClick;
-            CanClick = false;
-            int count = tileObjects.Count;
+            List<GameObject> tileObjectsExcludeTsumo = new List<GameObject>(tileObjects);
+            tileObjectsExcludeTsumo.Remove(tsumoTile);
+
+            int count = tileObjectsExcludeTsumo.Count;
             if (count <= 0)
             {
                 yield break;
@@ -226,7 +229,7 @@ namespace MCRGame.UI
             var tileImages = new List<Image>(count);
             for (int i = 0; i < count; i++)
             {
-                var tileObj = tileObjects[i];
+                var tileObj = tileObjectsExcludeTsumo[i];
                 var imageField = tileObj.transform.Find("ImageField");
                 if (imageField != null)
                 {
@@ -242,11 +245,11 @@ namespace MCRGame.UI
             }
 
             // 2) 위치와 finalPositions 계산
-            RectTransform firstRT = tileObjects[0].GetComponent<RectTransform>();
+            RectTransform firstRT = tileObjectsExcludeTsumo[0].GetComponent<RectTransform>();
             float tileWidth = firstRT != null ? firstRT.rect.width : 100f;
             var finalPositions = new Dictionary<GameObject, Vector2>();
             for (int i = 0; i < count; i++)
-                finalPositions[tileObjects[i]] = new Vector2(i * (tileWidth + gap), 0f);
+                finalPositions[tileObjectsExcludeTsumo[i]] = new Vector2(i * (tileWidth + gap), 0f);
 
             int groupSize = 4;
             int numGroups = (count - 1) / groupSize + 1;
@@ -256,9 +259,9 @@ namespace MCRGame.UI
             // 3) 초기 투명화 & 위치 세팅
             for (int i = 0; i < count; i++)
             {
-                var rt = tileObjects[i].GetComponent<RectTransform>();
+                var rt = tileObjectsExcludeTsumo[i].GetComponent<RectTransform>();
                 if (rt != null)
-                    rt.anchoredPosition = finalPositions[tileObjects[i]] + Vector2.up * dropHeight;
+                    rt.anchoredPosition = finalPositions[tileObjectsExcludeTsumo[i]] + Vector2.up * dropHeight;
                 var img = tileImages[i];
                 if (img != null)
                     img.color = new Color(img.color.r, img.color.g, img.color.b, 0f);
@@ -281,11 +284,11 @@ namespace MCRGame.UI
                     // 현재 그룹 타일의 위치 보간 및 alpha 업데이트
                     for (int i = start; i < end; i++)
                     {
-                        var rt = tileObjects[i].GetComponent<RectTransform>();
+                        var rt = tileObjectsExcludeTsumo[i].GetComponent<RectTransform>();
                         if (rt != null)
                         {
-                            var startPos = finalPositions[tileObjects[i]] + Vector2.up * dropHeight;
-                            var endPos = finalPositions[tileObjects[i]];
+                            var startPos = finalPositions[tileObjectsExcludeTsumo[i]] + Vector2.up * dropHeight;
+                            var endPos = finalPositions[tileObjectsExcludeTsumo[i]];
                             rt.anchoredPosition = Vector2.Lerp(startPos, endPos, ease);
                         }
                         var img = tileImages[i];
@@ -305,9 +308,9 @@ namespace MCRGame.UI
                 // 그룹 완료 시 위치 고정 및 alpha=1로 변경
                 for (int i = start; i < end; i++)
                 {
-                    var rt = tileObjects[i].GetComponent<RectTransform>();
+                    var rt = tileObjectsExcludeTsumo[i].GetComponent<RectTransform>();
                     if (rt != null)
-                        rt.anchoredPosition = finalPositions[tileObjects[i]];
+                        rt.anchoredPosition = finalPositions[tileObjectsExcludeTsumo[i]];
                     var img = tileImages[i];
                     if (img != null)
                         img.color = new Color(img.color.r, img.color.g, img.color.b, 1f);
@@ -318,8 +321,6 @@ namespace MCRGame.UI
             SortTileList();
 
             yield return StartCoroutine(AnimateReposition());
-            IsAnimating = false;
-            CanClick = prevCanClick;
         }
 
         public IEnumerator AddInitFlowerTsumo(GameTile tile)

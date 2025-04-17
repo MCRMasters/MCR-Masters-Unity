@@ -355,15 +355,13 @@ namespace MCRGame.Game
                             StartCoroutine(playersHand3DFields[(int)relativeSeat].RequestDiscardMultiple(count: 1));
                         }
                     }
-
-                    if (callBlockData.Type == CallBlockType.CHII ||
-                        callBlockData.Type == CallBlockType.PUNG ||
-                        callBlockData.Type == CallBlockType.DAIMIN_KONG)
-                    {
-                        Debug.Log("ConfirmCallBlock: Removing last discard for sourceRelativeSeat = " + sourceRelativeSeat);
-                        discardManager.RemoveLastDiscard(seat: sourceRelativeSeat);
-                    }
-
+                }
+                if (callBlockData.Type == CallBlockType.CHII ||
+                    callBlockData.Type == CallBlockType.PUNG ||
+                    callBlockData.Type == CallBlockType.DAIMIN_KONG)
+                {
+                    Debug.Log("ConfirmCallBlock: Removing last discard for sourceRelativeSeat = " + sourceRelativeSeat);
+                    discardManager.RemoveLastDiscard(seat: sourceRelativeSeat);
                 }
             }
             catch (Exception ex)
@@ -430,7 +428,6 @@ namespace MCRGame.Game
 
                 SetFlowerCount(floweredRelativeSeat, currentFlowerCount);
             }
-            UpdateLeftTilesByDelta(-1);
         }
 
         public void ConfirmDiscard(JObject data)
@@ -952,7 +949,8 @@ namespace MCRGame.Game
         public void InitHandFromMessage(List<GameTile> initTiles, GameTile? tsumoTile)
         {
             InitRound();
-
+            gameHandManager.CanClick = false;
+            gameHandManager.IsAnimating = true;
             Debug.Log("GameManager: Initializing hand with received data for SELF.");
 
             // 1) 2D 핸드(UI) 초기화
@@ -999,12 +997,9 @@ namespace MCRGame.Game
 
         public IEnumerator StartFlowerReplacement(List<GameTile> newTiles, List<GameTile> appliedFlowers, List<int> flowerCounts)
         {
-            gameHandManager.IsAnimating = true;
-            bool prevCanClick = gameHandManager.CanClick;
-            gameHandManager.CanClick = false;
             yield return StartCoroutine(FlowerReplacementCoroutine(newTiles, appliedFlowers, flowerCounts));
             gameHandManager.IsAnimating = false;
-            gameHandManager.CanClick = prevCanClick;
+            gameHandManager.CanClick = false;
         }
 
         private IEnumerator FlowerReplacementCoroutine(List<GameTile> newTiles, List<GameTile> appliedFlowers, List<int> flowerCounts)
@@ -1265,11 +1260,14 @@ namespace MCRGame.Game
             AbsoluteSeat currentPlayerSeat,
             int flowerCount,
             GameTile? tsumoTile,
-            List<List<GameTile>> anKanInfos)
+            List<List<GameTile>> anKanInfos,
+            GameTile winningTile
+        )
         {
+            handTiles.Sort();
             int singleScore = scoreResult.total_score;
             int total_score = (winPlayerSeat == currentPlayerSeat ? singleScore * 3 : singleScore) + 24;
-            WinningScoreData wsd = new WinningScoreData(handTiles, callBlocks, singleScore, total_score, scoreResult.yaku_score_list, winPlayerSeat, flowerCount);
+            WinningScoreData wsd = new WinningScoreData(handTiles, callBlocks, singleScore, total_score, scoreResult.yaku_score_list, winPlayerSeat, flowerCount, winningTile);
 
 
             // 3D 핸드 필드 새로 생성: 승리한 플레이어의 핸드 필드를 클리어하고 실제 타일로 재구성
@@ -1287,7 +1285,7 @@ namespace MCRGame.Game
             canvas.SetActive(false);
             Debug.Log("Canvas 비활성화 완료.");
             yield return StartCoroutine(cameraResultAnimator.PlayResultAnimation());
-            yield return StartCoroutine(targetHandField.AnimateAllTilesRotationDomino(baseDuration:0.4f, handScore:singleScore));
+            yield return StartCoroutine(targetHandField.AnimateAllTilesRotationDomino(baseDuration: 0.4f, handScore: singleScore));
             yield return new WaitForSeconds(5f);
             ScorePopupManager.Instance.ShowWinningPopup(wsd);
             Debug.Log("processed hu hand.");

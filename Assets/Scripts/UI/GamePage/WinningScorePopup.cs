@@ -17,8 +17,6 @@ namespace MCRGame.UI
         [Header("UI References")]
         [SerializeField] private GameObject TilePanel;
         [SerializeField] private GameObject TsumoPanel;
-        [SerializeField] private TextMeshProUGUI winningTilesText;
-        [SerializeField] private TextMeshProUGUI callBlocksText;
         [SerializeField] private TextMeshProUGUI singleScoreText;
         [SerializeField] private TextMeshProUGUI totalScoreText;
         [SerializeField] private TextMeshProUGUI winnerNicknameText;
@@ -26,7 +24,8 @@ namespace MCRGame.UI
         [SerializeField] private Image characterImage;
         [SerializeField] private Image flowerImage;
         [SerializeField] private Button okButton;
-
+        [SerializeField] private CallBlockField2D CallBlockOrigin;
+        [SerializeField] private WinningHandDisplay winningHandDisplay;
         [SerializeField] private GameObject scorePannel;
 
         [SerializeField] private TextMeshProUGUI scoreTextPrefab;
@@ -37,8 +36,10 @@ namespace MCRGame.UI
             // 점수 표시
             singleScoreText.text = $"{scoreData.singleScore:N0}";
             totalScoreText.text = $"{scoreData.totalScore:N0}";
-            winningTilesText.text = ConvertHandTilesToString(scoreData.handTiles);
-            callBlocksText.text = ConvertCallBlocksToString(scoreData.callBlocks);
+            winningHandDisplay.ShowWinningHand(scoreData);
+            foreach(var callBlock in scoreData.callBlocks){
+                CallBlockOrigin.AddCallBlock(callBlock);
+            }
             // 승자 정보
             //winnerNicknameText.text = GameManager.Instance.Players[(int)scoreData.winnerSeat].Nickname;
             //characterImage.sprite = scoreData.characterSprite;
@@ -86,25 +87,6 @@ namespace MCRGame.UI
             }
             return sb.ToString();
         }
-
-        public string ConvertCallBlocksToString(List<CallBlockData> callBlocks)
-        {
-            if (callBlocks == null || callBlocks.Count == 0)
-            {
-                return "No call blocks";
-            }
-            StringBuilder sb = new StringBuilder();
-            sb.AppendLine("Call Blocks:");
-            for (int i = 0; i < callBlocks.Count; i++)
-            {
-                var block = callBlocks[i];
-                sb.Append(block.ToString());
-                sb.Append(" ");
-            }
-            return sb.ToString();
-        }
-        // 사용 예시:
-        // DisplayYakuScores(scorePanel, scoreTextPrefab, yakuScoreList);
         public static void DisplayYakuScores(RectTransform panel, TMP_Text textPrefab, List<YakuScore> yakuScores)
         {
             float spacing = 30f;
@@ -112,7 +94,7 @@ namespace MCRGame.UI
             // 기존 텍스트 모두 삭제
             foreach (Transform child in panel)
             {
-                if (child != panel && child.GetComponent<TMP_Text>())
+                if (child.GetComponent<TMP_Text>())
                     Destroy(child.gameObject);
             }
 
@@ -123,30 +105,39 @@ namespace MCRGame.UI
             }
 
             float currentY = -startOffset;
+            // 폰트 크기 설정
+            float headerFontSize = 50f;
+            float entryFontSize = 40f;
 
             // 헤더 생성
             TMP_Text header = Instantiate(textPrefab, panel);
-            header.text = "<size=100%><b>역 점수</b></size>";
+            header.text = "<b>역 점수</b>";
             header.alignment = TextAlignmentOptions.Center;
+            header.fontSize = headerFontSize;
             header.rectTransform.anchoredPosition = new Vector2(100, currentY);
             currentY -= spacing;
 
             // 각 야쿠 점수 표시
             foreach (YakuScore yakuInfo in yakuScores)
             {
-                Yaku yakuId = yakuInfo.YakuId;
-                int score = yakuInfo.Score;
+                string name = Enum.GetName(typeof(Yaku), yakuInfo.YakuId) ?? "";
+                string score = yakuInfo.Score.ToString("N0");
                 TMP_Text entry = Instantiate(textPrefab, panel);
-                entry.text = $"<b>{Enum.GetName(typeof(Yaku), yakuId)}</b>: {score.ToString("N0")}점";
+                entry.text = $"<b>{name}</b>: {score}점";
+                entry.fontSize = entryFontSize;
+                entry.alignment = TextAlignmentOptions.Left;
                 entry.rectTransform.anchoredPosition = new Vector2(0, currentY);
                 currentY -= spacing;
             }
 
-            // 총점 표시 (구분선 추가)
+            // 총점 표시 (구분선)
             TMP_Text divider = Instantiate(textPrefab, panel);
             divider.text = "<color=#AAAAAA>---------------------</color>";
+            divider.fontSize = entryFontSize;
+            divider.alignment = TextAlignmentOptions.Center;
             divider.rectTransform.anchoredPosition = new Vector2(0, currentY);
         }
 
     }
 }
+

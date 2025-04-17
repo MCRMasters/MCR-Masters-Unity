@@ -15,8 +15,9 @@ namespace MCRGame.Common
         public List<YakuScore> yaku_score_list;
         public AbsoluteSeat winnerSeat;
         public int flowerCount;
+        public GameTile winningTile;
 
-        public WinningScoreData(List<GameTile> handTiles, List<CallBlockData> callBlocks, int singleScore, int totalScore, List<YakuScore> yaku_score_list, AbsoluteSeat winnerSeat, int flowerCount)
+        public WinningScoreData(List<GameTile> handTiles, List<CallBlockData> callBlocks, int singleScore, int totalScore, List<YakuScore> yaku_score_list, AbsoluteSeat winnerSeat, int flowerCount, GameTile winning_tile)
         {
             this.handTiles = handTiles;
             this.callBlocks = callBlocks;
@@ -25,6 +26,7 @@ namespace MCRGame.Common
             this.yaku_score_list = yaku_score_list;
             this.winnerSeat = winnerSeat;
             this.flowerCount = flowerCount;
+            this.winningTile = winning_tile;
         }
     }
 }

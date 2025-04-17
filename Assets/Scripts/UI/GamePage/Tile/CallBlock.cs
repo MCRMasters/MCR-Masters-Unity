@@ -64,7 +64,7 @@ namespace MCRGame.UI
                 }
             }
             // 기본적으로 오른쪽에서 왼쪽 순서로 배치하도록 Reverse
-            Tiles.Reverse();
+            // Tiles.Reverse();
         }
 
         private int GetTileCount()
