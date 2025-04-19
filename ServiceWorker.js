@@ -1,9 +1,9 @@
 const cacheName = "DefaultCompany-MCR Masters Unity-1.0";
 const contentToCache = [
     "Build/WebBuild.loader.js",
-    "Build/WebBuild.framework.js.br",
-    "Build/WebBuild.data.br",
-    "Build/WebBuild.wasm.br",
+    "Build/WebBuild.framework.js",
+    "Build/WebBuild.data",
+    "Build/WebBuild.wasm",
     "TemplateData/style.css"
 
 ];

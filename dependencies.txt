@@ -1,3 +1,4 @@
+com.endel.nativewebsocket@1.1.5
 com.unity.collab-proxy@2.7.1
 com.unity.connect.share@4.2.3
 com.unity.feature.2d@2.0.1
