@@ -1,176 +1,104 @@
 <!DOCTYPE html>
 <html lang="en-us">
-
-<head>
+  <head>
     <meta charset="utf-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>MCR Masters</title>
+    <title>Unity Web Player | MCR Masters Unity</title>
     <link rel="shortcut icon" href="TemplateData/favicon.ico">
     <link rel="stylesheet" href="TemplateData/style.css">
-    <style>
-        /* 전체 창을 덮도록 설정 */
-        html,
-        body {
-            margin: 0;
-            padding: 0;
-            width: 100vw;
-            height: 100vh;
-            background: #333;
-            /* 짙은 회색 배경 */
-            overflow: hidden;
-        }
-
-        /* 외부 컨테이너: 화면 전체를 사용하며, 내부 콘텐츠를 중앙에 배치 */
-        #unity-container {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
-            height: 100%;
-            background: #333;
-            position: relative;
-        }
-
-        /* 기본적으로 16:9 비율을 유지하는 래퍼. 
-         미디어 쿼리를 통해 화면의 가로/세로 비율에 따라 크기를 조정 */
-        .aspect-ratio-wrapper {
-            /* 기본값은 width:100vw일 때 계산한 높이 */
-            width: 100vw;
-            height: calc(100vw * 9 / 16);
-        }
-
-        /* 만약 화면이 (width/height) > (16/9)라면, 즉 화면이 너무 넓으면 높이를 기준으로 조정 */
-        @media (min-aspect-ratio: 16/9) {
-            .aspect-ratio-wrapper {
-                height: 100vh;
-                width: calc(100vh * 16 / 9);
-            }
-        }
-
-        /* 만약 화면이 (width/height) < (16/9)라면, 즉 화면이 너무 좁으면 너비를 기준으로 조정 */
-        @media (max-aspect-ratio: 16/9) {
-            .aspect-ratio-wrapper {
-                width: 100vw;
-                height: calc(100vw * 9 / 16);
-            }
-        }
-
-        /* 캔버스가 래퍼에 꽉 차도록 설정 */
-        #unity-canvas {
-            width: 100%;
-            height: 100%;
-            background: #000;
-            display: block;
-            object-fit: contain;
-        }
-
-        /* the grey “track” background */
-        #unity-loading-bar {
-            position: absolute;
-            bottom: 10%;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 50%;
-            height: 20px;
-            background: rgba(255, 255, 255, 0.2);
-            overflow: hidden;
-            /* ensure the inner bar is clipped */
-        }
-
-        /* the green “fill” indicator */
-        #unity-progress-bar-full {
-            position: absolute;
-            top: 0;
-            left: 0;
-            height: 100%;
-            width: 0%;
-            background: #4caf50;
-            transition: width 0.2s ease;
-        }
-    </style>
-</head>
-
-<body>
+    <link rel="manifest" href="manifest.webmanifest">
+  </head>
+  <body>
     <div id="unity-container">
-        <!-- 16:9 비율 유지 래퍼 -->
-        <div class="aspect-ratio-wrapper">
-            <canvas id="unity-canvas" tabindex="-1"></canvas>
+      <canvas id="unity-canvas" width=1920 height=1080 tabindex="-1"></canvas>
+      <div id="unity-loading-bar">
+        <div id="unity-logo"></div>
+        <div id="unity-progress-bar-empty">
+          <div id="unity-progress-bar-full"></div>
         </div>
-        <!-- LOADING BAR -->
-        <div id="unity-loading-bar">
-            <div id="unity-progress-bar-full"></div>
-        </div>
-
-        <div id="unity-warning"></div>
-        <div id="unity-footer">…</div>
+      </div>
+      <div id="unity-warning"> </div>
     </div>
-    </div>
-
     <script>
-        var canvas = document.querySelector("#unity-canvas");
+      window.addEventListener("load", function () {
+        if ("serviceWorker" in navigator) {
+          navigator.serviceWorker.register("ServiceWorker.js");
+        }
+      });
 
-        function unityShowBanner(msg, type) {
-            var warningBanner = document.querySelector("#unity-warning");
-            function updateBannerVisibility() {
-                warningBanner.style.display = warningBanner.children.length ? 'block' : 'none';
-            }
-            var div = document.createElement('div');
-            div.innerHTML = msg;
-            warningBanner.appendChild(div);
-            if (type == 'error') div.style = 'background: red; padding: 10px;';
-            else {
-                if (type == 'warning') div.style = 'background: yellow; padding: 10px;';
-                setTimeout(function () {
-                    warningBanner.removeChild(div);
-                    updateBannerVisibility();
-                }, 5000);
-            }
+      var container = document.querySelector("#unity-container");
+      var canvas = document.querySelector("#unity-canvas");
+      var loadingBar = document.querySelector("#unity-loading-bar");
+      var progressBarFull = document.querySelector("#unity-progress-bar-full");
+      var warningBanner = document.querySelector("#unity-warning");
+
+      // Shows a temporary message banner/ribbon for a few seconds, or
+      // a permanent error message on top of the canvas if type=='error'.
+      // If type=='warning', a yellow highlight color is used.
+      // Modify or remove this function to customize the visually presented
+      // way that non-critical warnings and error messages are presented to the
+      // user.
+      function unityShowBanner(msg, type) {
+        function updateBannerVisibility() {
+          warningBanner.style.display = warningBanner.children.length ? 'block' : 'none';
+        }
+        var div = document.createElement('div');
+        div.innerHTML = msg;
+        warningBanner.appendChild(div);
+        if (type == 'error') div.style = 'background: red; padding: 10px;';
+        else {
+          if (type == 'warning') div.style = 'background: yellow; padding: 10px;';
+          setTimeout(function() {
+            warningBanner.removeChild(div);
             updateBannerVisibility();
+          }, 5000);
         }
+        updateBannerVisibility();
+      }
 
-        var buildUrl = "Build";
-        var loaderUrl = buildUrl + "/Web.loader.js";
-        var config = {
-            arguments: [],
-            dataUrl: buildUrl + "/Web.data",
-            frameworkUrl: buildUrl + "/Web.framework.js",
-            codeUrl: buildUrl + "/Web.wasm",
-            streamingAssetsUrl: "StreamingAssets",
-            companyName: "MCR Masters",
-            productName: "MCR Masters",
-            productVersion: "1.0",
-            showBanner: unityShowBanner,
-        };
+      var buildUrl = "Build";
+      var loaderUrl = buildUrl + "/WebBuild.loader.js";
+      var config = {
+        arguments: [],
+        dataUrl: buildUrl + "/WebBuild.data.br",
+        frameworkUrl: buildUrl + "/WebBuild.framework.js.br",
+        codeUrl: buildUrl + "/WebBuild.wasm.br",
+        streamingAssetsUrl: "StreamingAssets",
+        companyName: "DefaultCompany",
+        productName: "MCR Masters Unity",
+        productVersion: "1.0",
+        showBanner: unityShowBanner,
+      };
 
-        if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-            var meta = document.createElement('meta');
-            meta.name = 'viewport';
-            meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
-            document.getElementsByTagName('head')[0].appendChild(meta);
-            document.querySelector("#unity-container").className = "unity-mobile";
-            canvas.className = "unity-mobile";
-        }
+      // By default Unity keeps WebGL canvas render target size matched with
+      // the DOM size of the canvas element (scaled by window.devicePixelRatio)
+      // Set this to false if you want to decouple this synchronization from
+      // happening inside the engine, and you would instead like to size up
+      // the canvas DOM size and WebGL render target sizes yourself.
+      // config.matchWebGLToCanvasSize = false;
 
-        document.querySelector("#unity-loading-bar").style.display = "block";
+      if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+        // Mobile device style: fill the whole browser client area with the game canvas:
+        var meta = document.createElement('meta');
+        meta.name = 'viewport';
+        meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
+        document.getElementsByTagName('head')[0].appendChild(meta);
+      }
 
-        var script = document.createElement("script");
-        script.src = loaderUrl;
-        script.onload = () => {
-            createUnityInstance(canvas, config, (progress) => {
-                // progress is 0.0 → 1.0
-                document.querySelector("#unity-progress-bar-full").style.width = (100 * progress) + "%";
-            }).then((unityInstance) => {
-                document.querySelector("#unity-loading-bar").style.display = "none";
-                document.querySelector("#unity-fullscreen-button").onclick = () => {
-                    unityInstance.SetFullscreen(1);
-                };
-            }).catch((message) => {
-                alert(message);
-            });
-        };
-        document.body.appendChild(script);
+      loadingBar.style.display = "block";
 
+      var script = document.createElement("script");
+      script.src = loaderUrl;
+      script.onload = () => {
+        createUnityInstance(canvas, config, (progress) => {
+          progressBarFull.style.width = 100 * progress + "%";
+        }).then((unityInstance) => {
+          loadingBar.style.display = "none";
+        }).catch((message) => {
+          alert(message);
+        });
+      };
+      document.body.appendChild(script);
     </script>
-</body>
-
+  </body>
 </html>
