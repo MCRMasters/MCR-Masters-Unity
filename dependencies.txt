@@ -1,4 +1,4 @@
-com.psygames.unitywebsocket@2.8.6
+com.endel.nativewebsocket@1.1.5
 com.unity.collab-proxy@2.7.1
 com.unity.connect.share@4.2.3
 com.unity.feature.2d@2.0.1
@@ -16,7 +16,6 @@ com.unity.transport@2.5.1
 com.unity.ugui@2.0.0
 com.unity.visualscripting@1.9.5
 com.veriorpies.parrelsync@1.5.2
-net.gree.unity-webview@1.0.0
 com.unity.modules.accessibility@1.0.0
 com.unity.modules.ai@1.0.0
 com.unity.modules.androidjni@1.0.0
