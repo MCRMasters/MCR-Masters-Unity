@@ -1,177 +1,144 @@
 <!DOCTYPE html>
 <html lang="ko">
-
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0,
+  <meta charset="UTF-8" />
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0,
                  maximum-scale=1.0, user-scalable=no,
                  viewport-fit=cover" />
-    <link rel="manifest" href="manifest.json" />
-    <meta name="mobile-web-app-capable" content="yes" />
-    <title>Mahjong Party</title>
+  <link rel="manifest" href="manifest.json" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <title>Mahjong Party</title>
 
-    <style>
-        /* 풀화면 배경 검정 */
-        html,
-        body {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            background: #000;
-        }
-
-        /* 캔버스 컨테이너 */
-        #unity-container {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: #000;
-            overflow: hidden;
-        }
-
-        /* WebGL 캔버스 */
-        #unity-canvas {
-            position: absolute;
-            top: 0;
-            left: 0;
-            background: #000;
-            /* width/height, transform 은 JS에서 조정 */
-        }
-
-        /* 로딩바 */
-        #unity-loading-bar {
-            position: absolute;
-            bottom: 10px;
-            left: 10px;
-            right: 10px;
-            height: 4px;
-            background: rgba(255, 255, 255, 0.2);
-        }
-
-        #unity-loading-bar-full {
-            width: 0%;
-            height: 100%;
-            background: #fff;
-        }
-    </style>
+  <style>
+    /* ── 배경 ── */
+    html, body {
+      margin:0; padding:0;
+      width:100%; height:100%;
+      overflow:hidden;
+      background:#000;
+    }
+    /* ── 컨테이너: 레터박스용 ── */
+    #unity-container {
+      position:absolute;
+      top:50%; left:50%;
+      transform:translate(-50%,-50%);
+      background:#000;
+      overflow:hidden;
+    }
+    /* ── 캔버스 ── */
+    #unity-canvas {
+      position:absolute;
+      top:0; left:0;
+      background:#000;
+    }
+    /* ── 로딩바 ── */
+    #unity-loading-bar {
+      position:absolute;
+      bottom:10px; left:10px; right:10px;
+      height:4px; background:rgba(255,255,255,0.2);
+    }
+    #unity-loading-bar-full {
+      width:0%; height:100%; background:#fff;
+    }
+  </style>
 </head>
-
 <body>
-    <div id="unity-container">
-        <canvas id="unity-canvas"></canvas>
-        <div id="unity-loading-bar">
-            <div id="unity-loading-bar-full"></div>
-        </div>
+  <div id="unity-container">
+    <canvas id="unity-canvas"></canvas>
+    <div id="unity-loading-bar">
+      <div id="unity-loading-bar-full"></div>
     </div>
+  </div>
 
-    <!-- Unity WebGL 로더 -->
-    <script src="Build/WebBuild.loader.js"></script>
-    <script>
-        const container = document.getElementById('unity-container');
-        const canvas = document.getElementById('unity-canvas');
-        const loadingBar = document.getElementById('unity-loading-bar-full');
-        const TARGET_LAND = 16 / 9;
-        const TARGET_PORT = 9 / 16;
+  <!-- Unity WebGL loader -->
+  <script src="Build/WebBuild.loader.js"></script>
+  <script>
+    const container  = document.getElementById('unity-container');
+    const canvas     = document.getElementById('unity-canvas');
+    const loadingBar = document.getElementById('unity-loading-bar-full');
 
-        // 주소창 숨김 트릭
-        function hideAddressBar() {
-            window.scrollTo(0, 1);
-            setTimeout(() => window.scrollTo(0, 1), 200);
-        }
+    // 주소창 숨김 트릭: 두 번 호출하여 안정적으로
+    function hideAddressBar() {
+      window.scrollTo(0,1);
+      setTimeout(()=>window.scrollTo(0,1), 300);
+    }
 
-        // Landscape 용 크기 계산
-        function computeLandscapeSize() {
-            const w = window.innerWidth, h = window.innerHeight;
-            if (w / h > TARGET_LAND) {
-                // 너무 넓으면 높이 기준
-                const ch = h;
-                return [ch * TARGET_LAND, ch];
-            } else {
-                const cw = w;
-                return [cw, cw / TARGET_LAND];
-            }
-        }
-        // Portrait 용 크기 계산
-        function computePortraitSize() {
-            const w = window.innerWidth, h = window.innerHeight;
-            if ((w / h) < TARGET_PORT) {
-                // 너무 좁으면 너비 기준
-                const cw = w;
-                return [cw, cw / TARGET_PORT];
-            } else {
-                const ch = h;
-                return [ch * TARGET_PORT, ch];
-            }
-        }
+    // 주어진 aspect에 맞춰 화면 안에 딱 맞는 컨테이너 크기 계산
+    function computeContainerSize(targetAspect) {
+      const w = window.innerWidth, h = window.innerHeight;
+      const windowAspect = w / h;
+      if (windowAspect > targetAspect) {
+        // 창이 더 넓으면 높이 기준
+        return [ h * targetAspect, h ];
+      } else {
+        // 창이 더 좁으면 너비 기준
+        return [ w, w / targetAspect ];
+      }
+    }
 
-        // 리사이즈 & 회전 적용
-        function resizeCanvas() {
-            if (window.innerWidth > window.innerHeight) {
-                // ───── Landscape ─────
-                const [cw, ch] = computeLandscapeSize();
-                container.style.width = cw + 'px';
-                container.style.height = ch + 'px';
+    function resizeAndRotate() {
+      if (window.innerWidth > window.innerHeight) {
+        // ─── Landscape ───
+        const [cw, ch] = computeContainerSize(16/9);
+        // 컨테이너 크기
+        container.style.width  = cw + 'px';
+        container.style.height = ch + 'px';
+        // 캔버스 해상도 & CSS 크기
+        canvas.width   = cw;
+        canvas.height  = ch;
+        canvas.style.width  = cw + 'px';
+        canvas.style.height = ch + 'px';
+        // 회전 해제
+        canvas.style.transform = 'rotate(0deg)';
+        canvas.style.transformOrigin = '';
+        // 트릭
+        hideAddressBar();
+      } else {
+        // ─── Portrait ───
+        // portrait 비율 9:16
+        const [cw, ch] = computeContainerSize(9/16);
+        container.style.width  = cw + 'px';
+        container.style.height = ch + 'px';
+        // 내부 캔버스는 원본 landscape 해상도 (16:9)
+        const [cwL, chL] = computeContainerSize(16/9);
+        canvas.width  = cwL;
+        canvas.height = chL;
+        // CSS 크기는 portrait 컨테이너 크기의 반전
+        canvas.style.width  = ch + 'px'; // 회전 전 너비 = 컨테이너 높이
+        canvas.style.height = cw + 'px'; // 회전 전 높이 = 컨테이너 너비
+        // 90° 회전
+        canvas.style.transform = 'rotate(90deg)';
+        canvas.style.transformOrigin = 'center center';
+        // Portrait 에서는 주소창 트릭 생략
+      }
+    }
 
-                // 캔버스 해상도 & CSS 크기
-                canvas.width = cw;
-                canvas.height = ch;
-                canvas.style.width = cw + 'px';
-                canvas.style.height = ch + 'px';
-                canvas.style.transform = 'rotate(0)';
-                canvas.style.transformOrigin = '';
+    window.addEventListener('load', () => {
+      // 가능하면 orientation lock
+      screen.orientation?.lock('landscape').catch(()=>{/*ignore*/});
+      resizeAndRotate();
 
-                hideAddressBar();
-            } else {
-                // ───── Portrait ─────
-                const [cw, ch] = computePortraitSize();
-                container.style.width = cw + 'px';
-                container.style.height = ch + 'px';
+      createUnityInstance(canvas, {
+        dataUrl:           "Build/WebBuild.data",
+        frameworkUrl:      "Build/WebBuild.framework.js",
+        codeUrl:           "Build/WebBuild.wasm",
+        streamingAssetsUrl:"StreamingAssets",
+        companyName:       "Mahjong Party",
+        productName:       "Mahjong Party",
+        productVersion:    "1.0",
+      }, (prog) => {
+        loadingBar.style.width = `${100 * prog}%`;
+      }).then(() => {
+        document.getElementById('unity-loading-bar').style.display = 'none';
+      }).catch(console.error);
+    });
 
-                // 캔버스 해상도는 Landscape 기준(16:9)
-                const [cwL, chL] = computeLandscapeSize();
-                canvas.width = cwL;
-                canvas.height = chL;
-
-                // CSS 크기는 Portrait 크기(회전 전)
-                canvas.style.width = ch + 'px';  // 회전 전 너비 = 목표 높이
-                canvas.style.height = cw + 'px';  // 회전 전 높이 = 목표 너비
-                // 90° 회전
-                canvas.style.transform = 'rotate(90deg)';
-                canvas.style.transformOrigin = 'center center';
-            }
-        }
-
-        window.addEventListener('load', () => {
-            // 가능한 경우 orientation lock
-            if (screen.orientation?.lock) {
-                screen.orientation.lock('landscape').catch(() => { });
-            }
-            resizeCanvas();
-
-            createUnityInstance(canvas, {
-                dataUrl: "Build/WebBuild.data",
-                frameworkUrl: "Build/WebBuild.framework.js",
-                codeUrl: "Build/WebBuild.wasm",
-                streamingAssetsUrl: "StreamingAssets",
-                companyName: "Mahjong Party",
-                productName: "Mahjong Party",
-                productVersion: "1.0"
-            }, prog => {
-                loadingBar.style.width = `${100 * prog}%`;
-            }).then(() => {
-                document.getElementById('unity-loading-bar').style.display = 'none';
-            }).catch(console.error);
-        });
-
-        window.addEventListener('resize', resizeCanvas);
-        window.addEventListener('orientationchange', () => {
-            hideAddressBar();
-            setTimeout(resizeCanvas, 200);
-        });
-    </script>
+    window.addEventListener('resize', resizeAndRotate);
+    window.addEventListener('orientationchange', () => {
+      hideAddressBar();
+      setTimeout(resizeAndRotate, 300);
+    });
+  </script>
 </body>
-
 </html>
