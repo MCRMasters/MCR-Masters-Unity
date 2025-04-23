@@ -3,8 +3,9 @@
 
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0,
-                 user-scalable=no, viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0,
+                 maximum-scale=1.0, user-scalable=no,
+                 viewport-fit=cover" />
     <link rel="manifest" href="manifest.json" />
     <meta name="mobile-web-app-capable" content="yes" />
     <title>Mahjong Party</title>
@@ -20,14 +21,12 @@
             background: #000;
         }
 
-        /* ── 16∶9 레터박스 컨테이너 ── */
         #unity-container {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
             background: #000;
-            /* JS에서 width/height 세팅 */
         }
 
         #unity-canvas {
@@ -37,7 +36,6 @@
             background: #000;
         }
 
-        /* ── 로딩바 ── */
         #unity-loading-bar {
             position: absolute;
             bottom: 10px;
@@ -63,48 +61,60 @@
         </div>
     </div>
 
-    <!-- Unity WebGL loader -->
     <script src="Build/WebBuild.loader.js"></script>
     <script>
         const container = document.getElementById('unity-container');
         const canvas = document.getElementById('unity-canvas');
-        const loadingBarFull = document.getElementById('unity-loading-bar-full');
+        const loadingBar = document.getElementById('unity-loading-bar-full');
+        const targetAspect = 16 / 9;
 
-        // 1) Landscape Lock API (지원되는 브라우저에 한해)
-        function lockLandscape() {
-            if (screen.orientation && screen.orientation.lock) {
-                screen.orientation.lock('landscape').catch(() => {/* 무시 */ });
-            }
+        // 주소창 숨김 트릭: 두 번 호출해서 안정적으로 올리기
+        function hideAddressBar() {
+            window.scrollTo(0, 1);
+            setTimeout(() => window.scrollTo(0, 1), 300);
         }
 
-        // 2) 주소창 숨김 트릭 (가로 모드일 때만)
-        function hideAddressBarIfLandscape() {
-            if (window.innerWidth > window.innerHeight) {
-                setTimeout(() => window.scrollTo(0, 1), 100);
-            }
-        }
-
-        // 3) 16∶9 레터박스 크기 계산
-        function resizeCanvas() {
+        // Landscape 크기 계산
+        function computeLandscapeSize() {
             const w = window.innerWidth, h = window.innerHeight;
-            const target = 16 / 9, aspect = w / h;
-            let cw, ch;
-            if (aspect > target) {
-                ch = h; cw = ch * target;
+            if (w / h > targetAspect) {
+                const ch = h;
+                return [ch * targetAspect, ch];
             } else {
-                cw = w; ch = cw / target;
+                const cw = w;
+                return [cw, cw / targetAspect];
             }
-            container.style.width = cw + 'px';
-            container.style.height = ch + 'px';
-            canvas.width = cw;
-            canvas.height = ch;
         }
 
-        // 4) 초기화
+        // 캔버스 크기 & 회전
+        function resizeAndRotateCanvas() {
+            const [cw_l, ch_l] = computeLandscapeSize();
+
+            if (window.innerWidth > window.innerHeight) {
+                // ─── Landscape ───
+                container.style.width = cw_l + 'px';
+                container.style.height = ch_l + 'px';
+                container.style.transform = 'translate(-50%,-50%)';
+                canvas.width = cw_l;
+                canvas.height = ch_l;
+                hideAddressBar();
+            } else {
+                // ─── Portrait ───
+                container.style.width = ch_l + 'px';
+                container.style.height = cw_l + 'px';
+                container.style.transform = 'translate(-50%,-50%) rotate(90deg)';
+                canvas.width = cw_l;
+                canvas.height = ch_l;
+                // Portrait 에선 주소창 숨김 트릭 생략
+            }
+        }
+
         window.addEventListener('load', () => {
-            lockLandscape();
-            hideAddressBarIfLandscape();
-            resizeCanvas();
+            // 가능한 경우 orientation lock
+            if (screen.orientation && screen.orientation.lock) {
+                screen.orientation.lock('landscape').catch(() => {/*ignore*/ });
+            }
+            resizeAndRotateCanvas();
 
             createUnityInstance(canvas, {
                 dataUrl: "Build/WebBuild.data",
@@ -114,21 +124,18 @@
                 companyName: "Mahjong Party",
                 productName: "Mahjong Party",
                 productVersion: "1.0"
-            }, (progress) => {
-                loadingBarFull.style.width = (100 * progress) + "%";
+            }, (prog) => {
+                loadingBar.style.width = (100 * prog) + "%";
             }).then(() => {
                 document.getElementById('unity-loading-bar').style.display = 'none';
             }).catch(console.error);
         });
 
-        // 5) 화면 회전 / 리사이즈 시 재계산
-        window.addEventListener('resize', () => {
-            hideAddressBarIfLandscape();
-            resizeCanvas();
-        });
+        window.addEventListener('resize', resizeAndRotateCanvas);
         window.addEventListener('orientationchange', () => {
-            hideAddressBarIfLandscape();
-            setTimeout(resizeCanvas, 100);
+            // orientation 바뀔 때도 확실히 scroll 트릭
+            hideAddressBar();
+            setTimeout(resizeAndRotateCanvas, 300);
         });
     </script>
 </body>
