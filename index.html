@@ -3,10 +3,8 @@
 
 <head>
     <meta charset="UTF-8" />
-    <!-- 가로 모드에서 주소창·탭바 숨기고, 확대/축소 금지 -->
-    <meta name="viewport"
-        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-    <!-- PWA / Standalone 모드 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0,
+                 user-scalable=no, viewport-fit=cover" />
     <link rel="manifest" href="manifest.json" />
     <meta name="mobile-web-app-capable" content="yes" />
     <title>Mahjong Party</title>
@@ -22,14 +20,14 @@
             background: #000;
         }
 
-        /* 16:9 레터박스 컨테이너 */
+        /* ── 16∶9 레터박스 컨테이너 ── */
         #unity-container {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
             background: #000;
-            /* JS에서 동적으로 width/height 세팅 */
+            /* JS에서 width/height 세팅 */
         }
 
         #unity-canvas {
@@ -39,7 +37,7 @@
             background: #000;
         }
 
-        /* 로딩바 */
+        /* ── 로딩바 ── */
         #unity-loading-bar {
             position: absolute;
             bottom: 10px;
@@ -65,22 +63,17 @@
         </div>
     </div>
 
-    <!-- Unity WebGL 로더 스크립트 -->
+    <!-- Unity WebGL loader -->
     <script src="Build/WebBuild.loader.js"></script>
-
     <script>
         const container = document.getElementById('unity-container');
         const canvas = document.getElementById('unity-canvas');
         const loadingBarFull = document.getElementById('unity-loading-bar-full');
 
-        // 1) Landscape Lock API (지원 시)
+        // 1) Landscape Lock API (지원되는 브라우저에 한해)
         function lockLandscape() {
             if (screen.orientation && screen.orientation.lock) {
-                screen.orientation.lock('landscape').catch(e => console.warn('Orientation lock failed', e));
-            } else if (screen.lockOrientation) {
-                screen.lockOrientation('landscape');
-            } else if (screen.mozLockOrientation) {
-                screen.mozLockOrientation('landscape');
+                screen.orientation.lock('landscape').catch(() => {/* 무시 */ });
             }
         }
 
@@ -91,19 +84,15 @@
             }
         }
 
-        // 3) 16:9 비율로 캔버스 크기 조정
-        function resizeCanvasTo16by9() {
+        // 3) 16∶9 레터박스 크기 계산
+        function resizeCanvas() {
             const w = window.innerWidth, h = window.innerHeight;
             const target = 16 / 9, aspect = w / h;
             let cw, ch;
             if (aspect > target) {
-                // 화면이 너무 넓으면 세로 꽉 채우고 양옆 레터박스
-                ch = h;
-                cw = ch * target;
+                ch = h; cw = ch * target;
             } else {
-                // 화면이 좁으면 가로 꽉 채우고 상하 레터박스
-                cw = w;
-                ch = cw / target;
+                cw = w; ch = cw / target;
             }
             container.style.width = cw + 'px';
             container.style.height = ch + 'px';
@@ -115,7 +104,7 @@
         window.addEventListener('load', () => {
             lockLandscape();
             hideAddressBarIfLandscape();
-            resizeCanvasTo16by9();
+            resizeCanvas();
 
             createUnityInstance(canvas, {
                 dataUrl: "Build/WebBuild.data",
@@ -127,19 +116,19 @@
                 productVersion: "1.0"
             }, (progress) => {
                 loadingBarFull.style.width = (100 * progress) + "%";
-            }).then((unityInstance) => {
+            }).then(() => {
                 document.getElementById('unity-loading-bar').style.display = 'none';
             }).catch(console.error);
         });
 
-        // 5) 방향전환·리사이즈 시 재조정
-        window.addEventListener('orientationchange', () => {
-            hideAddressBarIfLandscape();
-            setTimeout(resizeCanvasTo16by9, 100);
-        });
+        // 5) 화면 회전 / 리사이즈 시 재계산
         window.addEventListener('resize', () => {
             hideAddressBarIfLandscape();
-            resizeCanvasTo16by9();
+            resizeCanvas();
+        });
+        window.addEventListener('orientationchange', () => {
+            hideAddressBarIfLandscape();
+            setTimeout(resizeCanvas, 100);
         });
     </script>
 </body>
