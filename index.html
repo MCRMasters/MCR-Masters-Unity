@@ -1,41 +1,148 @@
 <!DOCTYPE html>
-<html lang="en-us">
-  <head>
-    <meta charset="utf-8">
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Unity Web Player | Majong Party</title>
-  </head>
-  <body style="text-align: center; padding: 0; border: 0; margin: 0;">
-    <canvas id="unity-canvas" width=1920 height=1080 tabindex="-1" style="width: 1920px; height: 1080px; background: #231F20"></canvas>
-    <script src="Build/WebBuild.loader.js"></script>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <!-- PWA 설치용 -->
+    <link rel="manifest" href="manifest.json" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <title>My Unity Game</title>
+
+    <style>
+        /* ── 기본: 전체를 검은 배경으로 채우고 스크롤 숨김 ───────── */
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: black;
+        }
+
+        /* ── 1) 화면 전체를 채우는 컨테이너 ───────────────────── */
+        #unity-container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: black;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* ── 2) 16∶9 비율을 유지하는 래퍼 ───────────────────── */
+        #unity-aspect {
+            background: black;
+            position: relative;
+        }
+
+        /* 최신 브라우저: CSS aspect-ratio */
+        @supports (aspect-ratio: 16/9) {
+            #unity-aspect {
+                aspect-ratio: 16 / 9;
+                width: 100%;
+                height: auto;
+                max-width: 100%;
+                max-height: 100%;
+            }
+        }
+
+        /* ── 3) 캔버스 자체는 래퍼에 꽉 채우기 ───────────────── */
+        #unity-canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* ── 4) 로딩 바 스타일 (필요시 커스터마이즈) ───────── */
+        #unity-loading-bar {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            right: 10px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        #unity-loading-bar-full {
+            width: 0%;
+            height: 100%;
+            background: white;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="unity-container">
+        <div id="unity-aspect">
+            <canvas id="unity-canvas"></canvas>
+            <div id="unity-loading-bar">
+                <div id="unity-loading-bar-full"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Unity 빌드된 로더 스크립트 -->
+    <script src="%UNITY_LOADER_URL%"></script>
     <script>
-      if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-        // Mobile device style: fill the whole browser client area with the game canvas:
-        var meta = document.createElement('meta');
-        meta.name = 'viewport';
-        meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
-        document.getElementsByTagName('head')[0].appendChild(meta);
+        // ── CSS aspect-ratio 미지원 브라우저용 JS 리사이즈 ─────────
+        function resizeAspect() {
+            // 최신 브라우저가 CSS 지원하면 JS 리사이즈 불필요
+            if (CSS.supports && CSS.supports('aspect-ratio', '16/9')) return;
 
-        var canvas = document.querySelector("#unity-canvas");
-        canvas.style.width = "100%";
-        canvas.style.height = "100%";
-        canvas.style.position = "fixed";
+            const container = document.getElementById('unity-container');
+            const wrapper = document.getElementById('unity-aspect');
+            const w = container.clientWidth;
+            const h = container.clientHeight;
+            const targetR = 16 / 9;
+            let cw, ch;
 
-        document.body.style.textAlign = "left";
-      }
+            if (w / h > targetR) {
+                // 화면이 더 넓으면: 높이에 맞추고 좌우 레터박스
+                ch = h;
+                cw = ch * targetR;
+            } else {
+                // 화면이 더 좁으면: 너비에 맞추고 상하 레터박스
+                cw = w;
+                ch = cw / targetR;
+            }
+            wrapper.style.width = cw + 'px';
+            wrapper.style.height = ch + 'px';
+        }
 
-      createUnityInstance(document.querySelector("#unity-canvas"), {
-        arguments: [],
-        dataUrl: "Build/WebBuild.data",
-        frameworkUrl: "Build/WebBuild.framework.js",
-        codeUrl: "Build/WebBuild.wasm",
-        streamingAssetsUrl: "StreamingAssets",
-        companyName: "MCR Masters",
-        productName: "Majong Party",
-        productVersion: "0.1.0",
-        // matchWebGLToCanvasSize: false, // Uncomment this to separately control WebGL canvas render size and DOM element size.
-        // devicePixelRatio: 1, // Uncomment this to override low DPI rendering on high DPI displays.
-      });
+        // ── 이벤트 바인딩 ─────────────────────────────────────────
+        window.addEventListener('load', () => {
+            // 주소창 숨김 트릭
+            setTimeout(() => window.scrollTo(0, 1), 100);
+            resizeAspect();
+
+            // Unity 인스턴스 생성
+            createUnityInstance(document.getElementById('unity-canvas'), {
+                dataUrl: "%UNITY_DATA_URL%",
+                frameworkUrl: "%UNITY_FRAMEWORK_URL%",
+                codeUrl: "%UNITY_WASM_URL%",
+                streamingAssetsUrl: "StreamingAssets",
+                companyName: "MyCompany",
+                productName: "MyProduct",
+                productVersion: "1.0.0"
+            }, (progress) => {
+                document.getElementById('unity-loading-bar-full').style.width = (100 * progress) + "%";
+            }).then(unityInstance => {
+                // 로딩 바 감추기
+                document.getElementById('unity-loading-bar').style.display = 'none';
+                // 필요하면 글로벌에 저장
+                window.unityInstance = unityInstance;
+            }).catch(console.error);
+        });
+
+        // 윈도우 크기/회전 시 리사이즈 다시 계산
+        window.addEventListener('resize', resizeAspect);
+        window.addEventListener('orientationchange', () => setTimeout(resizeAspect, 100));
     </script>
-  </body>
+</body>
+
 </html>
