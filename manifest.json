@@ -1,6 +1,6 @@
 {
-    "name": "My Unity Game",
-    "short_name": "UnityGame",
+    "name": "Mahjong Party",
+    "short_name": "MahjongParty",
     "start_url": ".",
     "display": "standalone",
     "orientation": "portrait-primary",

@@ -3,15 +3,13 @@
 
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <!-- PWA 설치용 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <!-- PWA 설치/Standalone 모드 -->
     <link rel="manifest" href="manifest.json" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <title>My Unity Game</title>
+    <meta name="mobile-web-app-capable" content="yes" />
+    <title>Mahjong Party</title>
 
     <style>
-        /* ── 기본: 전체를 검은 배경으로 채우고 스크롤 숨김 ───────── */
         html,
         body {
             margin: 0;
@@ -19,46 +17,27 @@
             width: 100%;
             height: 100%;
             overflow: hidden;
-            background: black;
+            background: #000;
         }
 
-        /* ── 1) 화면 전체를 채우는 컨테이너 ───────────────────── */
+        /* 16:9 비율 레터박스용 컨테이너 */
         #unity-container {
-            width: 100vw;
-            height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: black;
-            overflow: hidden;
-            position: relative;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #000;
+            /* JS에서 width/height 세팅 */
         }
 
-        /* ── 2) 16∶9 비율을 유지하는 래퍼 ───────────────────── */
-        #unity-aspect {
-            background: black;
-            position: relative;
-        }
-
-        /* 최신 브라우저: CSS aspect-ratio */
-        @supports (aspect-ratio: 16/9) {
-            #unity-aspect {
-                aspect-ratio: 16 / 9;
-                width: 100%;
-                height: auto;
-                max-width: 100%;
-                max-height: 100%;
-            }
-        }
-
-        /* ── 3) 캔버스 자체는 래퍼에 꽉 채우기 ───────────────── */
         #unity-canvas {
             display: block;
             width: 100%;
             height: 100%;
+            background: #000;
         }
 
-        /* ── 4) 로딩 바 스타일 (필요시 커스터마이즈) ───────── */
+        /* 로딩바 */
         #unity-loading-bar {
             position: absolute;
             bottom: 10px;
@@ -71,77 +50,71 @@
         #unity-loading-bar-full {
             width: 0%;
             height: 100%;
-            background: white;
+            background: #fff;
         }
     </style>
 </head>
 
 <body>
     <div id="unity-container">
-        <div id="unity-aspect">
-            <canvas id="unity-canvas"></canvas>
-            <div id="unity-loading-bar">
-                <div id="unity-loading-bar-full"></div>
-            </div>
+        <canvas id="unity-canvas"></canvas>
+        <div id="unity-loading-bar">
+            <div id="unity-loading-bar-full"></div>
         </div>
     </div>
 
-    <!-- Unity 빌드된 로더 스크립트 -->
-    <script src="%UNITY_LOADER_URL%"></script>
+    <!-- 1) WebBuild.loader.js 경로 -->
+    <script src="Build/WebBuild.loader.js"></script>
+
     <script>
-        // ── CSS aspect-ratio 미지원 브라우저용 JS 리사이즈 ─────────
-        function resizeAspect() {
-            // 최신 브라우저가 CSS 지원하면 JS 리사이즈 불필요
-            if (CSS.supports && CSS.supports('aspect-ratio', '16/9')) return;
+        const container = document.getElementById('unity-container');
+        const canvas = document.getElementById('unity-canvas');
+        const loadingBarFull = document.getElementById('unity-loading-bar-full');
 
-            const container = document.getElementById('unity-container');
-            const wrapper = document.getElementById('unity-aspect');
-            const w = container.clientWidth;
-            const h = container.clientHeight;
-            const targetR = 16 / 9;
+        function resizeCanvasTo16by9() {
+            const w = window.innerWidth, h = window.innerHeight;
+            const target = 16 / 9, aspect = w / h;
             let cw, ch;
-
-            if (w / h > targetR) {
-                // 화면이 더 넓으면: 높이에 맞추고 좌우 레터박스
+            if (aspect > target) {
+                // 화면이 너무 넓으면 세로 꽉 채우고 가로 레터박스
                 ch = h;
-                cw = ch * targetR;
+                cw = ch * target;
             } else {
-                // 화면이 더 좁으면: 너비에 맞추고 상하 레터박스
+                // 화면이 너무 좁으면 가로 꽉 채우고 세로 레터박스
                 cw = w;
-                ch = cw / targetR;
+                ch = cw / target;
             }
-            wrapper.style.width = cw + 'px';
-            wrapper.style.height = ch + 'px';
+            container.style.width = cw + 'px';
+            container.style.height = ch + 'px';
+            canvas.width = cw;
+            canvas.height = ch;
         }
 
-        // ── 이벤트 바인딩 ─────────────────────────────────────────
         window.addEventListener('load', () => {
-            // 주소창 숨김 트릭
+            // 주소창 숨김
             setTimeout(() => window.scrollTo(0, 1), 100);
-            resizeAspect();
+            resizeCanvasTo16by9();
 
-            // Unity 인스턴스 생성
-            createUnityInstance(document.getElementById('unity-canvas'), {
-                dataUrl: "%UNITY_DATA_URL%",
-                frameworkUrl: "%UNITY_FRAMEWORK_URL%",
-                codeUrl: "%UNITY_WASM_URL%",
+            // 2) Unity 인스턴스 생성
+            createUnityInstance(canvas, {
+                dataUrl: "Build/WebBuild.data",
+                frameworkUrl: "Build/WebBuild.framework.js",
+                codeUrl: "Build/WebBuild.wasm",
                 streamingAssetsUrl: "StreamingAssets",
-                companyName: "MyCompany",
-                productName: "MyProduct",
-                productVersion: "1.0.0"
+                companyName: "MCR Masters",
+                productName: "Mahjong Party",
+                productVersion: "1.0",
             }, (progress) => {
-                document.getElementById('unity-loading-bar-full').style.width = (100 * progress) + "%";
-            }).then(unityInstance => {
-                // 로딩 바 감추기
+                loadingBarFull.style.width = (100 * progress) + "%";
+            }).then((unityInstance) => {
                 document.getElementById('unity-loading-bar').style.display = 'none';
-                // 필요하면 글로벌에 저장
-                window.unityInstance = unityInstance;
-            }).catch(console.error);
+            }).catch((err) => {
+                console.error(err);
+            });
         });
 
-        // 윈도우 크기/회전 시 리사이즈 다시 계산
-        window.addEventListener('resize', resizeAspect);
-        window.addEventListener('orientationchange', () => setTimeout(resizeAspect, 100));
+        window.addEventListener('resize', resizeCanvasTo16by9);
+        window.addEventListener('orientationchange', () => setTimeout(resizeCanvasTo16by9, 100));
     </script>
 </body>
 
