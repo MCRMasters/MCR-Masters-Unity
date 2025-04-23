@@ -3,8 +3,10 @@
 
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <!-- PWA 설치/Standalone 모드 -->
+    <!-- 가로 모드에서 주소창·탭바 숨기고, 확대/축소 금지 -->
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <!-- PWA / Standalone 모드 -->
     <link rel="manifest" href="manifest.json" />
     <meta name="mobile-web-app-capable" content="yes" />
     <title>Mahjong Party</title>
@@ -20,14 +22,14 @@
             background: #000;
         }
 
-        /* 16:9 비율 레터박스용 컨테이너 */
+        /* 16:9 레터박스 컨테이너 */
         #unity-container {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
             background: #000;
-            /* JS에서 width/height 세팅 */
+            /* JS에서 동적으로 width/height 세팅 */
         }
 
         #unity-canvas {
@@ -63,7 +65,7 @@
         </div>
     </div>
 
-    <!-- 1) WebBuild.loader.js 경로 -->
+    <!-- Unity WebGL 로더 스크립트 -->
     <script src="Build/WebBuild.loader.js"></script>
 
     <script>
@@ -71,16 +73,35 @@
         const canvas = document.getElementById('unity-canvas');
         const loadingBarFull = document.getElementById('unity-loading-bar-full');
 
+        // 1) Landscape Lock API (지원 시)
+        function lockLandscape() {
+            if (screen.orientation && screen.orientation.lock) {
+                screen.orientation.lock('landscape').catch(e => console.warn('Orientation lock failed', e));
+            } else if (screen.lockOrientation) {
+                screen.lockOrientation('landscape');
+            } else if (screen.mozLockOrientation) {
+                screen.mozLockOrientation('landscape');
+            }
+        }
+
+        // 2) 주소창 숨김 트릭 (가로 모드일 때만)
+        function hideAddressBarIfLandscape() {
+            if (window.innerWidth > window.innerHeight) {
+                setTimeout(() => window.scrollTo(0, 1), 100);
+            }
+        }
+
+        // 3) 16:9 비율로 캔버스 크기 조정
         function resizeCanvasTo16by9() {
             const w = window.innerWidth, h = window.innerHeight;
             const target = 16 / 9, aspect = w / h;
             let cw, ch;
             if (aspect > target) {
-                // 화면이 너무 넓으면 세로 꽉 채우고 가로 레터박스
+                // 화면이 너무 넓으면 세로 꽉 채우고 양옆 레터박스
                 ch = h;
                 cw = ch * target;
             } else {
-                // 화면이 너무 좁으면 가로 꽉 채우고 세로 레터박스
+                // 화면이 좁으면 가로 꽉 채우고 상하 레터박스
                 cw = w;
                 ch = cw / target;
             }
@@ -90,31 +111,36 @@
             canvas.height = ch;
         }
 
+        // 4) 초기화
         window.addEventListener('load', () => {
-            // 주소창 숨김
-            setTimeout(() => window.scrollTo(0, 1), 100);
+            lockLandscape();
+            hideAddressBarIfLandscape();
             resizeCanvasTo16by9();
 
-            // 2) Unity 인스턴스 생성
             createUnityInstance(canvas, {
                 dataUrl: "Build/WebBuild.data",
                 frameworkUrl: "Build/WebBuild.framework.js",
                 codeUrl: "Build/WebBuild.wasm",
                 streamingAssetsUrl: "StreamingAssets",
-                companyName: "MCR Masters",
+                companyName: "Mahjong Party",
                 productName: "Mahjong Party",
-                productVersion: "1.0",
+                productVersion: "1.0"
             }, (progress) => {
                 loadingBarFull.style.width = (100 * progress) + "%";
             }).then((unityInstance) => {
                 document.getElementById('unity-loading-bar').style.display = 'none';
-            }).catch((err) => {
-                console.error(err);
-            });
+            }).catch(console.error);
         });
 
-        window.addEventListener('resize', resizeCanvasTo16by9);
-        window.addEventListener('orientationchange', () => setTimeout(resizeCanvasTo16by9, 100));
+        // 5) 방향전환·리사이즈 시 재조정
+        window.addEventListener('orientationchange', () => {
+            hideAddressBarIfLandscape();
+            setTimeout(resizeCanvasTo16by9, 100);
+        });
+        window.addEventListener('resize', () => {
+            hideAddressBarIfLandscape();
+            resizeCanvasTo16by9();
+        });
     </script>
 </body>
 
