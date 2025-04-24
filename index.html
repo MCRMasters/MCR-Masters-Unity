@@ -3,14 +3,17 @@
 
 <head>
     <meta charset="UTF-8" />
+    <!-- 확대/축소 금지, 뷰포트 꽉 채우기 -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0,
                  maximum-scale=1.0, user-scalable=no,
                  viewport-fit=cover" />
+    <!-- PWA 설치 시 standalone 모드 -->
     <link rel="manifest" href="manifest.json" />
     <meta name="mobile-web-app-capable" content="yes" />
     <title>Mahjong Party</title>
 
     <style>
+        /* ─── 풀스크린 배경 ─── */
         html,
         body {
             margin: 0;
@@ -21,7 +24,7 @@
             background: #000;
         }
 
-        /* ── 컨테이너: 화면 중앙, 검은 레터박스 ── */
+        /* ─── 16∶9 레터박스 컨테이너 ─── */
         #unity-container {
             position: absolute;
             top: 50%;
@@ -31,16 +34,15 @@
             overflow: hidden;
         }
 
-        /* ── 캔버스: 내부에서 회전 ── */
+        /* ─── 캔버스 ─── */
         #unity-canvas {
-            position: absolute;
-            top: 0;
-            left: 0;
+            width: 100%;
+            height: 100%;
+            display: block;
             background: #000;
-            transform-origin: center center;
         }
 
-        /* ── 로딩바 ── */
+        /* ─── 로딩 바 ─── */
         #unity-loading-bar {
             position: absolute;
             bottom: 10px;
@@ -66,75 +68,74 @@
         </div>
     </div>
 
+    <!-- 1) Unity WebGL loader 스크립트 -->
     <script src="Build/WebBuild.loader.js"></script>
+
     <script>
         const container = document.getElementById('unity-container');
         const canvas = document.getElementById('unity-canvas');
-        const loadFull = document.getElementById('unity-loading-bar-full');
+        const barFull = document.getElementById('unity-loading-bar-full');
+        const ASPECT = 16 / 9;
 
-        // 주소창 숨김 트릭 (가로 전환 시)
+        // 주소창 숨김 트릭 (Landscape 모드일 때만)
         function hideAddressBar() {
             window.scrollTo(0, 1);
             setTimeout(() => window.scrollTo(0, 1), 300);
         }
 
-        // 주어진 종횡비(aspect)에 맞춰, 화면 안에 딱 들어맞는 [w,h] 계산
+        // 뷰포트 크기에 맞춰 16:9 컨테이너 크기를 계산
         function computeBox(aspect) {
             const W = window.innerWidth;
             const H = window.innerHeight;
             if (W / H > aspect) {
-                // 화면이 더 넓으면 높이 기준
+                // 화면이 더 넓으면, 높이에 맞춰 너비 계산
                 return [H * aspect, H];
             } else {
-                // 화면이 더 좁으면 너비 기준
+                // 화면이 더 좁으면, 너비에 맞춰 높이 계산
                 return [W, W / aspect];
             }
         }
 
-        function resizeAll() {
-            const isLandscape = window.innerWidth > window.innerHeight;
+        // 컨테이너 & 캔버스 크기를 16:9로 동기화
+        function resizeTo16by9() {
+            const [w, h] = computeBox(ASPECT);
 
-            // 1) 컨테이너 크기 결정
-            const aspect = isLandscape ? (16 / 9) : (9 / 16);
-            const [cW, cH] = computeBox(aspect);
-            container.style.width = cW + 'px';
-            container.style.height = cH + 'px';
+            // 1) 컨테이너 크기 설정
+            container.style.width = w + 'px';
+            container.style.height = h + 'px';
 
-            // 2) 캔버스 CSS 크기 & 회전
-            if (isLandscape) {
-                // 가로: 캔버스 가득 채우고 회전 해제
-                canvas.style.width = cW + 'px';
-                canvas.style.height = cH + 'px';
-                canvas.style.transform = 'rotate(0deg)';
-                canvas.style.top = '0';
-                canvas.style.left = '0';
+            // 2) 캔버스 픽셀 해상도 및 CSS 크기 설정
+            canvas.width = w;
+            canvas.height = h;
+            canvas.style.width = '100%';
+            canvas.style.height = '100%';
+
+            // 3) 가로 모드면 주소창 숨김
+            if (window.innerWidth > window.innerHeight) {
                 hideAddressBar();
-            } else {
-                // 세로: 내부에서 90° 회전
-                // 캔버스 원본 해상도은 cW×cH, CSS 크기는 세로용 스왑
-                canvas.style.width = cH + 'px'; // 회전 전 너비 = container 높이
-                canvas.style.height = cW + 'px'; // 회전 전 높이 = container 너비
-                canvas.style.top = `calc(50% - ${cH / 2}px)`;
-                canvas.style.left = `calc(50% - ${cW / 2}px)`;
-                canvas.style.transform = 'rotate(90deg)';
             }
+        }
 
-            // 3) 캔버스 해상도(pixel) 설정
-            // -> 해상도는 항상 컨테이너의 logical w/h(회전 전) 를 따라야
-            if (isLandscape) {
-                canvas.width = cW;
-                canvas.height = cH;
-            } else {
-                canvas.width = cH; // 원본 해상도: cH×cW
-                canvas.height = cW;
+        // Canvas GL 버퍼 크기와 CSS 표시 크기 동기화
+        function syncCanvasBufferSize() {
+            const dpi = window.devicePixelRatio || 1;
+            const needW = Math.floor(canvas.clientWidth * dpi);
+            const needH = Math.floor(canvas.clientHeight * dpi);
+            if (canvas.width !== needW || canvas.height !== needH) {
+                canvas.width = needW;
+                canvas.height = needH;
             }
         }
 
         window.addEventListener('load', () => {
-            // 가능한 경우 가로잠금 시도
-            screen.orientation?.lock('landscape').catch(() => { });
-            resizeAll();
+            // 1) 초기 크기 동기화
+            resizeTo16by9();
+            syncCanvasBufferSize();
 
+            // 2) 가능한 경우 화면 방향 잠금 시도
+            screen.orientation?.lock('landscape').catch(() => { });
+
+            // 3) Unity 인스턴스 생성
             createUnityInstance(canvas, {
                 dataUrl: "Build/WebBuild.data",
                 frameworkUrl: "Build/WebBuild.framework.js",
@@ -143,17 +144,22 @@
                 companyName: "Mahjong Party",
                 productName: "Mahjong Party",
                 productVersion: "1.0"
-            }, prog => {
-                loadFull.style.width = `${100 * prog}%`;
+            }, progress => {
+                barFull.style.width = `${100 * progress}%`;
             }).then(() => {
                 document.getElementById('unity-loading-bar')
                     .style.display = 'none';
             }).catch(console.error);
         });
 
-        window.addEventListener('resize', resizeAll);
+        // 뷰포트 변화 시 크기/버퍼 재동기화
+        window.addEventListener('resize', () => {
+            resizeTo16by9();
+            syncCanvasBufferSize();
+        });
         window.addEventListener('orientationchange', () => {
-            resizeAll();
+            resizeTo16by9();
+            setTimeout(syncCanvasBufferSize, 100);
         });
     </script>
 </body>
