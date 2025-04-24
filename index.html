@@ -11,46 +11,36 @@
     <title>Mahjong Party</title>
 
     <style>
-        /* ── 1. 풀스크린 배경 ───────────────────────── */
         html,
         body {
-            width: 100vw;
-            height: 100vh;
             margin: 0;
             padding: 0;
-            background: #000;
+            width: 100vw;
+            height: 100vh;
             overflow: hidden;
+            background: #000;
         }
 
-        /* ── 2. 레터박스 컨테이너 ───────────────────── */
+        /* ── 컨테이너: 화면 중앙, 검은 레터박스 ── */
         #unity-container {
             position: absolute;
             top: 50%;
             left: 50%;
-            /* CSS 변수로 회전과 종횡비 제어 */
-            --aspect: 16/9;
-            --rotate: 0deg;
-            width: auto;
-            height: auto;
-            max-width: 100vw;
-            /* 화면 넘치지 않도록 */
-            max-height: 100vh;
-            aspect-ratio: var(--aspect);
-            transform: translate(-50%, -50%) rotate(var(--rotate));
-            transform-origin: center center;
+            transform: translate(-50%, -50%);
             background: #000;
             overflow: hidden;
         }
 
-        /* ── 3. 캔버스(full) ───────────────────────── */
+        /* ── 캔버스: 내부에서 회전 ── */
         #unity-canvas {
-            width: 100%;
-            height: 100%;
-            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
             background: #000;
+            transform-origin: center center;
         }
 
-        /* ── 4. 로딩바 ─────────────────────────────── */
+        /* ── 로딩바 ── */
         #unity-loading-bar {
             position: absolute;
             bottom: 10px;
@@ -76,48 +66,74 @@
         </div>
     </div>
 
-    <!-- Unity WebGL loader -->
     <script src="Build/WebBuild.loader.js"></script>
     <script>
-        const root = document.documentElement;
         const container = document.getElementById('unity-container');
         const canvas = document.getElementById('unity-canvas');
-        const loading = document.getElementById('unity-loading-bar-full');
+        const loadFull = document.getElementById('unity-loading-bar-full');
 
-        // 주소창 숨김 트릭
+        // 주소창 숨김 트릭 (가로 전환 시)
         function hideAddressBar() {
             window.scrollTo(0, 1);
             setTimeout(() => window.scrollTo(0, 1), 300);
         }
 
-        // 화면 모드에 따라 CSS 변수 업데이트
-        function updateOrientationVars() {
-            if (window.innerWidth > window.innerHeight) {
-                // Landscape 모드: 16:9, 회전 0
-                container.style.setProperty('--aspect', '16/9');
-                container.style.setProperty('--rotate', '0deg');
-                hideAddressBar();
+        // 주어진 종횡비(aspect)에 맞춰, 화면 안에 딱 들어맞는 [w,h] 계산
+        function computeBox(aspect) {
+            const W = window.innerWidth;
+            const H = window.innerHeight;
+            if (W / H > aspect) {
+                // 화면이 더 넓으면 높이 기준
+                return [H * aspect, H];
             } else {
-                // Portrait 모드: 9:16, 회전 90deg
-                container.style.setProperty('--aspect', '9/16');
-                container.style.setProperty('--rotate', '90deg');
-                // portrait에선 주소창 그대로
+                // 화면이 더 좁으면 너비 기준
+                return [W, W / aspect];
             }
         }
 
-        // container 크기에 맞춰 canvas 픽셀 해상도 설정
-        function configureCanvasResolution() {
-            const rect = container.getBoundingClientRect();
-            canvas.width = rect.width;
-            canvas.height = rect.height;
+        function resizeAll() {
+            const isLandscape = window.innerWidth > window.innerHeight;
+
+            // 1) 컨테이너 크기 결정
+            const aspect = isLandscape ? (16 / 9) : (9 / 16);
+            const [cW, cH] = computeBox(aspect);
+            container.style.width = cW + 'px';
+            container.style.height = cH + 'px';
+
+            // 2) 캔버스 CSS 크기 & 회전
+            if (isLandscape) {
+                // 가로: 캔버스 가득 채우고 회전 해제
+                canvas.style.width = cW + 'px';
+                canvas.style.height = cH + 'px';
+                canvas.style.transform = 'rotate(0deg)';
+                canvas.style.top = '0';
+                canvas.style.left = '0';
+                hideAddressBar();
+            } else {
+                // 세로: 내부에서 90° 회전
+                // 캔버스 원본 해상도은 cW×cH, CSS 크기는 세로용 스왑
+                canvas.style.width = cH + 'px'; // 회전 전 너비 = container 높이
+                canvas.style.height = cW + 'px'; // 회전 전 높이 = container 너비
+                canvas.style.top = `calc(50% - ${cH / 2}px)`;
+                canvas.style.left = `calc(50% - ${cW / 2}px)`;
+                canvas.style.transform = 'rotate(90deg)';
+            }
+
+            // 3) 캔버스 해상도(pixel) 설정
+            // -> 해상도는 항상 컨테이너의 logical w/h(회전 전) 를 따라야
+            if (isLandscape) {
+                canvas.width = cW;
+                canvas.height = cH;
+            } else {
+                canvas.width = cH; // 원본 해상도: cH×cW
+                canvas.height = cW;
+            }
         }
 
-        // 초기화
         window.addEventListener('load', () => {
-            // Landscape lock 시도
+            // 가능한 경우 가로잠금 시도
             screen.orientation?.lock('landscape').catch(() => { });
-            updateOrientationVars();
-            configureCanvasResolution();
+            resizeAll();
 
             createUnityInstance(canvas, {
                 dataUrl: "Build/WebBuild.data",
@@ -127,22 +143,17 @@
                 companyName: "Mahjong Party",
                 productName: "Mahjong Party",
                 productVersion: "1.0"
-            }, progress => {
-                loading.style.width = `${100 * progress}%`;
+            }, prog => {
+                loadFull.style.width = `${100 * prog}%`;
             }).then(() => {
                 document.getElementById('unity-loading-bar')
                     .style.display = 'none';
             }).catch(console.error);
         });
 
-        // 리사이즈/회전 처리
-        window.addEventListener('resize', () => {
-            updateOrientationVars();
-            configureCanvasResolution();
-        });
+        window.addEventListener('resize', resizeAll);
         window.addEventListener('orientationchange', () => {
-            updateOrientationVars();
-            setTimeout(configureCanvasResolution, 300);
+            resizeAll();
         });
     </script>
 </body>
