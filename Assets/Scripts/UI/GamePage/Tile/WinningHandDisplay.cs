@@ -11,9 +11,7 @@ namespace MCRGame.UI
         [Tooltip("타일 간 기본 간격")]
         public float tileSpacing = 0f;
         [Tooltip("승리 타일과 나머지 타일 사이에 추가로 줄 간격")]
-
-        public GameObject tilePanel;
-        public float extraGap = 10f;
+        public float extraGap = 20f;
 
         /// <summary>
         /// handTiles 중 winningTile 하나만 뒤로 빼고, extraGap 띄워서 화면에 띄운다.
@@ -26,46 +24,32 @@ namespace MCRGame.UI
             // 2) 승리 타일은 따로 빼두고
             GameTile win = data.winningTile;
             bool winFlag = true;
-            List<GameTile> hand = new List<GameTile>();
+            List<GameTile> others = new List<GameTile>();
             foreach (var t in data.handTiles)
             {
                 if (t == win && winFlag){
                     winFlag = false;
                     continue;
                 }
-                hand.Add(t);
+                others.Add(t);
             }
-
-            List<GameTile> call = new List<GameTile>();
 
             // 3) 순서대로 배치
             float x = 0f;
             float blockHeight = ((RectTransform)transform).rect.height;
 
             // a) 일반 타일
-            foreach (var tile in hand)
+            foreach (var tile in others)
             {
                 x = CreateTileAt(tile, x, blockHeight);
                 x += tileSpacing;
             }
 
             // b) extra gap
-            x += extraGap * 2;
-
-            foreach (var c in data.callBlocks){
-                foreach (var tile in c.ToGameTiles()){
-                    x = CreateTileAt(tile, x, blockHeight);
-                    x += tileSpacing;
-                }
-                x += extraGap;
-            }
-            
             x += extraGap;
+
             // c) 승리 타일
-            float finalWidth = CreateTileAt(win, x, blockHeight);
-            Debug.Log(tilePanel.GetComponent<RectTransform>().rect.width);
-            Debug.Log(finalWidth);
-            transform.localScale = Vector3.one * tilePanel.GetComponent<RectTransform>().rect.width / finalWidth;
+            CreateTileAt(win, x, blockHeight);
         }
 
         /// <summary>
@@ -89,8 +73,8 @@ namespace MCRGame.UI
 
             // 3) RectTransform 세팅
             var rt = go.GetComponent<RectTransform>();
-            rt.pivot = new Vector2(1, 0);
-            rt.anchorMin = rt.anchorMax = new Vector2(0, 0);
+            rt.pivot = new Vector2(0, 0);
+            rt.anchorMin = rt.anchorMax = new Vector2(1, 0);
             float ratio = spr.rect.width / spr.rect.height;
             rt.sizeDelta = new Vector2(blockHeight * ratio, blockHeight);
 

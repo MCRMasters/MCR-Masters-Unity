@@ -84,34 +84,6 @@ namespace MCRGame.Common
             SourceTileIndex = sourceTileIndex;
         }
 
-        public List<GameTile> ToGameTiles()
-        {
-            List<GameTile> ret = new List<GameTile>();
-            switch (Type){
-                case CallBlockType.CHII:
-                    ret.Add(FirstTile);
-                    ret.Add(FirstTile + 1);
-                    ret.Add(FirstTile + 2);
-                    break;
-                case CallBlockType.PUNG:
-                    ret.Add(FirstTile);
-                    ret.Add(FirstTile);
-                    ret.Add(FirstTile);
-                    break;
-                case CallBlockType.AN_KONG:
-                case CallBlockType.SHOMIN_KONG:
-                case CallBlockType.DAIMIN_KONG:
-                    ret.Add(FirstTile);
-                    ret.Add(FirstTile);
-                    ret.Add(FirstTile);
-                    ret.Add(FirstTile);
-                    break;
-                default:
-                    break;
-            }
-            return ret;
-        }
-
         public override string ToString()
         {
             string ret = "";

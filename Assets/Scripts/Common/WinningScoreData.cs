@@ -17,8 +17,6 @@ namespace MCRGame.Common
         public int flowerCount;
         public GameTile winningTile;
 
-        public WinningScoreData() { }
-
         public WinningScoreData(List<GameTile> handTiles, List<CallBlockData> callBlocks, int singleScore, int totalScore, List<YakuScore> yaku_score_list, AbsoluteSeat winnerSeat, int flowerCount, GameTile winning_tile)
         {
             this.handTiles = handTiles;
