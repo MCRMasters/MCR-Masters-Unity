@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: ae64876f44b664e588ce988f6ff838be
+guid: de48e6f47201e437d916936bfdffc161
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -1296207034283112578
-    second: 77z_0
+      213: -1784137549941597315
+    second: Chun_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -46,7 +46,7 @@ TextureImporter:
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
-  spriteMode: 2
+  spriteMode: 1
   spriteExtrude: 1
   spriteMeshType: 1
   alignment: 0
@@ -113,7 +113,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: 77z_0
+      name: Chun_0
       rect:
         serializedVersion: 2
         x: 0
@@ -128,8 +128,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: e774136e192f20ee0800000000000000
-      internalID: -1296207034283112578
+      spriteID: d7b9b41e9587d37e0800000000000000
+      internalID: -1784137549941597315
       vertices: []
       indices: 
       edges: []
@@ -138,7 +138,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 
+    spriteID: 5e97eb03825dee720800000000000000
     internalID: 0
     vertices: []
     indices: 
@@ -148,7 +148,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      77z_0: -1296207034283112578
+      Chun_0: -1784137549941597315
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
