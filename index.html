@@ -94,52 +94,30 @@
         const ASPECT = 16 / 9;
 
         // 16:9 박스 크기 계산
-        function computeBox(aspect, targetWidth, targetHeight) {
-            if (targetWidth / targetHeight > aspect) {
-                return [targetHeight * aspect, targetHeight];
+        function computeBox(aspect) {
+            const W = window.innerWidth;
+            const H = window.innerHeight;
+            if (W / H > aspect) {
+                return [H * aspect, H];
             } else {
-                return [targetWidth, targetWidth / aspect];
+                return [W, W / aspect];
             }
         }
 
         // 컨테이너 & 캔버스 크기 적용
         function applySize() {
-            const screenW = window.innerWidth;
-            const screenH = window.innerHeight;
-            let gameW, gameH;
+            const [w, h] = computeBox(ASPECT);
+            container.style.width = w + 'px';
+            container.style.height = h + 'px';
 
-            if (screenH > screenW) { // 세로 모드
-                [gameW, gameH] = computeBox(ASPECT, screenH, screenW);
-                
-                // 중요: 회전 시킬 컨테이너가 화면 실제 크기(vw, vh) 제약을 받지 않도록 설정
-                // 이렇게 해야 gameW(예: 1920px)가 screenW(예: 1080px)보다 클 때 잘리지 않습니다.
-                container.style.maxWidth = 'none';
-                container.style.maxHeight = 'none';
-                
-                container.style.width = gameW + 'px';
-                container.style.height = gameH + 'px';
-                container.style.transform = 'rotate(90deg)';
-
-            } else { // 가로 모드 또는 정사각형
-                [gameW, gameH] = computeBox(ASPECT, screenW, screenH);
-
-                // 가로 모드에서는 다시 뷰포트 크기 제약을 설정할 수 있습니다 (선택 사항).
-                // computeBox가 이미 뷰포트 내에 맞추므로 필수는 아닐 수 있습니다.
-                container.style.maxWidth = '100vw';
-                container.style.maxHeight = '100vh';
-
-                container.style.width = gameW + 'px';
-                container.style.height = gameH + 'px';
-                container.style.transform = 'none';
-            }
-
+            // 캔버스 CSS 크기
             canvas.style.width = '100%';
             canvas.style.height = '100%';
 
+            // 캔버스 버퍼 크기 (DPI 반영)
             const dpi = window.devicePixelRatio || 1;
-            const needW = Math.floor(gameW * dpi);
-            const needH = Math.floor(gameH * dpi);
-
+            const needW = Math.floor(w * dpi);
+            const needH = Math.floor(h * dpi);
             if (canvas.width !== needW || canvas.height !== needH) {
                 canvas.width = needW;
                 canvas.height = needH;
