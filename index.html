@@ -94,30 +94,43 @@
         const ASPECT = 16 / 9;
 
         // 16:9 박스 크기 계산
-        function computeBox(aspect) {
-            const W = window.innerWidth;
-            const H = window.innerHeight;
-            if (W / H > aspect) {
-                return [H * aspect, H];
+        function computeBox(aspect, targetWidth, targetHeight) {
+            if (targetWidth / targetHeight > aspect) {
+                return [targetHeight * aspect, targetHeight];
             } else {
-                return [W, W / aspect];
+                return [targetWidth, targetWidth / aspect];
             }
         }
 
         // 컨테이너 & 캔버스 크기 적용
         function applySize() {
-            const [w, h] = computeBox(ASPECT);
-            container.style.width = w + 'px';
-            container.style.height = h + 'px';
+            const screenW = window.innerWidth;
+            const screenH = window.innerHeight;
+            let gameW, gameH;
 
-            // 캔버스 CSS 크기
+            // screen.orientation.type을 확인하여 더 명확하게 구분할 수도 있습니다.
+            // (e.g., screen.orientation.type.includes('portrait'))
+            if (screenH > screenW) { // 세로 모드
+                // 게임이 화면의 긴 쪽(screenH)을 너비로, 짧은 쪽(screenW)을 높이로 사용하는 것처럼 계산
+                [gameW, gameH] = computeBox(ASPECT, screenH, screenW);
+                container.style.width = gameW + 'px';
+                container.style.height = gameH + 'px';
+                container.style.transform = 'rotate(90deg)';
+            } else { // 가로 모드 또는 정사각형
+                [gameW, gameH] = computeBox(ASPECT, screenW, screenH);
+                container.style.width = gameW + 'px';
+                container.style.height = gameH + 'px';
+                container.style.transform = 'none'; // 또는 'rotate(0deg)'
+            }
+
             canvas.style.width = '100%';
             canvas.style.height = '100%';
 
             // 캔버스 버퍼 크기 (DPI 반영)
             const dpi = window.devicePixelRatio || 1;
-            const needW = Math.floor(w * dpi);
-            const needH = Math.floor(h * dpi);
+            const needW = Math.floor(gameW * dpi);
+            const needH = Math.floor(gameH * dpi);
+
             if (canvas.width !== needW || canvas.height !== needH) {
                 canvas.width = needW;
                 canvas.height = needH;
