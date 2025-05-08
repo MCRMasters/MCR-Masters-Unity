@@ -46,6 +46,9 @@ namespace MCRGame.Game
 
         [SerializeField] private DiscardManager discardManager;
 
+        [SerializeField] private EmojiPanelController emojiPanelController;
+        public EmojiPanelController EmojiPanelController => emojiPanelController;
+
         /* ---------- 글로벌 상태 플래그 ---------- */
         public bool IsFlowerConfirming = false;
         public bool IsRightClickTsumogiri;

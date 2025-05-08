@@ -10,7 +10,8 @@ namespace MCRGame.Game.Events
         {
             if (evt != GameEventType.FLOWER) return;
 
-            HandlerUtil.GM.IsFlowerConfirming = true;
+            if (HandlerUtil.GM.IsMyTurn)
+                HandlerUtil.GM.IsFlowerConfirming = true;
             HandlerUtil.GM.StartCoroutine(HandlerUtil.GM.ConfirmFlower(data));
         }
     }
