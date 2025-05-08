@@ -108,25 +108,34 @@
             const screenH = window.innerHeight;
             let gameW, gameH;
 
-            // screen.orientation.type을 확인하여 더 명확하게 구분할 수도 있습니다.
-            // (e.g., screen.orientation.type.includes('portrait'))
             if (screenH > screenW) { // 세로 모드
-                // 게임이 화면의 긴 쪽(screenH)을 너비로, 짧은 쪽(screenW)을 높이로 사용하는 것처럼 계산
                 [gameW, gameH] = computeBox(ASPECT, screenH, screenW);
+                
+                // 중요: 회전 시킬 컨테이너가 화면 실제 크기(vw, vh) 제약을 받지 않도록 설정
+                // 이렇게 해야 gameW(예: 1920px)가 screenW(예: 1080px)보다 클 때 잘리지 않습니다.
+                container.style.maxWidth = 'none';
+                container.style.maxHeight = 'none';
+                
                 container.style.width = gameW + 'px';
                 container.style.height = gameH + 'px';
                 container.style.transform = 'rotate(90deg)';
+
             } else { // 가로 모드 또는 정사각형
                 [gameW, gameH] = computeBox(ASPECT, screenW, screenH);
+
+                // 가로 모드에서는 다시 뷰포트 크기 제약을 설정할 수 있습니다 (선택 사항).
+                // computeBox가 이미 뷰포트 내에 맞추므로 필수는 아닐 수 있습니다.
+                container.style.maxWidth = '100vw';
+                container.style.maxHeight = '100vh';
+
                 container.style.width = gameW + 'px';
                 container.style.height = gameH + 'px';
-                container.style.transform = 'none'; // 또는 'rotate(0deg)'
+                container.style.transform = 'none';
             }
 
             canvas.style.width = '100%';
             canvas.style.height = '100%';
 
-            // 캔버스 버퍼 크기 (DPI 반영)
             const dpi = window.devicePixelRatio || 1;
             const needW = Math.floor(gameW * dpi);
             const needH = Math.floor(gameH * dpi);
