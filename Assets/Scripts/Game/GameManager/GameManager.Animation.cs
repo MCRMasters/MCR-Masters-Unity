@@ -93,7 +93,6 @@ namespace MCRGame.Game
             isInitHandDone = true;
 
             TryProcessFlowerQueue();
-            // queue 처리를 해야하는데 만약에 아직 queue에 message가 없으면 기다려야 해 
 
             yield return new WaitForSeconds(0.5f);
             Debug.Log("[GameMessageMediator] InitHand complete. Processing any queued flower replacement messages.");
