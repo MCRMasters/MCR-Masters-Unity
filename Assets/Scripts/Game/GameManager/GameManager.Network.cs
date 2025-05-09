@@ -583,10 +583,13 @@ namespace MCRGame.Game
             var list = data["actions"].ToObject<List<GameAction>>();
             list.Sort();
 
+            bool has_hu_action = false;
+
             foreach (var action in list)
             {
                 if (action.Type == GameActionType.HU)
                 {
+                    has_hu_action = true;
                     if (AutoHuFlag)
                     {
                         SendSelectedAction(action);
@@ -594,7 +597,7 @@ namespace MCRGame.Game
                     }
                 }
             }
-            if (PreventCallFlag)
+            if (PreventCallFlag && !has_hu_action)
             {
                 OnSkipButtonClicked();
                 return;
@@ -624,7 +627,9 @@ namespace MCRGame.Game
             {
                 var type = kv.Key;
                 var actionsOfType = kv.Value;
-
+                if (PreventCallFlag && has_hu_action && type != GameActionType.HU){
+                    continue;
+                }
                 // CHII 또는 KAN 이고 선택지가 2개 이상이면 "추가 선택지" 버튼 생성
                 if ((type == GameActionType.CHII || type == GameActionType.KAN)
                     && actionsOfType.Count > 1)
