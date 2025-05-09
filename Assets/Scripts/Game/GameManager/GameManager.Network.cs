@@ -14,6 +14,7 @@ using MCRGame.Net;
 using MCRGame.View;
 using MCRGame.Audio;
 using DG.Tweening;
+using UnityEngine.SocialPlatforms.Impl;
 
 
 namespace MCRGame.Game
@@ -856,6 +857,7 @@ namespace MCRGame.Game
             yield return StartCoroutine(targetHandField.AnimateAllTilesRotationDomino(baseDuration: 0.4f, handScore: singleScore));
             yield return new WaitForSeconds(2f);
             yield return ScorePopupManager.Instance.ShowWinningPopup(wsd).WaitForCompletion();
+            ScorePopupManager.Instance.ShowButton();
             Debug.Log("processed hu hand.");
             yield return new WaitForSeconds(5f);
             cameraResultAnimator.ResetCameraState();

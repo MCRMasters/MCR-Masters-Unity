@@ -31,6 +31,13 @@ namespace MCRGame.UI
 
         private Sequence yakuAnimationSequence;
 
+        void Awake()
+        {
+            okButton.gameObject.SetActive(false);
+        }
+        public void SetOKButtonActive(){
+            okButton.gameObject.SetActive(true);
+        }
         public Sequence Initialize(WinningScoreData scoreData)
         {
             // [기존 Initialize 내용은 동일]
