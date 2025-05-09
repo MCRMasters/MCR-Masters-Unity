@@ -152,6 +152,14 @@ namespace MCRGame.Game
                     break;
 
                 /*──────────────────────────────────*/
+                /*  이모티콘                         */
+                /*──────────────────────────────────*/
+
+                case GameWSActionType.EMOJI_BROADCAST:
+                    OnEmojiBroadCast(message.Data);
+                break;
+
+                /*──────────────────────────────────*/
                 /*  게임 진행 보조                   */
                 /*──────────────────────────────────*/
                 case GameWSActionType.RELOAD_DATA:
@@ -237,6 +245,18 @@ namespace MCRGame.Game
             }
 
             StartCoroutine(GameManager.Instance.InitHandCoroutine(initTiles, tsumoTile));
+        }
+        
+        private void OnEmojiBroadCast(JObject data){
+            string emojiKey = "";
+            AbsoluteSeat seat = AbsoluteSeat.EAST;
+            if (data.TryGetValue("emoji_key", out JToken emojiTok)){
+                emojiKey = emojiTok.ToObject<string>();
+            }
+            if (data.TryGetValue("seat", out JToken seatTok)){
+                seat = (AbsoluteSeat)seatTok.ToObject<int>();
+            }
+            GameManager.Instance.EmojiPanelController.OnServerEmoji(emojiKey:emojiKey, seat:seat);
         }
 
         private void OnEndGame(JObject data)

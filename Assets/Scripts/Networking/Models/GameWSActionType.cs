@@ -15,6 +15,10 @@ namespace MCRGame.Net
         RETURN_ACTION,
         [EnumMember(Value = "reload_data")]
         RELOAD_DATA,
+        [EnumMember(Value = "emoji_send")]
+        EMOJI_SEND,
+        [EnumMember(Value = "emoji_broadcast")]
+        EMOJI_BROADCAST,
         [EnumMember(Value = "game_start_info")]
         GAME_START_INFO,
         [EnumMember(Value = "init_event")]
