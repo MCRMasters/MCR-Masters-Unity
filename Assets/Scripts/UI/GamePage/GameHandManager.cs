@@ -584,8 +584,8 @@ namespace MCRGame.UI
             IsAnimating = true;
             ResetPositionAll();
             // 1) 이름으로 타일 오브젝트 찾기
-            string tileName = tile.ToCustomString(); // :contentReference[oaicite:0]{index=0}
-            int idx = tileObjects.FindIndex(go => go.name == tileName);
+            string tileName = tile.ToCustomString();
+            int idx = tileObjects.FindIndex(go => go != null && go.name == tileName);
             if (idx < 0)
             {
                 Debug.LogWarning($"[GameHandManager] '{tileName}' 타일을 찾을 수 없습니다.");
