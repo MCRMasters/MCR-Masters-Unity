@@ -8,7 +8,7 @@ namespace MCRGame.UI
     {
         //public Canvas subCanvas;
         public GameObject winningScorePrefab;
-
+        public GameObject popup;
         public static ScorePopupManager Instance { get; private set; }
 
         private void Awake()
@@ -34,6 +34,14 @@ namespace MCRGame.UI
             }
         }
 
+        public void ShowButton()
+        {
+            if (!popup.TryGetComponent<WinningScorePopup>(out var popupComponent))
+            {
+                Debug.LogError("WinningScorePopup component missing!");
+            }
+            popupComponent.SetOKButtonActive();
+        }
         public Sequence ShowWinningPopup(WinningScoreData data)
         {
 
@@ -50,7 +58,7 @@ namespace MCRGame.UI
                 oldPopup = null;
             }
 
-            var popup = Instantiate(winningScorePrefab);
+            popup = Instantiate(winningScorePrefab);
             popup.name = "Score Popup";
             if (!popup.TryGetComponent<WinningScorePopup>(out var popupComponent))
             {

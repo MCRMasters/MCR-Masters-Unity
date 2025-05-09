@@ -272,14 +272,10 @@ namespace MCRGame.Game
         /* 꽃 대체 – InitHand 도중에 올 수 있어 대기 큐 필요 */
         private void HandleInitFlowerReplacement(GameWSMessage msg)
         {
-            if (!GameManager.Instance.isInitHandDone)
-            {
-                GameManager.Instance.pendingFlowerReplacement.Add(msg);
-            }
-            else
-            {
-                GameManager.Instance.ProcessInitFlowerReplacement(msg);
-            }
+            GameManager.Instance.flowerQueue.Enqueue(msg);
+            if (GameManager.Instance.isInitHandDone)
+                GameManager.Instance.TryProcessFlowerQueue();
         }
+
     }
 }
