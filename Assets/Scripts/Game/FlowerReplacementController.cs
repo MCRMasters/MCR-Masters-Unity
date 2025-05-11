@@ -34,7 +34,7 @@ namespace MCRGame.Game
             List<GameTile> appliedFlowers,
             List<int> flowerCounts)
         {
-            yield return GameManager.Instance.GameHandManager.RunExclusive(FlowerReplacementCoroutine(newTiles, appliedFlowers, flowerCounts));
+            yield return GameManager.Instance.GameHandManager.RunExclusive(FlowerReplacementCoroutine(newTiles:newTiles, appliedFlowers:appliedFlowers, flowerCounts:flowerCounts));
             GameManager.Instance.GameHandManager.IsAnimating = false;
             GameManager.Instance.CanClick = false;
         }
@@ -46,13 +46,6 @@ namespace MCRGame.Game
         {
             GameManager gm = GameManager.Instance;
             if (gm == null) yield break;
-
-            // InitHand 완료 보장
-            while (!gm.GameHandManager.IsInitHandComplete)
-                yield return null;
-
-            if (gm.MySeat != AbsoluteSeat.EAST)
-                yield return new WaitForSeconds(0.4f);
 
             // ---------------- FLOWER PHASE 들어가기 ----------------
             GameObject canvas = GameObject.Find("Main 2D Canvas");

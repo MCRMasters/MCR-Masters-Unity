@@ -31,6 +31,13 @@ namespace MCRGame.UI
 
         private Sequence yakuAnimationSequence;
 
+        void Awake()
+        {
+            okButton.gameObject.SetActive(false);
+        }
+        public void SetOKButtonActive(){
+            okButton.gameObject.SetActive(true);
+        }
         public Sequence Initialize(WinningScoreData scoreData)
         {
             // [기존 Initialize 내용은 동일]
@@ -103,7 +110,8 @@ namespace MCRGame.UI
             for (int i = 0; i < yakuScores.Count; i++)
             {
                 int index = i; // 클로저 캡처 방지
-                string name = Enum.GetName(typeof(Yaku), yakuScores[index].YakuId) ?? "";
+                // string name = Enum.GetName(typeof(Yaku), yakuScores[index].YakuId) ?? "";
+                string name = Enum.GetName(typeof(KRYaku), (KRYaku)yakuScores[index].YakuId) ?? "";
                 string score = yakuScores[index].Score.ToString();
 
                 yakuAnimationSequence.AppendCallback(() =>

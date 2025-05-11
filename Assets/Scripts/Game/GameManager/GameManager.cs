@@ -124,7 +124,8 @@ namespace MCRGame.Game
         /* ---------- 타일/도움 dict ---------- */
         public Dictionary<GameTile, List<TenpaiAssistEntry>> tenpaiAssistDict = new();
         public List<TenpaiAssistEntry> NowTenpaiAssistList = new();
-        public List<GameWSMessage> pendingFlowerReplacement = new();
+        // public List<GameWSMessage> pendingFlowerReplacement = new();
+        public readonly Queue<GameWSMessage> flowerQueue = new Queue<GameWSMessage>();
 
         /* ---------- 좌석 매핑 ---------- */
         public Dictionary<AbsoluteSeat, int> seatToPlayerIndex;

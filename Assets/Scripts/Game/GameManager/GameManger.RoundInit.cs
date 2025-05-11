@@ -107,7 +107,7 @@ namespace MCRGame.Game
         }
 
         /* 사용 예
-           DealSeatMapper.GetSeatMappings(1, out var seat2idx, out var idx2seat);
+            DealSeatMapper.GetSeatMappings(1, out var seat2idx, out var idx2seat);
            // seat2idx[AbsoluteSeat.EAST] == 0,  idx2seat[2] == AbsoluteSeat.WEST
         */
         public void InitSeatIndexMapping()
