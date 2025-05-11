@@ -70,7 +70,8 @@ namespace MCRGame.Game
 
         private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
         {
-            if (scene.name != "GameScene"){
+            if (scene.name != "GameScene")
+            {
                 _dispatcher = null;
                 return;
             }
@@ -157,7 +158,7 @@ namespace MCRGame.Game
 
                 case GameWSActionType.EMOJI_BROADCAST:
                     OnEmojiBroadCast(message.Data);
-                break;
+                    break;
 
                 /*──────────────────────────────────*/
                 /*  게임 진행 보조                   */
@@ -180,13 +181,6 @@ namespace MCRGame.Game
                 /*──────────────────────────────────*/
                 case GameWSActionType.END_GAME:
                     OnEndGame(message.Data);
-                    break;
-
-                /*──────────────────────────────────*/
-                /*  꽃 대체 (초기 핸드 특수 이벤트) */
-                /*──────────────────────────────────*/
-                case GameWSActionType.INIT_FLOWER_REPLACEMENT:
-                    HandleInitFlowerReplacement(message);
                     break;
 
                 /*──────────────────────────────────*/
@@ -244,19 +238,58 @@ namespace MCRGame.Game
                 GameManager.Instance.UpdatePlayerScores(scores);
             }
 
-            StartCoroutine(GameManager.Instance.InitHandCoroutine(initTiles, tsumoTile));
+            if (!TryParseFlowerParams(data, out var newTiles, out var appliedFlowers, out var flowerCounts))
+            {
+                Debug.LogWarning("[GameMessageMediator] flower phase 파라미터 누락.");
+                // reload 요청 후
+                GameWS.Instance.SendGameEvent(action: GameWSActionType.REQUEST_RELOAD, payload: new());
+                // init flower ok 보내기
+                GameWS.Instance.SendGameEvent(
+                    GameWSActionType.GAME_EVENT,
+                    new
+                    {
+                        event_type = (int)GameEventType.INIT_FLOWER_OK,
+                        data = new Dictionary<string, object>()
+                    }
+                );
+            }
+
+            StartCoroutine(GameManager.Instance.InitHandCoroutine(tiles:initTiles, tsumoTile:tsumoTile, newTiles:newTiles, appliedFlowers:appliedFlowers, flowerCounts:flowerCounts));
         }
-        
-        private void OnEmojiBroadCast(JObject data){
+
+        private bool TryParseFlowerParams(
+            JObject data,
+            out List<GameTile> newTiles,
+            out List<GameTile> appliedFlowers,
+            out List<int> flowerCounts)
+        {
+            newTiles = appliedFlowers = null;
+            flowerCounts = null;
+            if (data.TryGetValue("new_tiles", out var t0)
+                && data.TryGetValue("applied_flowers", out var t1)
+                && data.TryGetValue("flower_count", out var t2))
+            {
+                newTiles = t0.ToObject<List<int>>().Select(i => (GameTile)i).ToList();
+                appliedFlowers = t1.ToObject<List<GameTile>>();
+                flowerCounts = t2.ToObject<List<int>>();
+                return true;
+            }
+            return false;
+        }
+
+        private void OnEmojiBroadCast(JObject data)
+        {
             string emojiKey = "";
             AbsoluteSeat seat = AbsoluteSeat.EAST;
-            if (data.TryGetValue("emoji_key", out JToken emojiTok)){
+            if (data.TryGetValue("emoji_key", out JToken emojiTok))
+            {
                 emojiKey = emojiTok.ToObject<string>();
             }
-            if (data.TryGetValue("seat", out JToken seatTok)){
+            if (data.TryGetValue("seat", out JToken seatTok))
+            {
                 seat = (AbsoluteSeat)seatTok.ToObject<int>();
             }
-            GameManager.Instance.EmojiPanelController.OnServerEmoji(emojiKey:emojiKey, seat:seat);
+            GameManager.Instance.EmojiPanelController.OnServerEmoji(emojiKey: emojiKey, seat: seat);
         }
 
         private void OnEndGame(JObject data)
@@ -268,14 +301,5 @@ namespace MCRGame.Game
             }
             GameManager.Instance.EndScorePopup();
         }
-
-        /* 꽃 대체 – InitHand 도중에 올 수 있어 대기 큐 필요 */
-        private void HandleInitFlowerReplacement(GameWSMessage msg)
-        {
-            GameManager.Instance.flowerQueue.Enqueue(msg);
-            if (GameManager.Instance.isInitHandDone)
-                GameManager.Instance.TryProcessFlowerQueue();
-        }
-
     }
 }

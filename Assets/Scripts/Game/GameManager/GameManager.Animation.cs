@@ -27,74 +27,19 @@ namespace MCRGame.Game
         /* ───────── ①  Init-Hand 관련 ───────── */
         #region ▶ Init-Hand 코루틴
 
-        public void TryProcessFlowerQueue()
-        {
-            if (flowerQueue.Count == 0) return;
-            StartCoroutine(ProcessFlowerQueue());
-        }
-
-
-        private IEnumerator ProcessFlowerQueue()
-        {
-            while (flowerQueue.Count > 0)
-            {
-                var msg = flowerQueue.Dequeue();
-                if (!TryParseFlowerParams(msg, out var newTiles, out var appliedFlowers, out var flowerCounts))
-                {
-                    Debug.LogWarning("[GameMessageMediator] 꽃 대체 파라미터 누락.");
-                    // reload 요청 후
-                    GameWS.Instance.SendGameEvent(action: GameWSActionType.REQUEST_RELOAD, payload: new());
-                    // init flower ok 보내기
-                    GameWS.Instance.SendGameEvent(
-                        GameWSActionType.GAME_EVENT,
-                        new
-                        {
-                            event_type = (int)GameEventType.INIT_FLOWER_OK,
-                            data = new Dictionary<string, object>()
-                        }
-                    );
-                    continue;
-                }
-
-                // RunExclusive이 끝날 때까지 대기
-                yield return StartCoroutine(
-                    gameHandManager.RunExclusive(
-                        FlowerReplacementController.Instance
-                            .StartFlowerReplacement(newTiles, appliedFlowers, flowerCounts)
-                    )
-                );
-            }
-        }
-
-        private bool TryParseFlowerParams(
-            GameWSMessage msg,
-            out List<GameTile> newTiles,
-            out List<GameTile> appliedFlowers,
-            out List<int> flowerCounts)
-        {
-            newTiles = appliedFlowers = null;
-            flowerCounts = null;
-            if (msg.Data.TryGetValue("new_tiles", out var t0)
-                && msg.Data.TryGetValue("applied_flowers", out var t1)
-                && msg.Data.TryGetValue("flower_count", out var t2))
-            {
-                newTiles = t0.ToObject<List<int>>().Select(i => (GameTile)i).ToList();
-                appliedFlowers = t1.ToObject<List<GameTile>>();
-                flowerCounts = t2.ToObject<List<int>>();
-                return true;
-            }
-            return false;
-        }
-
-        public IEnumerator InitHandCoroutine(List<GameTile> tiles, GameTile? tsumoTile)
+        public IEnumerator InitHandCoroutine(List<GameTile> tiles, GameTile? tsumoTile, List<GameTile> newTiles, List<GameTile> appliedFlowers, List<int> flowerCounts)
         {
             isInitHandDone = false;
             yield return StartCoroutine(InitHandFromMessage(tiles, tsumoTile));
             isInitHandDone = true;
 
-            TryProcessFlowerQueue();
+            yield return StartCoroutine(
+                gameHandManager.RunExclusive(
+                    FlowerReplacementController.Instance
+                        .StartFlowerReplacement(newTiles, appliedFlowers, flowerCounts)
+                )
+            );
 
-            yield return new WaitForSeconds(0.5f);
             Debug.Log("[GameMessageMediator] InitHand complete. Processing any queued flower replacement messages.");
         }
 
