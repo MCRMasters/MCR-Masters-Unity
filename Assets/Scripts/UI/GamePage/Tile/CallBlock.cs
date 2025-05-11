@@ -35,7 +35,6 @@ namespace MCRGame.UI
             }
             Tiles.Clear();
         }
-
         private void CreateTiles()
         {
             int tileCount = GetTileCount();
@@ -44,28 +43,34 @@ namespace MCRGame.UI
             for (int i = 0; i < tileCount; i++)
             {
                 GameTile tileValue = GetTileValueForIndex(i, chiiIndices);
-                // 만약 AN_KONG 타입이라면 무조건 타일 값은 5z 즉, Z5로 강제 변경합니다.
+                if (Data.Type == CallBlockType.AN_KONG)
+                    tileValue = GameTile.Z5;
+
+                GameObject tileObj = Create3DTile(tileValue);
+                if (tileObj == null) continue;
+
+                tileObj.transform.localPosition = Vector3.zero;
+                tileObj.transform.localRotation = Quaternion.identity;
+
                 if (Data.Type == CallBlockType.AN_KONG)
                 {
-                    tileValue = GameTile.Z5;  // GameTile.Z5는 Honor 타일 5번 (즉, 5z)를 의미합니다.
-                }
-                GameObject tileObj = Create3DTile(tileValue);
-                if (tileObj != null)
-                {
-                    // 부모의 로컬 좌표계에 종속되도록 초기화
-                    tileObj.transform.localPosition = Vector3.zero;
-                    tileObj.transform.localRotation = Quaternion.identity;
-                    // AN_KONG 타입이면 앞면 대신 뒷면처럼 보이도록 x축으로 180도 회전 적용
-                    if (Data.Type == CallBlockType.AN_KONG)
+                    // 뒤집기
+                    tileObj.transform.localRotation = Quaternion.Euler(180f, 0f, 0f);
+
+                    // Z축 보정만: bounds 높이(deltaZ) 만큼 앞으로(+) 이동
+                    var bounds = GetTileLocalBounds(tileObj);
+                    if (bounds.HasValue)
                     {
-                        tileObj.transform.localRotation = Quaternion.Euler(180f, 0f, 0f);
+                        float deltaZ = bounds.Value.max.z - bounds.Value.min.z;
+                        Debug.Log($"DeltaZ: {deltaZ}");
+                        tileObj.transform.localPosition += new Vector3(0f, 0f, deltaZ);
                     }
-                    Tiles.Add(tileObj);
                 }
+
+                Tiles.Add(tileObj);
             }
-            // 기본적으로 오른쪽에서 왼쪽 순서로 배치하도록 Reverse
-            // Tiles.Reverse();
         }
+
 
         private int GetTileCount()
         {
@@ -152,7 +157,7 @@ namespace MCRGame.UI
         private void PositionTile(GameObject tile, ref float offsetX)
         {
             // 초기 localPosition을 offsetX로 설정
-            tile.transform.localPosition = new Vector3(offsetX, 0f, 0f);
+            tile.transform.localPosition = new Vector3(offsetX, 0f, tile.transform.localPosition.z);
 
             // 각 타일의 부모(로컬) 좌표계 내 경계값 계산
             var bounds = GetTileLocalBounds(tile);
