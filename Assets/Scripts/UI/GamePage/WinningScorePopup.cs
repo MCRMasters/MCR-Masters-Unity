@@ -110,7 +110,8 @@ namespace MCRGame.UI
             for (int i = 0; i < yakuScores.Count; i++)
             {
                 int index = i; // 클로저 캡처 방지
-                string name = Enum.GetName(typeof(Yaku), yakuScores[index].YakuId) ?? "";
+                // string name = Enum.GetName(typeof(Yaku), yakuScores[index].YakuId) ?? "";
+                string name = Enum.GetName(typeof(KRYaku), (KRYaku)yakuScores[index].YakuId) ?? "";
                 string score = yakuScores[index].Score.ToString();
 
                 yakuAnimationSequence.AppendCallback(() =>
