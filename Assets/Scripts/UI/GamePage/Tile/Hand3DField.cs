@@ -1,6 +1,8 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using DG.Tweening;
 using MCRGame.Common;
 using MCRGame.Game;
 
@@ -31,7 +33,7 @@ namespace MCRGame.UI
         private Queue<HandRequest> requestQueue = new Queue<HandRequest>();
         private bool isProcessing = false;
 
-        // --- 퍼블릭 API: 큐에 요청 등록 ---
+        // --- 퍼블릭 API: 요청 등록 및 완료 대기 ---
         public IEnumerator RequestTsumo()
         {
             EnqueueRequest(new HandRequest(RequestType.Tsumo));
@@ -46,223 +48,194 @@ namespace MCRGame.UI
 
         public IEnumerator RequestDiscardRightmost()
         {
-            EnqueueRequest(new HandRequest(RequestType.Discard, discardRightmost: true));
+            EnqueueRequest(new HandRequest(RequestType.Discard, true));
             yield return new WaitUntil(() => !isProcessing && requestQueue.Count == 0);
         }
 
-        /// <summary>
-        /// 오른쪽 끝이 아닌 단일 타일을 버리는 요청입니다.
-        /// </summary>
         public IEnumerator RequestDiscardRandom()
         {
-            EnqueueRequest(new HandRequest(RequestType.Discard, discardRightmost: false));
+            EnqueueRequest(new HandRequest(RequestType.Discard, false));
             yield return new WaitUntil(() => !isProcessing && requestQueue.Count == 0);
         }
 
-        /// <summary>
-        /// 여러 개의 랜덤한 타일을 한 번에 버리는 요청입니다.
-        /// 단, tsumoTile(마지막 요소)는 제외하고 처리합니다.
-        /// </summary>
         public IEnumerator RequestDiscardMultiple(int count)
         {
-            EnqueueRequest(new HandRequest(RequestType.DiscardMultiple, discardCount: count));
+            EnqueueRequest(new HandRequest(RequestType.DiscardMultiple, false, count));
             yield return new WaitUntil(() => !isProcessing && requestQueue.Count == 0);
         }
 
+        // --- 내부: 요청 큐 처리 ---
         private void EnqueueRequest(HandRequest req)
         {
             requestQueue.Enqueue(req);
             if (!isProcessing)
-                StartCoroutine(ProcessRequestQueue());
+                ProcessRequestQueue();
         }
 
-        // --- 큐 처리 코루틴 ---
-        private IEnumerator ProcessRequestQueue()
+        private void ProcessRequestQueue()
         {
+            if (requestQueue.Count == 0)
+            {
+                isProcessing = false;
+                return;
+            }
             isProcessing = true;
-            while (requestQueue.Count > 0)
-            {
-                HandRequest req = requestQueue.Dequeue();
-                yield return StartCoroutine(HandleRequest(req));
-            }
-            isProcessing = false;
+            var req = requestQueue.Dequeue();
+            HandleRequest(req)
+                .OnComplete(() => ProcessRequestQueue())
+                .Play();
         }
 
-        // --- 요청별 실제 처리 ---
-        private IEnumerator HandleRequest(HandRequest req)
+        // --- 요청별 처리: DOTween Sequence 반환 ---
+        private Sequence HandleRequest(HandRequest req)
         {
-            if (req.Type == RequestType.Tsumo)
+            var seq = DOTween.Sequence();
+            switch (req.Type)
             {
-                // tsumo 타일 생성 --> 리스트의 마지막에 추가
-                GameObject newTile = CreateWhiteTile();
-                if (newTile != null)
-                {
-                    tsumoTile = newTile;
-                    handTiles.Add(newTile);
-                    RepositionTiles(); // 즉시 재배치
-                }
+                case RequestType.Tsumo:
+                    seq.AppendCallback(() =>
+                    {
+                        var tile = CreateWhiteTile();
+                        if (tile != null)
+                        {
+                            tsumoTile = tile;
+                            handTiles.Add(tile);
+                            RepositionInstant();
+                        }
+                    });
+                    break;
+                case RequestType.InitFlowerTsumo:
+                    seq.AppendCallback(() =>
+                    {
+                        var tile = CreateWhiteTile();
+                        if (tile != null)
+                        {
+                            handTiles.Add(tile);
+                            tsumoTile = (handTiles.Count == GameHand.FULL_HAND_SIZE) ? tile : null;
+                            RepositionInstant();
+                        }
+                    });
+                    break;
+                case RequestType.Discard:
+                    seq.Insert(0, HandleDiscard(req.discardRightmost));
+                    break;
+                case RequestType.DiscardMultiple:
+                    seq.Insert(0, HandleDiscardMultiple(req.discardCount));
+                    break;
             }
-            else if (req.Type == RequestType.Discard)
-            {
-                if (handTiles.Count == 0)
-                    yield break;
-
-                int idx;
-                if (req.discardRightmost || handTiles.Count == 1)
-                    idx = handTiles.Count - 1;
-                else
-                    idx = Random.Range(0, handTiles.Count - 1);
-
-                GameObject toRemove = handTiles[idx];
-                handTiles.RemoveAt(idx);
-                if (toRemove != null)
-                    Destroy(toRemove);
-
-                tsumoTile = null;
-
-                // ⭐ 0.1초 대기 후 애니메이션 실행
-                yield return new WaitForSeconds(0.2f);
-                yield return StartCoroutine(AnimateReposition());
-            }
-            else if (req.Type == RequestType.DiscardMultiple)
-            {
-                if (handTiles.Count == 0)
-                    yield break;
-
-                List<int> candidateIndices = new List<int>();
-                if (handTiles.Count > 1 && tsumoTile != null)
-                {
-                    for (int i = 0; i < handTiles.Count - 1; i++)
-                        candidateIndices.Add(i);
-                }
-                else
-                {
-                    for (int i = 0; i < handTiles.Count; i++)
-                        candidateIndices.Add(i);
-                }
-
-                int discardCount = Mathf.Min(req.discardCount, candidateIndices.Count);
-
-                for (int i = 0; i < candidateIndices.Count; i++)
-                {
-                    int randIndex = Random.Range(i, candidateIndices.Count);
-                    int temp = candidateIndices[i];
-                    candidateIndices[i] = candidateIndices[randIndex];
-                    candidateIndices[randIndex] = temp;
-                }
-
-                List<int> indicesToDiscard = candidateIndices.GetRange(0, discardCount);
-                indicesToDiscard.Sort((a, b) => b.CompareTo(a));
-
-                foreach (int idx in indicesToDiscard)
-                {
-                    GameObject toRemove = handTiles[idx];
-                    handTiles.RemoveAt(idx);
-                    if (toRemove != null)
-                        Destroy(toRemove);
-                }
-
-                // ⭐ 0.1초 대기 후 애니메이션 실행
-                yield return new WaitForSeconds(0.2f);
-                yield return StartCoroutine(AnimateReposition());
-            }
-
-            else if (req.Type == RequestType.InitFlowerTsumo)
-            {
-                GameObject newTile = CreateWhiteTile();
-                if (newTile != null)
-                {
-                    // tsumo 타일은 항상 마지막 인덱스로 추가
-                    handTiles.Add(newTile);
-                    tsumoTile = (handTiles.Count == GameHand.FULL_HAND_SIZE) ? newTile : null;
-                    RepositionTiles();
-                }
-            }
+            return seq;
         }
 
-        // --- AnimateReposition (기존 코드) ---
-        private IEnumerator AnimateReposition()
+        private Sequence HandleDiscard(bool rightmost)
         {
-            if (handTiles.Count == 0) yield break;
+            var seq = DOTween.Sequence();
+            if (handTiles.Count == 0) return seq;
 
-            var initial = new Dictionary<GameObject, Vector3>();
-            var target = new Dictionary<GameObject, Vector3>();
+            int idx = rightmost || handTiles.Count == 1
+                ? handTiles.Count - 1
+                : UnityEngine.Random.Range(0, handTiles.Count - 1);
+
+            var toRemove = handTiles[idx];
+            handTiles.RemoveAt(idx);
+            tsumoTile = null;
+
+            seq.AppendInterval(0.2f)
+               .AppendCallback(() => Destroy(toRemove))
+               .Append(RepositionTween(slideDuration));
+            return seq;
+        }
+
+        private Sequence HandleDiscardMultiple(int count)
+        {
+            var seq = DOTween.Sequence();
+            if (handTiles.Count == 0) return seq;
+
+            var candidates = new List<int>();
+            int limit = tsumoTile != null ? handTiles.Count - 1 : handTiles.Count;
+            for (int i = 0; i < limit; i++) candidates.Add(i);
+            int removeCount = Mathf.Min(count, candidates.Count);
+
+            for (int i = 0; i < candidates.Count; i++)
+            {
+                int r = UnityEngine.Random.Range(i, candidates.Count);
+                var tmp = candidates[i]; candidates[i] = candidates[r]; candidates[r] = tmp;
+            }
+            candidates.Sort((a, b) => b.CompareTo(a));
+
+            seq.AppendInterval(0.2f)
+               .AppendCallback(() =>
+               {
+                   for (int i = 0; i < removeCount; i++)
+                   {
+                       int idx = candidates[i];
+                       Destroy(handTiles[idx]);
+                       handTiles.RemoveAt(idx);
+                   }
+               })
+               .Append(RepositionTween(slideDuration));
+
+            return seq;
+        }
+
+        // --- 재배치 ---
+        private void RepositionInstant()
+        {
+            for (int i = 0; i < handTiles.Count; i++)
+                handTiles[i].transform.localPosition = ComputePosition(i);
+        }
+
+        private Tween RepositionTween(float duration)
+        {
+            var seq = DOTween.Sequence();
             for (int i = 0; i < handTiles.Count; i++)
             {
-                GameObject go = handTiles[i];
-                initial[go] = go.transform.localPosition;
-                target[go] = ComputeTargetLocalPositionForIndex(i);
+                var tile = handTiles[i];
+                seq.Join(tile.transform.DOLocalMove(ComputePosition(i), duration).SetEase(Ease.InOutQuad));
             }
-
-            float elapsed = 0f;
-            while (elapsed < slideDuration)
-            {
-                elapsed += Time.deltaTime;
-                float t = Mathf.Clamp01(elapsed / slideDuration);
-                foreach (var kv in target)
-                {
-                    kv.Key.transform.localPosition = Vector3.Lerp(initial[kv.Key], kv.Value, t);
-                }
-                yield return null;
-            }
-            foreach (var kv in target)
-                kv.Key.transform.localPosition = kv.Value;
+            return seq;
         }
 
-        // ComputeTargetLocalPositionForIndex는 원래 코드를 유지
-        private Vector3 ComputeTargetLocalPositionForIndex(int index)
+        private Vector3 ComputePosition(int index)
         {
-            float width = GetTileLocalWidth(handTiles[0]);
+            if (handTiles.Count == 0) return Vector3.zero;
+            float width = GetTileWidth(handTiles[0]);
             float offset = index * (width + gap);
-
             float extra = (index == handTiles.Count - 1 && tsumoTile != null)
-                ? width * 0.5f
-                : 0f;
+                ? width * 0.5f : 0f;
             return new Vector3(-(offset + extra), 0f, 0f);
         }
 
-        // 타일의 로컬 너비를 계산하는 유틸리티 (원래 코드에 따른 구현)
-        private float GetTileLocalWidth(GameObject tile)
+        private float GetTileWidth(GameObject tile)
         {
-            Renderer rend = tile.GetComponent<Renderer>();
-            if (rend == null)
-                return 0f;
-            (Vector3 min, Vector3 max) = GetLocalBounds(tile);
+            var rend = tile.GetComponent<Renderer>();
+            if (rend == null) return 0f;
+            var (min, max) = GetBounds(tile);
             return max.x - min.x;
         }
 
-        // 타일 오브젝트의 local bounds를 구하는 유틸리티 메서드
-        private (Vector3 min, Vector3 max) GetLocalBounds(GameObject obj)
+        private (Vector3 min, Vector3 max) GetBounds(GameObject obj)
         {
             var rend = obj.GetComponent<Renderer>();
-            if (rend == null)
-                return (Vector3.zero, Vector3.zero);
-            Bounds b = rend.bounds;
-
-            Vector3 overallMin = new Vector3(float.MaxValue, float.MaxValue, float.MaxValue);
-            Vector3 overallMax = new Vector3(float.MinValue, float.MinValue, float.MinValue);
+            if (rend == null) return (Vector3.zero, Vector3.zero);
+            var b = rend.bounds;
             Vector3[] corners = new Vector3[8]
             {
-                new Vector3(b.min.x, b.min.y, b.min.z),
-                new Vector3(b.min.x, b.min.y, b.max.z),
-                new Vector3(b.min.x, b.max.y, b.min.z),
-                new Vector3(b.min.x, b.max.y, b.max.z),
-                new Vector3(b.max.x, b.min.y, b.min.z),
-                new Vector3(b.max.x, b.min.y, b.max.z),
-                new Vector3(b.max.x, b.max.y, b.min.z),
-                new Vector3(b.max.x, b.max.y, b.max.z),
+                new Vector3(b.min.x,b.min.y,b.min.z), new Vector3(b.min.x,b.min.y,b.max.z),
+                new Vector3(b.min.x,b.max.y,b.min.z), new Vector3(b.min.x,b.max.y,b.max.z),
+                new Vector3(b.max.x,b.min.y,b.min.z), new Vector3(b.max.x,b.min.y,b.max.z),
+                new Vector3(b.max.x,b.max.y,b.min.z), new Vector3(b.max.x,b.max.y,b.max.z)
             };
-
+            Vector3 min = Vector3.positiveInfinity, max = Vector3.negativeInfinity;
             foreach (var c in corners)
             {
-                Vector3 localCorner = transform.InverseTransformPoint(c);
-                overallMin = Vector3.Min(overallMin, localCorner);
-                overallMax = Vector3.Max(overallMax, localCorner);
+                var lc = obj.transform.InverseTransformPoint(c);
+                min = Vector3.Min(min, lc);
+                max = Vector3.Max(max, lc);
             }
-            return (overallMin, overallMax);
+            return (min, max);
         }
 
-        // --- 기본 타일 생성 (기존 코드) ---
+        // --- 타일 생성 ---
         private GameObject CreateWhiteTile()
         {
             if (Tile3DManager.Instance == null)
@@ -270,8 +243,7 @@ namespace MCRGame.UI
                 Debug.LogError("Tile3DManager 인스턴스가 없습니다.");
                 return null;
             }
-            GameTile white = GameTile.Z5;
-            return Tile3DManager.Instance.Make3DTile(white.ToCustomString(), transform);
+            return Tile3DManager.Instance.Make3DTile(GameTile.Z5.ToCustomString(), transform);
         }
 
         private GameObject CreateRealTile(GameTile tile)
@@ -284,283 +256,158 @@ namespace MCRGame.UI
             return Tile3DManager.Instance.Make3DTile(tile.ToCustomString(), transform);
         }
 
-        /// <summary>
-        /// handTiles 리스트에 담긴 모든 타일을 즉시 재배치합니다.
-        /// </summary>
-        private void RepositionTiles()
-        {
-            for (int i = 0; i < handTiles.Count; i++)
-            {
-                if (handTiles[i] == null) continue;
-                handTiles[i].transform.localPosition = ComputeTargetLocalPositionForIndex(i);
-            }
-        }
-
-        public void clear()
-        {
-            foreach (var tile in handTiles)
-            {
-                if (tile != null)
-                    Destroy(tile);
-            }
-            handTiles.Clear();
-            tsumoTile = null;
-        }
-
-        public void MakeRealHand(GameTile winningTile, List<GameTile> originalHandTiles, bool isTsumo)
+        // --- Hand 초기화/리로드 ---
+        public void InitHand(bool includeTsumo)
         {
             clear();
-
-            List<GameTile> tilesForRealHand = new List<GameTile>(originalHandTiles);
-            
-            if (tilesForRealHand.Contains((GameTile)winningTile))
+            int total = includeTsumo ? 14 : 13;
+            for (int i = 0; i < total; i++)
             {
-                tilesForRealHand.Remove(winningTile);
-            }
-
-            foreach (var tile in tilesForRealHand)
-            {
-                GameObject tileObj = CreateRealTile(tile);
-                if (tileObj != null)
+                if (includeTsumo && i == total - 1)
                 {
-                    handTiles.Add(tileObj);
+                    tsumoTile = CreateWhiteTile();
+                    if (tsumoTile != null) handTiles.Add(tsumoTile);
+                }
+                else
+                {
+                    var tile = CreateWhiteTile();
+                    if (tile != null) handTiles.Add(tile);
                 }
             }
-            // 일반 타일들 즉시 재배치 (애니메이션 없이)
-            RepositionTiles();
-
-            if (isTsumo)
-            {
-                // 마지막에 tsumoTile 생성 및 추가
-                GameObject tsumoTileObj = CreateRealTile(winningTile);
-                if (tsumoTileObj != null)
-                {
-                    handTiles.Add(tsumoTileObj);
-                    tsumoTile = tsumoTileObj;
-                }
-            }
-            // tsumoTile에 extra gap가 적용되도록 재배치 (ComputeTargetLocalPositionForIndex에서 extra 처리)
-            RepositionTiles();
+            RepositionInstant();
         }
 
         public void ReloadInitHand(int handCount, bool includeTsumo)
         {
-            // 기존 타일 삭제
-            foreach (var tile in handTiles)
+            clear();
+            int total = handCount;
+            for (int i = 0; i < total; i++)
             {
-                if (tile != null)
-                    Destroy(tile);
-            }
-            handTiles.Clear();
-            tsumoTile = null;
-
-            int totalTiles = handCount;
-            for (int i = 0; i < totalTiles; i++)
-            {
-                // tsumo 타일은 마지막 인덱스에 배치
-                if (includeTsumo && i == totalTiles - 1)
+                if (includeTsumo && i == total - 1)
                 {
                     tsumoTile = CreateWhiteTile();
-                    if (tsumoTile != null)
-                        handTiles.Add(tsumoTile);
+                    if (tsumoTile != null) handTiles.Add(tsumoTile);
                 }
                 else
                 {
-                    GameObject tile = CreateWhiteTile();
-                    if (tile != null)
-                        handTiles.Add(tile);
+                    var tile = CreateWhiteTile();
+                    if (tile != null) handTiles.Add(tile);
                 }
             }
-            // 즉시 재배치 (애니메이션 없이)
-            RepositionTiles();
+            RepositionInstant();
         }
 
-        // ---------------------------
-        // 초기 패 생성: 13개 또는 13개 + tsumo (총 14개)를 즉시 생성 및 배치 (tsumo는 마지막 요소)
-        public void InitHand(bool includeTsumo)
+        // --- Real Hand 생성 ---
+        public void MakeRealHand(GameTile winningTile, List<GameTile> originalHandTiles, bool isTsumo)
         {
-            // 기존 타일 삭제
-            foreach (var tile in handTiles)
+            clear();
+            var tiles = new List<GameTile>(originalHandTiles);
+            if (tiles.Contains(winningTile)) tiles.Remove(winningTile);
+            foreach (var t in tiles)
             {
-                if (tile != null)
-                    Destroy(tile);
+                var go = CreateRealTile(t);
+                if (go != null) handTiles.Add(go);
             }
-            handTiles.Clear();
-            tsumoTile = null;
-
-            int totalTiles = includeTsumo ? 14 : 13;
-            for (int i = 0; i < totalTiles; i++)
+            RepositionInstant();
+            if (isTsumo)
             {
-                // tsumo 타일은 마지막 인덱스에 배치
-                if (includeTsumo && i == totalTiles - 1)
+                var go = CreateRealTile(winningTile);
+                if (go != null)
                 {
-                    tsumoTile = CreateWhiteTile();
-                    if (tsumoTile != null)
-                        handTiles.Add(tsumoTile);
-                }
-                else
-                {
-                    GameObject tile = CreateWhiteTile();
-                    if (tile != null)
-                        handTiles.Add(tile);
+                    handTiles.Add(go);
+                    tsumoTile = go;
                 }
             }
-            // 즉시 재배치 (애니메이션 없이)
-            RepositionTiles();
+            RepositionInstant();
         }
-        private IEnumerator AnimateTileRotation(GameObject tile, float baseDuration, int handScore)
+
+        // --- 타일 회전 & 튕김 애니메이션 ---
+        public Sequence AnimateTileRotation(GameObject tile, float baseDuration, int handScore)
         {
-            if (tile == null) yield break;
+            var seq = DOTween.Sequence();
+            if (tile == null) return seq;
 
-            // --- 1) 회전 파트 (기존) ---
-            Quaternion startRot = tile.transform.localRotation;
-            Quaternion targetRot = Quaternion.Euler(-90f, startRot.eulerAngles.y, startRot.eulerAngles.z);
-            float rotationDuration = baseDuration / (1f + handScore / 10f);
+            var startRot = tile.transform.localRotation;
+            var euler = startRot.eulerAngles;
+            float rotDuration = baseDuration / (1f + handScore / 10f);
+            seq.Append(tile.transform.DOLocalRotate(new Vector3(-90f, euler.y, euler.z), rotDuration).SetEase(Ease.OutQuad));
 
-            float elapsed = 0f;
-            while (elapsed < rotationDuration)
-            {
-                elapsed += Time.deltaTime;
-                float t = Mathf.Clamp01(elapsed / rotationDuration);
-                float easedT = t * t;
-                float angle = Mathf.Lerp(0f, -90f, easedT);
-                tile.transform.localRotation = Quaternion.Euler(angle, startRot.eulerAngles.y, startRot.eulerAngles.z);
-                yield return null;
-            }
-            tile.transform.localRotation = targetRot;
-
-            // --- 2) 튕김 파트 (y축 + z축) ---
             Vector3 startPos = tile.transform.localPosition;
-            float bounceDuration = baseDuration * Random.Range(0.9f, 1.1f);
-            float amplitudeY = Mathf.Max(1f, handScore);
-            float frequency = Mathf.PI * 4f * Random.Range(0.8f, 1.2f);
-            float dampingY = 3f * Random.Range(0.8f, 1.2f);
-            float dampingZ = 2f * Random.Range(0.8f, 1.2f); // z축 감쇠 속도 (클수록 빨리 줄어듬)
-
+            float ampY = Mathf.Max(1f, handScore);
+            float freq = Mathf.PI * 4f * UnityEngine.Random.Range(0.8f, 1.2f);
+            float dampY = 3f * UnityEngine.Random.Range(0.8f, 1.2f);
+            float dampZ = 2f * UnityEngine.Random.Range(0.8f, 1.2f);
+            float duration = baseDuration * UnityEngine.Random.Range(0.9f, 1.1f);
             float prevY = 0f;
-            float currentZOffset = 0f;
+            float currZ = 0f;
 
-            elapsed = 0f;
-            while (elapsed < bounceDuration)
-            {
-                elapsed += Time.deltaTime;
-                float tt = Mathf.Clamp01(elapsed / bounceDuration);
-
-                // y축 튕김: 댐핑된 사인파
-                float y = amplitudeY * Mathf.Exp(-dampingY * tt) * Mathf.Abs(Mathf.Sin(frequency * tt));
-
-                // 바닥에 닿았을 때(prevY > 0 && y <= 0)마다 새로운 Z 오프셋 생성
-                if (prevY > 0f && y <= 0f)
-                {
-                    // 기본 Z 오프셋 크기: y축 amplitude의 10~30%
-                    float baseZ = amplitudeY * Random.Range(0.2f, 0.5f);
-                    // 랜덤 방향
-                    float sign = Random.value < 0.5f ? -1f : 1f;
-                    // 감쇠 적용: 진행률 tt에 따라 줄어들게
-                    currentZOffset = baseZ * sign * Mathf.Exp(-dampingZ * tt);
-                }
-
-                // 위치 적용
-                tile.transform.localPosition = startPos + new Vector3(0f, y, currentZOffset);
-
-                prevY = y;
-                yield return null;
-            }
-
-            // 최종 고정: 원위치로 복귀
-            tile.transform.localPosition = startPos;
-            tile.transform.localRotation = targetRot;
-        }
-
-
-        // EaseOutBounce 이징 함수 (로버트 페너 공식 참고)
-        private float EaseOutBounce(float t)
-        {
-            if (t < (1f / 2.75f))
-            {
-                return 7.5625f * t * t;
-            }
-            else if (t < (2f / 2.75f))
-            {
-                t -= 1.5f / 2.75f;
-                return 7.5625f * t * t + 0.75f;
-            }
-            else if (t < (2.5f / 2.75f))
-            {
-                t -= 2.25f / 2.75f;
-                return 7.5625f * t * t + 0.9375f;
-            }
-            else
-            {
-                t -= 2.625f / 2.75f;
-                return 7.5625f * t * t + 0.984375f;
-            }
-        }
-        // ★ 추가: 개별 타일 애니메이션 완료 후 완료 콜백을 호출하는 래퍼 코루틴
-        private IEnumerator AnimateTileRotationWithCallback(GameObject tile, float duration, int handScore, System.Action onComplete)
-        {
-            yield return StartCoroutine(AnimateTileRotation(tile, duration, handScore));
-            onComplete?.Invoke();
-        }
-
-        // ★ 수정: handTiles 전체를 도미노 효과로 순차적으로 시작하면서, 동시에 실행된 후 모든 애니메이션 종료 대기
-        public IEnumerator AnimateAllTilesRotationDomino(float baseDuration, int handScore)
-        {
-            float delayBetweenTiles = baseDuration / 30f;
-            Debug.Log("AnimateAllTilesRotationDomino 시작 - 총 타일 수: " + handTiles.Count + ", 기본 지속 시간: " + baseDuration + ", 타일 간 딜레이: " + delayBetweenTiles);
-
-            int count = handTiles.Count;
-            // 각 타일의 완료 여부를 추적하기 위한 배열
-            bool[] doneFlags = new bool[count];
-
-            // 각 타일에 대해 도미노 효과 시작 (순차적으로 시작되지만, 이전 코루틴을 기다리지 않고 바로 다음 코루틴을 시작)
-            for (int i = 0; i < count; i++)
-            {
-                int index = i;  // 지역 변수로 복사
-                GameObject tile = handTiles[index];
-                if (tile != null)
-                {
-                    Debug.Log("AnimateTileRotation 시작 (domino): " + tile.name + " (Index " + index + ")");
-                    StartCoroutine(AnimateTileRotationWithCallback(tile, baseDuration, handScore, () =>
+            seq.Append(DOTween.To(
+                () => 0f,
+                x => {
+                    float elapsed = x;
+                    float t = Mathf.Clamp01(elapsed / duration);
+                    float y = ampY * Mathf.Exp(-dampY * t) * Mathf.Abs(Mathf.Sin(freq * t));
+                    if (prevY > 0f && y <= 0f)
                     {
-                        Debug.Log("AnimateTileRotation 완료: " + tile.name + " (Index " + index + ")");
-                        doneFlags[index] = true;
-                    }));
-                }
-                else
-                {
-                    Debug.Log("AnimateTileRotation 건너뛰기 - null 타일 발견 (Index " + index + ")");
-                    doneFlags[index] = true;
-                }
-                // 타일 간 딜레이만큼 기다림 (이전 코루틴이 끝날 때까지 기다리지 않음)
-                yield return new WaitForSeconds(delayBetweenTiles);
-            }
+                        float baseZ = ampY * UnityEngine.Random.Range(0.2f, 0.5f);
+                        float sign = UnityEngine.Random.value < 0.5f ? -1f : 1f;
+                        currZ = baseZ * sign * Mathf.Exp(-dampZ * t);
+                    }
+                    tile.transform.localPosition = startPos + new Vector3(0f, y, currZ);
+                    prevY = y;
+                }, duration, duration).SetEase(Ease.Linear)
+            );
 
-            // 모든 타일 애니메이션 코루틴이 완료될 때까지 대기
-            yield return new WaitUntil(() =>
+            seq.AppendCallback(() =>
             {
-                for (int i = 0; i < count; i++)
-                {
-                    if (!doneFlags[i])
-                        return false;
-                }
-                return true;
+                tile.transform.localPosition = startPos;
+                tile.transform.localRotation = Quaternion.Euler(-90f, euler.y, euler.z);
             });
 
-            Debug.Log("AnimateAllTilesRotationDomino 완료");
+            return seq;
         }
 
-        // ★ 추가: 모든 타일의 회전을 초기화(0도로 리셋)
+        public Sequence AnimateTileRotationWithCallback(GameObject tile, float duration, int handScore, Action onComplete)
+        {
+            var seq = AnimateTileRotation(tile, duration, handScore);
+            seq.AppendCallback(() => onComplete?.Invoke());
+            return seq;
+        }
+
+        public Sequence AnimateAllTilesRotationDomino(float baseDuration, int handScore)
+        {
+            float delay = baseDuration / 30f;
+            var master = DOTween.Sequence();
+
+            for (int i = 0; i < handTiles.Count; i++)
+            {
+                int idx = i;
+                var tile = handTiles[idx];
+                var tileSeq = DOTween.Sequence()
+                    .AppendInterval(idx * delay)
+                    .Append(AnimateTileRotation(tile, baseDuration, handScore));
+                master.Join(tileSeq);
+            }
+
+            return master;
+        }
+
         public void ResetTileRotations()
         {
             foreach (var tile in handTiles)
             {
                 if (tile != null)
-                {
                     tile.transform.localRotation = Quaternion.identity;
-                }
             }
         }
 
+        // --- 클리어 ---
+        public void clear()
+        {
+            foreach (var t in handTiles) if (t != null) Destroy(t);
+            handTiles.Clear();
+            requestQueue.Clear();
+            tsumoTile = null;
+        }
     }
 }
