@@ -136,7 +136,7 @@ namespace MCRGame.Game
             var rt = popupGO.GetComponent<RectTransform>();
             // popupRoot와 동일한 캔버스 레이어일 때, anchoredPosition으로 맞춰줍니다
             rt.anchoredPosition = anchor.anchoredPosition;
-            rt.localScale = Vector3.zero;
+            rt.localScale = Vector3.one * 0.5f;
 
             // 3) 애니메이션
             DOTween.Sequence()
