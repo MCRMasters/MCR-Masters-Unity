@@ -14,18 +14,13 @@ namespace MCRGame.UI
     public class WinningScorePopup : MonoBehaviour
     {
         [Header("UI References")]
-        [SerializeField] private GameObject TilePanel;
         [SerializeField] private TextMeshProUGUI singleScoreText;
         [SerializeField] private TextMeshProUGUI totalScoreText;
         [SerializeField] private TextMeshProUGUI winnerNicknameText;
-        [SerializeField] private TextMeshProUGUI flowerCountText;
         [SerializeField] private Image characterImage;
-        [SerializeField] private Image flowerImage;
         [SerializeField] private Button okButton;
         [SerializeField] private WinningHandDisplay winningHandDisplay;
-        [SerializeField] private GameObject winningHandOrigin;
         [SerializeField] private GameObject yakuOrigin;
-        [SerializeField] private TextMeshProUGUI scoreTextPrefab;
         [SerializeField] private GameObject yakuObjectPrefab;
         [SerializeField] private GameObject yakuPanel;
 

@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 5bf0a13d6da9e3b4d8ee58eb2727ab10
+guid: 2b40e0800bbc1b641828fe173c4401a9
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -1296207034283112578
-    second: 77z_0
+      213: -1784137549941597315
+    second: Chun_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -109,30 +109,17 @@ TextureImporter:
     ignorePlatformSupport: 0
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
-  - serializedVersion: 4
-    buildTarget: iOS
-    maxTextureSize: 2048
-    resizeAlgorithm: 0
-    textureFormat: -1
-    textureCompression: 1
-    compressionQuality: 50
-    crunchedCompression: 0
-    allowsAlphaSplitting: 0
-    overridden: 0
-    ignorePlatformSupport: 0
-    androidETC2FallbackOverride: 0
-    forceMaximumCompressionQuality_BC6H_BC7: 0
   spriteSheet:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: 77z_0
+      name: Chun_0
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 504
-        height: 664
+        width: 600
+        height: 800
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -141,8 +128,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: e774136e192f20ee0800000000000000
-      internalID: -1296207034283112578
+      spriteID: d7b9b41e9587d37e0800000000000000
+      internalID: -1784137549941597315
       vertices: []
       indices: 
       edges: []
@@ -161,7 +148,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      77z_0: -1296207034283112578
+      Chun_0: -1784137549941597315
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

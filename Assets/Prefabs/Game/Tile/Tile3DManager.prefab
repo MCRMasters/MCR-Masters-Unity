@@ -46,3 +46,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   tilePrefab: {fileID: 1715320567893781447, guid: 1ebd8ed455384334ebb2d5c65367db57, type: 3}
   tileFrontMatPath: Materials/3dTileFront
+  defaultSideMaterial: {fileID: 2100000, guid: 4210e855910a9fd49b48e8a366425ffb, type: 2}
+  defaultBackMaterial: {fileID: 2100000, guid: eb3fbd61f8f37524cae67ff0babe8646, type: 2}

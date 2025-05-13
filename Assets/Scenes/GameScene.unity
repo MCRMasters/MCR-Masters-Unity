@@ -4713,7 +4713,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 311172342}
   m_HandleRect: {fileID: 311172341}
   m_Direction: 2
-  m_Value: 0
+  m_Value: 1
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -6706,7 +6706,6 @@ MonoBehaviour:
   isAfterTsumoAction: 0
   CanClick: 0
   NowHoverSource: {fileID: 0}
-  pendingFlowerReplacement: []
   playersHand3DFields:
   - {fileID: 747411122}
   - {fileID: 665667696}
@@ -7181,6 +7180,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   winningScorePrefab: {fileID: 746178161457754257, guid: e8e4ed1923016904ea47e6580790db25, type: 3}
+  popup: {fileID: 0}
 --- !u!4 &1375321606
 Transform:
   m_ObjectHideFlags: 0

@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 456a1a97cb36fb2419ec1c3f0dff9875
+guid: e5425da21e5103d4694b958c527e398e
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -3889110734873871864
-    second: 11p_0
+      213: 5891376657567825452
+    second: Pin1_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -109,30 +109,17 @@ TextureImporter:
     ignorePlatformSupport: 0
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
-  - serializedVersion: 4
-    buildTarget: iOS
-    maxTextureSize: 2048
-    resizeAlgorithm: 0
-    textureFormat: -1
-    textureCompression: 1
-    compressionQuality: 50
-    crunchedCompression: 0
-    allowsAlphaSplitting: 0
-    overridden: 0
-    ignorePlatformSupport: 0
-    androidETC2FallbackOverride: 0
-    forceMaximumCompressionQuality_BC6H_BC7: 0
   spriteSheet:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: 11p_0
+      name: Pin1_0
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 504
-        height: 664
+        width: 600
+        height: 800
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -141,8 +128,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 80a3fab546a170ac0800000000000000
-      internalID: -3889110734873871864
+      spriteID: c2ebb503bdf52c150800000000000000
+      internalID: 5891376657567825452
       vertices: []
       indices: 
       edges: []
@@ -161,7 +148,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      11p_0: -3889110734873871864
+      Pin1_0: 5891376657567825452
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
