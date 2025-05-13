@@ -10,7 +10,6 @@ namespace MCRGame.UI
         [Header("CallBlock Settings")]
         public List<GameObject> callBlocks;
         private Dictionary<GameTile, List<GameObject>> tileObjectDictionary = new();
-        private readonly List<Renderer> _highlighted = new();
 
 
         [Header("Animation Settings")]
@@ -27,6 +26,9 @@ namespace MCRGame.UI
         [Tooltip("바로 직전 블록의 너비에 대한 간격 비율")]
         public float gapRatio = 0.1f;
 
+        private readonly List<(Material mat, Color original)> _highlightedMats
+    = new List<(Material, Color)>();
+
         /// <summary>
         /// CallBlockField를 초기화합니다.
         /// 기존의 callBlocks 리스트를 초기화하고 모든 블록을 제거합니다.
@@ -38,7 +40,7 @@ namespace MCRGame.UI
             {
                 callBlocks = new List<GameObject>();
                 tileObjectDictionary.Clear();
-                _highlighted.Clear();
+                _highlightedMats.Clear();
             }
             else
             {
@@ -390,44 +392,41 @@ namespace MCRGame.UI
         /// <summary>tile과 일치하는 모든 CallBlock을 하이라이트(하늘색)합니다.</summary>
         public void HighlightBlocks(GameTile tile)
         {
-            ClearHighlights();
+            ClearHighlights();     // 이전 하이라이트 복원
 
-            if (tileObjectDictionary.TryGetValue(tile, out var goList))
+            if (!tileObjectDictionary.TryGetValue(tile, out var goList))
+                return;
+
+            foreach (var go in goList)
             {
-                foreach (var go in goList)
+                foreach (var r in go.GetComponentsInChildren<Renderer>())
                 {
-                    var rends = go.GetComponentsInChildren<Renderer>();
-                    foreach (var r in rends)
+                    foreach (var mat in r.materials)
                     {
-                        foreach (var mat in r.materials)
-                        {
-                            _highlighted.Add(r);
-                            Color orig = mat.color;
-                            // 연한 하늘색: R=0.7, G=0.9, B=1
-                            mat.color = new Color(0.7f, 0.9f, 1f, orig.a);
-                        }
+                        if (!mat.HasProperty("_Color")) continue;
+
+                        // (1) 현재 색 저장
+                        _highlightedMats.Add((mat, mat.color));
+
+                        // (2) 하이라이트 색 적용 (연한 하늘색)
+                        Color c = mat.color;
+                        mat.color = new Color(0.7f, 0.9f, 1f, c.a);
                     }
                 }
             }
         }
 
-        /// <summary>이전 하이라이트를 모두 해제하고, 흰색 Opaque로 되돌립니다.</summary>
+        /// <summary>이전 하이라이트를 모두 해제하고, 머티리얼을 원본 색으로 되돌립니다.</summary>
         public void ClearHighlights()
         {
-            foreach (var r in _highlighted)
+            foreach (var (mat, orig) in _highlightedMats)
             {
-                if (r == null)
-                    continue;
-
-                foreach (var mat in r.materials)
-                {
-                    if (mat.HasProperty("_Color"))
-                        mat.color = Color.white;
-                }
+                if (mat == null) continue;
+                if (mat.HasProperty("_Color"))
+                    mat.color = orig;      // 저장한 색으로 복원
             }
-            _highlighted.Clear();
+            _highlightedMats.Clear();
         }
-
 
         public void ClearAllCallBlocks()
         {

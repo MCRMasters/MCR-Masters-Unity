@@ -4,6 +4,7 @@ using MCRGame.Common; // RelativeSeat, GameTile, 등
 using System.Collections.Generic;
 using System;
 using MCRGame.Game;
+using UnityEngine.Rendering;
 
 namespace MCRGame.UI
 {
@@ -27,7 +28,10 @@ namespace MCRGame.UI
 
         private Dictionary<RelativeSeat, List<GameObject>> kawas = new Dictionary<RelativeSeat, List<GameObject>>();
         private Dictionary<GameTile, List<GameObject>> tileObjectDictionary = new Dictionary<GameTile, List<GameObject>>();
-        private readonly List<Renderer> _highlighted = new List<Renderer>();
+
+
+        private readonly List<(Material mat, Color original)> _highlightedMats
+            = new List<(Material, Color)>();
 
         void Awake()
         {
@@ -50,6 +54,7 @@ namespace MCRGame.UI
                 list.Clear();
             }
             tileObjectDictionary.Clear();
+            _highlightedMats.Clear();
         }
 
         /// <summary>
@@ -65,51 +70,45 @@ namespace MCRGame.UI
         }
 
 
-        /// <summary>
-        /// tile과 일치하는 discard 타일을 하늘색으로 하이라이트합니다.
-        /// </summary>
+
+        /// tile과 일치하는 discard 타일을 하늘색으로 하이라이트
         public void HighlightTiles(GameTile tile)
         {
-            ClearHighlights();
+            ClearHighlights();   // 이전 것 복원
 
-            if (tileObjectDictionary.TryGetValue(tile, out var goList))
+            if (!tileObjectDictionary.TryGetValue(tile, out var goList))
+                return;
+
+            foreach (var go in goList)
             {
-                foreach (var go in goList)
+                foreach (var r in go.GetComponentsInChildren<Renderer>())
                 {
-                    var rends = go.GetComponentsInChildren<Renderer>();
-                    foreach (var r in rends)
+                    foreach (var mat in r.materials)
                     {
-                        foreach (var mat in r.materials)
-                        {
-                            _highlighted.Add(r);
-                            Color orig = mat.color;
-                            // 연한 하늘색: R=0.7, G=0.9, B=1
-                            mat.color = new Color(0.7f, 0.9f, 1f, orig.a);
-                        }
+                        if (!mat.HasProperty("_Color")) continue;
+
+                        // ── (1) 원본 색 저장
+                        _highlightedMats.Add((mat, mat.color));
+
+                        // ── (2) 하이라이트 색 적용
+                        Color c = mat.color;
+                        mat.color = new Color(0.7f, 0.9f, 1f, c.a);   // 연한 하늘색
                     }
                 }
             }
         }
 
-        /// <summary>
-        /// 이전에 하이라이트했던 타일을 원래 색(흰색 불투명)으로 되돌립니다.
-        /// </summary>
+        /// 하이라이트 해제 → 원래 색 복원
         public void ClearHighlights()
         {
-            foreach (var r in _highlighted)
+            foreach (var (mat, orig) in _highlightedMats)
             {
-                if (r == null)
-                    continue;
-
-                foreach (var mat in r.materials)
-                {
-                    if (mat.HasProperty("_Color"))
-                        mat.color = Color.white;
-                }
+                if (mat == null) continue;
+                if (mat.HasProperty("_Color"))
+                    mat.color = orig;          // 저장해 둔 색으로 되돌림
             }
-            _highlighted.Clear();
+            _highlightedMats.Clear();
         }
-
 
         public void ReloadAllDiscards(List<List<GameTile>> allTilesBySeat)
         {
@@ -280,7 +279,6 @@ namespace MCRGame.UI
                 _ => Vector3.zero,
             };
         }
-
         private IEnumerator AnimateDiscard(
             GameObject tile,
             RelativeSeat seat,
@@ -290,7 +288,7 @@ namespace MCRGame.UI
             Vector3 finalPos,
             Quaternion finalRot)
         {
-            // 1) 초기 위치 계산
+            /* ───────────── ① 시작 위치 세팅 ───────────── */
             Vector3 dirCol, dirRow;
             switch (seat)
             {
@@ -302,100 +300,91 @@ namespace MCRGame.UI
             Vector3 startOffset = dirCol * (col * tileSpacing)
                                 + dirRow * ((row + extraRowOffset) * rowSpacing);
             Vector3 startPos = origin.position + startOffset + Vector3.up * dropHeight;
-            tile.transform.position = startPos;
-            tile.transform.rotation = finalRot;
+            tile.transform.SetPositionAndRotation(startPos, finalRot);
 
-            // 2) 머티리얼들 투명 모드로 전환 & 알파 0 세팅
-            var renderers = tile.GetComponentsInChildren<Renderer>();
-            foreach (var r in renderers)
+            /* ───────────── ② 머티리얼 캐싱 & 투명 모드 ───────────── */
+            var cachedMats = new List<Material>();
+            foreach (var r in tile.GetComponentsInChildren<Renderer>())
             {
-                foreach (var mat in r.materials)
+                var mats = r.materials;           // ← 여기서 한 번만 복사
+                cachedMats.AddRange(mats);
+
+                foreach (var mat in mats)
+                {
                     SetMaterialTransparent(mat);
-                foreach (var mat in r.materials)
                     if (mat.HasProperty("_Color"))
                     {
-                        Color c = mat.color;
-                        c.a = 0f;
-                        mat.color = c;
+                        Color c = mat.color; c.a = 0f; mat.color = c;
                     }
+                }
             }
 
-            // 3) 낙하 + 페이드인
+            /* ───────────── ③ 낙하 + 페이드인 ───────────── */
             float elapsed = 0f;
-            float totalTime = dropDuration;
-            float y0 = startPos.y;
-            float y1 = finalPos.y;
-            float a = 2f * (y1 - y0) / (totalTime * totalTime);
+            float a = 2f * (finalPos.y - startPos.y) / (dropDuration * dropDuration);
 
             Vector3 horizStart = new Vector3(startPos.x, 0f, startPos.z);
             Vector3 horizEnd = new Vector3(finalPos.x, 0f, finalPos.z);
 
-            while (elapsed < totalTime)
+            while (elapsed < dropDuration)
             {
                 elapsed += Time.deltaTime;
-                float tNorm = Mathf.Clamp01(elapsed / totalTime);
+                float tNorm = Mathf.Clamp01(elapsed / dropDuration);
 
-                // 수평 이동
+                // 위치 보간
                 Vector3 horiz = Vector3.Lerp(horizStart, horizEnd, tNorm);
-                // 수직 이동
-                float y = y0 + 0.5f * a * elapsed * elapsed;
+                float y = startPos.y + 0.5f * a * elapsed * elapsed;
                 tile.transform.position = new Vector3(horiz.x, y, horiz.z);
 
-                // 페이드인
+                // 알파 보간
                 float alphaT = Mathf.Clamp01(elapsed / fadeDuration);
-                foreach (var r in renderers)
-                    foreach (var mat in r.materials)
-                        if (mat.HasProperty("_Color"))
-                        {
-                            Color c = mat.color;
-                            c.a = alphaT;
-                            mat.color = c;
-                        }
+                foreach (var mat in cachedMats)
+                    if (mat.HasProperty("_Color"))
+                    {
+                        Color c = mat.color; c.a = alphaT; mat.color = c;
+                    }
 
                 yield return null;
             }
 
-            // 4) 최종 보정 + Opaque 복원
+            /* ───────────── ④ 최종 보정 & Opaque 복구 ───────────── */
             tile.transform.position = finalPos;
-            foreach (var r in renderers)
+            foreach (var mat in cachedMats)
             {
-                foreach (var mat in r.materials)
+                if (mat.HasProperty("_Color"))
                 {
-                    if (mat.HasProperty("_Color"))
-                    {
-                        Color c = mat.color;
-                        c.a = 1f;
-                        mat.color = c;
-                    }
-                    SetMaterialOpaque(mat);
+                    Color c = mat.color; c.a = 1f; mat.color = c;
                 }
+                SetMaterialOpaque(mat);
             }
         }
 
         // Standard Shader를 Transparent 모드로 전환
         private void SetMaterialTransparent(Material mat)
         {
-            mat.SetFloat("_Mode", 3);
-            mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
-            mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            mat.SetFloat("_Mode", 3f);
+            mat.SetOverrideTag("RenderType", "Transparent");                           // 추가
+            mat.SetInt("_SrcBlend", (int)BlendMode.SrcAlpha);
+            mat.SetInt("_DstBlend", (int)BlendMode.OneMinusSrcAlpha);
             mat.SetInt("_ZWrite", 0);
             mat.DisableKeyword("_ALPHATEST_ON");
             mat.EnableKeyword("_ALPHABLEND_ON");
             mat.DisableKeyword("_ALPHAPREMULTIPLY_ON");
-            mat.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
+            mat.renderQueue = (int)RenderQueue.Transparent;
         }
 
         // 머티리얼을 다시 Opaque 모드로 복원
         private void SetMaterialOpaque(Material mat)
         {
-            mat.SetFloat("_Mode", 0);
-            mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.One);
-            mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.Zero);
+            mat.SetFloat("_Mode", 0f);
+            mat.SetOverrideTag("RenderType", "Opaque");                               // 추가
+            mat.SetInt("_SrcBlend", (int)BlendMode.One);
+            mat.SetInt("_DstBlend", (int)BlendMode.Zero);
             mat.SetInt("_ZWrite", 1);
             mat.DisableKeyword("_ALPHATEST_ON");
             mat.DisableKeyword("_ALPHABLEND_ON");
             mat.DisableKeyword("_ALPHAPREMULTIPLY_ON");
-            mat.renderQueue = -1;
+            mat.renderQueue = (int)RenderQueue.Geometry;                              // 기본 Opaque 큐로 명시
         }
 
         private Transform GetDiscardPosition(RelativeSeat seat) => seat switch

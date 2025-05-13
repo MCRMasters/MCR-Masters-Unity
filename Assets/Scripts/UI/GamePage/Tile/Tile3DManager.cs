@@ -47,28 +47,51 @@ namespace MCRGame.UI
         public GameObject Make3DTile(string tileName, Transform parent = null)
         {
             if (tilePrefab == null) return null;
+
             var go = Instantiate(tilePrefab, parent);
             go.name = tileName;
 
+            // ─── 1) 루트 MeshRenderer 인스턴스화 ───
             var mr = go.GetComponent<MeshRenderer>();
-            if (mr == null) { Debug.LogError("MeshRenderer 누락"); return go; }
+            if (mr == null)
+            {
+                Debug.LogError("[Tile3DManager] MeshRenderer 누락");
+                return go;
+            }
 
-            var mats = mr.materials;
+            var mats = mr.materials;                     // ← 이 시점에 이미 ‘복사본’ 배열
             if (mats.Length < 3)
-                Debug.LogWarning($"서브메시(subMesh)가 3개가 아닙니다. 현재 Materials.Length={mats.Length}");
+                Debug.LogWarning($"[Tile3DManager] subMesh가 3개가 아닙니다. materials.Length={mats.Length}");
 
-            // 0: side, 1: back, 2: front
-            mats[0] = defaultSideMaterial;
-            mats[1] = defaultBackMaterial;
+            // 0: side, 1: back, 2: front  ── 전부 독립 인스턴스로 교체
+            mats[0] = new Material(defaultSideMaterial);
+            mats[1] = new Material(defaultBackMaterial);
 
-            // 앞면은 타일별 매핑
-            if (tileFrontMaterials != null && tileFrontMaterials.TryGetValue(tileName, out var frontBase))
+            if (tileFrontMaterials != null &&
+                tileFrontMaterials.TryGetValue(tileName, out var frontBase))
+            {
                 mats[2] = new Material(frontBase);
+            }
             else
-                Debug.LogWarning($"앞면 Material 못 찾음: {tileName} (기본값 유지)");
+            {
+                Debug.LogWarning($"[Tile3DManager] 앞면 Material 못 찾음: {tileName} (기본값 사용)");
+                mats[2] = new Material(mats[2]);          // 원본이라도 복사본으로
+            }
 
-            mr.materials = mats;
+            mr.materials = mats;                         // 복사본 배열 지정
+
+            // ─── 2) 자식 Renderer(그림자·테두리 등)도 모두 복사 ───
+            foreach (var rend in go.GetComponentsInChildren<Renderer>())
+            {
+                if (rend == mr) continue;                // 루트는 이미 처리
+                var childMats = rend.materials;          // 배열 + 소재 모두 복제
+                for (int i = 0; i < childMats.Length; i++)
+                    childMats[i] = new Material(childMats[i]);
+                rend.materials = childMats;
+            }
+
             return go;
         }
+
     }
 }

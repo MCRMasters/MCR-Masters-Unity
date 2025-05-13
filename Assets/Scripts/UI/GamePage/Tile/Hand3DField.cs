@@ -204,35 +204,48 @@ namespace MCRGame.UI
                 ? width * 0.5f : 0f;
             return new Vector3(-(offset + extra), 0f, 0f);
         }
-
         private float GetTileWidth(GameObject tile)
         {
-            var rend = tile.GetComponent<Renderer>();
-            if (rend == null) return 0f;
+            // Hand3DField 로컬에서 측정한 min/max 사용
             var (min, max) = GetBounds(tile);
             return max.x - min.x;
         }
 
         private (Vector3 min, Vector3 max) GetBounds(GameObject obj)
         {
-            var rend = obj.GetComponent<Renderer>();
-            if (rend == null) return (Vector3.zero, Vector3.zero);
-            var b = rend.bounds;
+            // 1) 자식 포함 모든 Renderer 수집
+            var renderers = obj.GetComponentsInChildren<Renderer>();
+            if (renderers.Length == 0)
+                return (Vector3.zero, Vector3.zero);
+
+            // 2) 월드 바운드 합치기
+            Bounds combined = renderers[0].bounds;
+            for (int i = 1; i < renderers.Length; i++)
+                combined.Encapsulate(renderers[i].bounds);
+
+            // 3) 8개 코너를 **Hand3DField 기준 로컬**로 변환
             Vector3[] corners = new Vector3[8]
             {
-                new Vector3(b.min.x,b.min.y,b.min.z), new Vector3(b.min.x,b.min.y,b.max.z),
-                new Vector3(b.min.x,b.max.y,b.min.z), new Vector3(b.min.x,b.max.y,b.max.z),
-                new Vector3(b.max.x,b.min.y,b.min.z), new Vector3(b.max.x,b.min.y,b.max.z),
-                new Vector3(b.max.x,b.max.y,b.min.z), new Vector3(b.max.x,b.max.y,b.max.z)
+        new Vector3(combined.min.x, combined.min.y, combined.min.z),
+        new Vector3(combined.min.x, combined.min.y, combined.max.z),
+        new Vector3(combined.min.x, combined.max.y, combined.min.z),
+        new Vector3(combined.min.x, combined.max.y, combined.max.z),
+        new Vector3(combined.max.x, combined.min.y, combined.min.z),
+        new Vector3(combined.max.x, combined.min.y, combined.max.z),
+        new Vector3(combined.max.x, combined.max.y, combined.min.z),
+        new Vector3(combined.max.x, combined.max.y, combined.max.z),
             };
-            Vector3 min = Vector3.positiveInfinity, max = Vector3.negativeInfinity;
-            foreach (var c in corners)
+
+            Vector3 localMin = Vector3.positiveInfinity;
+            Vector3 localMax = Vector3.negativeInfinity;
+            foreach (var worldCorner in corners)
             {
-                var lc = obj.transform.InverseTransformPoint(c);
-                min = Vector3.Min(min, lc);
-                max = Vector3.Max(max, lc);
+                // **핵심**: Hand3DField.transform 기준으로 변환해야 폭이 맞음
+                Vector3 lc = transform.InverseTransformPoint(worldCorner);
+                localMin = Vector3.Min(localMin, lc);
+                localMax = Vector3.Max(localMax, lc);
             }
-            return (min, max);
+            return (localMin, localMax);
         }
 
         // --- 타일 생성 ---
@@ -343,7 +356,8 @@ namespace MCRGame.UI
 
             seq.Append(DOTween.To(
                 () => 0f,
-                x => {
+                x =>
+                {
                     float elapsed = x;
                     float t = Mathf.Clamp01(elapsed / duration);
                     float y = ampY * Mathf.Exp(-dampY * t) * Mathf.Abs(Mathf.Sin(freq * t));
