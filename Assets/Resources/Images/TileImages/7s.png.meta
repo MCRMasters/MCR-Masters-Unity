@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 24364d4de41e3964cb576ee561218e1c
+guid: df18cb4b1a7fd454d94ba542b546933a
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -2202916408903397449
-    second: 77s_0
+      213: 6772897586817332818
+    second: Sou7_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -109,30 +109,17 @@ TextureImporter:
     ignorePlatformSupport: 0
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
-  - serializedVersion: 4
-    buildTarget: iOS
-    maxTextureSize: 2048
-    resizeAlgorithm: 0
-    textureFormat: -1
-    textureCompression: 1
-    compressionQuality: 50
-    crunchedCompression: 0
-    allowsAlphaSplitting: 0
-    overridden: 0
-    ignorePlatformSupport: 0
-    androidETC2FallbackOverride: 0
-    forceMaximumCompressionQuality_BC6H_BC7: 0
   spriteSheet:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: 77s_0
+      name: Sou7_0
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 504
-        height: 664
+        width: 600
+        height: 800
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -141,8 +128,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 7bf0f69923bad61e0800000000000000
-      internalID: -2202916408903397449
+      spriteID: 256f85a887a2efd50800000000000000
+      internalID: 6772897586817332818
       vertices: []
       indices: 
       edges: []
@@ -161,7 +148,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      77s_0: -2202916408903397449
+      Sou7_0: 6772897586817332818
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 8f27bea02e56f1640a4b790227e10568
+guid: ebf92d5f77064a84cb51378f836314e9
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -8319732156799110635
-    second: 66m_0
+      213: 297064607298119037
+    second: Man6_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -109,30 +109,17 @@ TextureImporter:
     ignorePlatformSupport: 0
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
-  - serializedVersion: 4
-    buildTarget: iOS
-    maxTextureSize: 2048
-    resizeAlgorithm: 0
-    textureFormat: -1
-    textureCompression: 1
-    compressionQuality: 50
-    crunchedCompression: 0
-    allowsAlphaSplitting: 0
-    overridden: 0
-    ignorePlatformSupport: 0
-    androidETC2FallbackOverride: 0
-    forceMaximumCompressionQuality_BC6H_BC7: 0
   spriteSheet:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: 66m_0
+      name: Man6_0
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 504
-        height: 664
+        width: 600
+        height: 800
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -141,8 +128,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 5123897eeaf5a8c80800000000000000
-      internalID: -8319732156799110635
+      spriteID: d756859bfa26f1400800000000000000
+      internalID: 297064607298119037
       vertices: []
       indices: 
       edges: []
@@ -161,7 +148,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      66m_0: -8319732156799110635
+      Man6_0: 297064607298119037
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

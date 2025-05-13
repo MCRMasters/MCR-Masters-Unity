@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 3676f378c84058b42a61caf9529f7dd7
+guid: ae9294f0e1c678740b0f5381bf4f4424
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 6278235039264207158
-    second: 55z_0
+      213: 3827161518679216104
+    second: Haku_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -109,24 +109,11 @@ TextureImporter:
     ignorePlatformSupport: 0
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
-  - serializedVersion: 4
-    buildTarget: iOS
-    maxTextureSize: 2048
-    resizeAlgorithm: 0
-    textureFormat: -1
-    textureCompression: 1
-    compressionQuality: 50
-    crunchedCompression: 0
-    allowsAlphaSplitting: 0
-    overridden: 0
-    ignorePlatformSupport: 0
-    androidETC2FallbackOverride: 0
-    forceMaximumCompressionQuality_BC6H_BC7: 0
   spriteSheet:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: 55z_0
+      name: Haku_0
       rect:
         serializedVersion: 2
         x: 0
@@ -141,8 +128,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 631f0c33185c02750800000000000000
-      internalID: 6278235039264207158
+      spriteID: 8ef4be2cf1fcc1530800000000000000
+      internalID: 3827161518679216104
       vertices: []
       indices: 
       edges: []
@@ -161,7 +148,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      55z_0: 6278235039264207158
+      Haku_0: 3827161518679216104
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
