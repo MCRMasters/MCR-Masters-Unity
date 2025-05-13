@@ -46,9 +46,9 @@ namespace MCRGame.Game
             List<int> flowerCounts)
         {
             // (1) 안전성 검사
-            if (flowerCounts == null || flowerCounts.Count < 4)
+            if (flowerCounts == null || flowerCounts.Count != 4)
             {
-                Debug.LogError($"[FlowerReplacement] flowerCounts.Count={flowerCounts?.Count}, expected>=4");
+                Debug.LogError($"[FlowerReplacement] flowerCounts.Count={flowerCounts?.Count}, expected == 4");
                 yield break;
             }
 
@@ -173,31 +173,6 @@ namespace MCRGame.Game
             onComplete?.Invoke();
         }
 
-
-        // ───── 헬퍼 메서드들 (GameManager 쪽 코드 그대로) ─────
-        private IEnumerator HandleOneFlower(
-            RelativeSeat rel, int index, GameManager gm,
-            List<GameTile> newTiles, List<GameTile> appliedFlowers)
-        {
-            if (rel == RelativeSeat.SELF)
-            {
-                yield return gm.GameHandManager.RunExclusive(gm.GameHandManager.ApplyFlower(appliedFlowers[index]));
-                yield return gm.GameHandManager.RunExclusive(gm.GameHandManager.AddInitFlowerTsumo(newTiles[index]));
-            }
-            else
-            {
-                Hand3DField field = gm.playersHand3DFields[(int)rel];
-                yield return field.RequestDiscardRandom();
-                yield return field.RequestInitFlowerTsumo();
-            }
-
-            // 꽃 카운트 UI 애니메이션
-            int prev = gm.flowerCountMap[rel];
-            int next = prev + 1;
-            yield return StartCoroutine(gm.AnimateFlowerCount(
-                rel, prev, next, null));
-            gm.SetFlowerCount(rel, next);
-        }
 
         // 지정한 Image 컴포넌트가 fade in 효과로 나타나도록 처리 (fadeDuration 동안)
         private IEnumerator FadeIn(Image img, float fadeDuration)
