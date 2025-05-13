@@ -859,7 +859,9 @@ namespace MCRGame.Game
             canvas.SetActive(false);
             Debug.Log("Canvas 비활성화 완료.");
             yield return StartCoroutine(cameraResultAnimator.PlayResultAnimation());
-            yield return StartCoroutine(targetHandField.AnimateAllTilesRotationDomino(baseDuration: 0.4f, handScore: singleScore));
+            Sequence seq = targetHandField.AnimateAllTilesRotationDomino(baseDuration:0.4f, handScore:singleScore);
+            yield return seq.WaitForCompletion();
+            
             yield return new WaitForSeconds(2f);
             yield return ScorePopupManager.Instance.ShowWinningPopup(wsd).WaitForCompletion();
             ScorePopupManager.Instance.ShowButton();

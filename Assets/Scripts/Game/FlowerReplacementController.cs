@@ -65,11 +65,11 @@ namespace MCRGame.Game
 
             // (3) 좌석 순서대로 화패 교체
             AbsoluteSeat[] seats = {
-        AbsoluteSeat.EAST,
-        AbsoluteSeat.SOUTH,
-        AbsoluteSeat.WEST,
-        AbsoluteSeat.NORTH
-    };
+                AbsoluteSeat.EAST,
+                AbsoluteSeat.SOUTH,
+                AbsoluteSeat.WEST,
+                AbsoluteSeat.NORTH
+            };
 
             foreach (var abs in seats)
             {
@@ -84,13 +84,14 @@ namespace MCRGame.Game
                         int next = prev + 1;
                         bool animDone = false;
                         StartCoroutine(gm.AnimateFlowerCount(rel, prev, next, () => animDone = true));
-                        
+
                         yield return gm.GameHandManager
                             .RunExclusive(gm.GameHandManager.ApplyFlower(appliedFlowers[i]));
                         yield return new WaitUntil(() => animDone);
                         yield return gm.GameHandManager
                             .RunExclusive(gm.GameHandManager.AddInitFlowerTsumo(newTiles[i]));
 
+                        gm.SetFlowerCount(rel, next);
                         gm.UpdateLeftTilesByDelta(-1);
                     }
                     else
@@ -98,19 +99,10 @@ namespace MCRGame.Game
                         int prev = gm.flowerCountMap[rel];
                         int next = prev + 1;
 
-                        bool animDone = false, opDone = false;
-
-                        // (3-1) 화패 카운트 팝업 애니메이션
-                        StartCoroutine(gm.AnimateFlowerCount(rel, prev, next, () => animDone = true));
-
-                        // (3-2) 3D Hand 필드 애니메이션
-                        StartCoroutine(ProcessOpponentFlowerOperation(
-                            gm.playersHand3DFields[(int)rel],
-                            () => opDone = true));
-
-                        // (3-3) 둘 다 완료될 때까지 대기
-                        yield return new WaitUntil(() => animDone && opDone);
-
+                        // 화패 카운트 애니메이션
+                        yield return StartCoroutine(gm.AnimateFlowerCount(rel, prev, next, null));
+                        // 상대 3D 애니메이션
+                        yield return StartCoroutine(ProcessOpponentFlowerOperation(gm.playersHand3DFields[(int)rel], null));
                         // 업데이트
                         gm.SetFlowerCount(rel, next);
                         gm.UpdateLeftTilesByDelta(-1);
