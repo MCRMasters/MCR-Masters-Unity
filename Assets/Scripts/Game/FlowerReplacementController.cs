@@ -45,22 +45,15 @@ namespace MCRGame.Game
             List<GameTile> appliedFlowers,
             List<int> flowerCounts)
         {
-            // (1) 안전성 검사
-            if (flowerCounts == null || flowerCounts.Count != 4)
-            {
-                Debug.LogError($"[FlowerReplacement] flowerCounts.Count={flowerCounts?.Count}, expected == 4");
-                yield break;
-            }
-
             GameManager gm = GameManager.Instance;
             if (gm == null)
                 yield break;
 
-            // (2) 캔버스 찾아서 부모로 지정
+            // (1) 캔버스 찾아서 부모로 지정
             GameObject canvas = GameObject.Find("Main 2D Canvas");
             Transform canvasTr = canvas != null ? canvas.transform : transform;
 
-            // (3) FLOWER PHASE 효과 연출 (Fade-In)
+            // (2) FLOWER PHASE 효과 연출 (Fade-In)
             GameObject effectGO = null;
             if (flowerPhaseEffectPrefab != null)
             {
@@ -70,7 +63,7 @@ namespace MCRGame.Game
                 yield return StartCoroutine(FadeIn(img, 0.2f));
             }
 
-            // (4) 좌석 순서대로 꽃 교체
+            // (3) 좌석 순서대로 화패 교체
             AbsoluteSeat[] seats = {
         AbsoluteSeat.EAST,
         AbsoluteSeat.SOUTH,
@@ -107,15 +100,15 @@ namespace MCRGame.Game
 
                         bool animDone = false, opDone = false;
 
-                        // (4-1) 꽃 카운트 팝업 애니메이션
+                        // (3-1) 화패 카운트 팝업 애니메이션
                         StartCoroutine(gm.AnimateFlowerCount(rel, prev, next, () => animDone = true));
 
-                        // (4-2) 3D Hand 필드 애니메이션
+                        // (3-2) 3D Hand 필드 애니메이션
                         StartCoroutine(ProcessOpponentFlowerOperation(
                             gm.playersHand3DFields[(int)rel],
                             () => opDone = true));
 
-                        // (4-3) 둘 다 완료될 때까지 대기
+                        // (3-3) 둘 다 완료될 때까지 대기
                         yield return new WaitUntil(() => animDone && opDone);
 
                         // 업데이트
@@ -128,7 +121,7 @@ namespace MCRGame.Game
                 }
             }
 
-            // (5) FLOWER PHASE Fade-Out
+            // (4) FLOWER PHASE Fade-Out
             if (effectGO != null)
             {
                 var img = effectGO.GetComponentInChildren<Image>();
@@ -136,7 +129,7 @@ namespace MCRGame.Game
                 Destroy(effectGO);
             }
 
-            // (6) ROUND START 연출
+            // (5) ROUND START 연출
             if (roundStartEffectPrefab != null)
             {
                 var go = Instantiate(roundStartEffectPrefab, canvasTr);
@@ -146,10 +139,10 @@ namespace MCRGame.Game
                 Destroy(go);
             }
 
-            // (7) 서버에 INIT_FLOWER_OK 전송
+            // (6) 서버에 INIT_FLOWER_OK 전송
             if (GameWS.Instance != null)
             {
-                // 4) 서버 OK 전송
+                // 서버 OK 전송
                 GameWS.Instance.SendGameEvent(GameWSActionType.GAME_EVENT,
                     new
                     {
