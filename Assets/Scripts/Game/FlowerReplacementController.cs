@@ -6,6 +6,7 @@ using System.Collections;
 using MCRGame.Common;
 using MCRGame.UI;
 using MCRGame.Net;
+using System;
 
 
 namespace MCRGame.Game
@@ -34,7 +35,7 @@ namespace MCRGame.Game
             List<GameTile> appliedFlowers,
             List<int> flowerCounts)
         {
-            yield return GameManager.Instance.GameHandManager.RunExclusive(FlowerReplacementCoroutine(newTiles:newTiles, appliedFlowers:appliedFlowers, flowerCounts:flowerCounts));
+            yield return GameManager.Instance.GameHandManager.RunExclusive(FlowerReplacementCoroutine(newTiles: newTiles, appliedFlowers: appliedFlowers, flowerCounts: flowerCounts));
             GameManager.Instance.GameHandManager.IsAnimating = false;
             GameManager.Instance.CanClick = false;
         }
@@ -44,69 +45,134 @@ namespace MCRGame.Game
             List<GameTile> appliedFlowers,
             List<int> flowerCounts)
         {
-            GameManager gm = GameManager.Instance;
-            if (gm == null) yield break;
+            // (1) 안전성 검사
+            if (flowerCounts == null || flowerCounts.Count < 4)
+            {
+                Debug.LogError($"[FlowerReplacement] flowerCounts.Count={flowerCounts?.Count}, expected>=4");
+                yield break;
+            }
 
-            // ---------------- FLOWER PHASE 들어가기 ----------------
+            GameManager gm = GameManager.Instance;
+            if (gm == null)
+                yield break;
+
+            // (2) 캔버스 찾아서 부모로 지정
             GameObject canvas = GameObject.Find("Main 2D Canvas");
             Transform canvasTr = canvas != null ? canvas.transform : transform;
 
-            // 0) “FLOWER PHASE” 연출
-            Image flowerPhaseImg = null;
+            // (3) FLOWER PHASE 효과 연출 (Fade-In)
+            GameObject effectGO = null;
             if (flowerPhaseEffectPrefab != null)
             {
-                var go = Instantiate(flowerPhaseEffectPrefab, canvasTr);
-                flowerPhaseImg = go.GetComponent<Image>();
-                flowerPhaseImg.raycastTarget = false;
-                yield return FadeIn(flowerPhaseImg, .2f);
+                effectGO = Instantiate(flowerPhaseEffectPrefab, canvasTr);
+                var img = effectGO.GetComponentInChildren<Image>();
+                img.raycastTarget = false;
+                yield return StartCoroutine(FadeIn(img, 0.2f));
             }
 
-            // 1) 좌석 순서 반복
-            AbsoluteSeat[] seats = { AbsoluteSeat.EAST, AbsoluteSeat.SOUTH,
-                                     AbsoluteSeat.WEST, AbsoluteSeat.NORTH };
+            // (4) 좌석 순서대로 꽃 교체
+            AbsoluteSeat[] seats = {
+        AbsoluteSeat.EAST,
+        AbsoluteSeat.SOUTH,
+        AbsoluteSeat.WEST,
+        AbsoluteSeat.NORTH
+    };
 
             foreach (var abs in seats)
             {
-                int cnt = flowerCounts[(int)abs];
-                RelativeSeat rel =
-                    RelativeSeatExtensions.CreateFromAbsoluteSeats(gm.MySeat, abs);
+                int count = flowerCounts[(int)abs];
+                RelativeSeat rel = RelativeSeatExtensions.CreateFromAbsoluteSeats(gm.MySeat, abs);
 
-                for (int i = 0; i < cnt; i++)
+                for (int i = 0; i < count; i++)
                 {
-                    yield return HandleOneFlower(rel, i, gm,
-                                                 newTiles, appliedFlowers);
-                    gm.UpdateLeftTilesByDelta(-1);
+                    if (rel == RelativeSeat.SELF)
+                    {
+                        int prev = gm.flowerCountMap[rel];
+                        int next = prev + 1;
+                        bool animDone = false;
+                        StartCoroutine(gm.AnimateFlowerCount(rel, prev, next, () => animDone = true));
+                        
+                        yield return gm.GameHandManager
+                            .RunExclusive(gm.GameHandManager.ApplyFlower(appliedFlowers[i]));
+                        yield return new WaitUntil(() => animDone);
+                        yield return gm.GameHandManager
+                            .RunExclusive(gm.GameHandManager.AddInitFlowerTsumo(newTiles[i]));
+
+                        gm.UpdateLeftTilesByDelta(-1);
+                    }
+                    else
+                    {
+                        int prev = gm.flowerCountMap[rel];
+                        int next = prev + 1;
+
+                        bool animDone = false, opDone = false;
+
+                        // (4-1) 꽃 카운트 팝업 애니메이션
+                        StartCoroutine(gm.AnimateFlowerCount(rel, prev, next, () => animDone = true));
+
+                        // (4-2) 3D Hand 필드 애니메이션
+                        StartCoroutine(ProcessOpponentFlowerOperation(
+                            gm.playersHand3DFields[(int)rel],
+                            () => opDone = true));
+
+                        // (4-3) 둘 다 완료될 때까지 대기
+                        yield return new WaitUntil(() => animDone && opDone);
+
+                        // 업데이트
+                        gm.SetFlowerCount(rel, next);
+                        gm.UpdateLeftTilesByDelta(-1);
+                    }
+
+                    // 다음 교체 전 잠시 여유
+                    yield return new WaitForSeconds(0.3f);
                 }
-                yield return new WaitForSeconds(0.3f);
             }
 
-            // 2) FLOWER PHASE fade-out
-            if (flowerPhaseImg != null)
+            // (5) FLOWER PHASE Fade-Out
+            if (effectGO != null)
             {
-                yield return FadeOut(flowerPhaseImg, .2f);
-                Destroy(flowerPhaseImg.gameObject);
+                var img = effectGO.GetComponentInChildren<Image>();
+                yield return StartCoroutine(FadeOut(img, 0.2f));
+                Destroy(effectGO);
             }
-            // 3) ROUND START 연출
+
+            // (6) ROUND START 연출
             if (roundStartEffectPrefab != null)
             {
                 var go = Instantiate(roundStartEffectPrefab, canvasTr);
-                var img = go.GetComponent<Image>();
+                var img = go.GetComponentInChildren<Image>();
                 img.raycastTarget = false;
-                yield return FadeInAndOut(img, .2f, .7f);
+                yield return StartCoroutine(FadeInAndOut(img, 0.2f, 0.7f));
                 Destroy(go);
             }
 
-            // 4) 서버 OK 전송
-            GameWS.Instance?.SendGameEvent(
-                GameWSActionType.GAME_EVENT,
-                new
-                {
-                    event_type = (int)GameEventType.INIT_FLOWER_OK,
-                    data = new Dictionary<string, object>()
-                });
-
+            // (7) 서버에 INIT_FLOWER_OK 전송
+            if (GameWS.Instance != null)
+            {
+                // 4) 서버 OK 전송
+                GameWS.Instance.SendGameEvent(GameWSActionType.GAME_EVENT,
+                    new
+                    {
+                        event_type = (int)GameEventType.INIT_FLOWER_OK,
+                        data = new Dictionary<string, object>()
+                    }
+                );
+            }
             yield break;
         }
+
+        /// <summary>
+        /// 상대 3D 핸드 쪽 꽃 교체 애니메이션을 처리하고 완료 콜백을 호출합니다.
+        /// </summary>
+        private IEnumerator ProcessOpponentFlowerOperation(
+            Hand3DField handField,
+            Action onComplete)
+        {
+            yield return handField.RequestDiscardRandom();
+            yield return handField.RequestInitFlowerTsumo();
+            onComplete?.Invoke();
+        }
+
 
         // ───── 헬퍼 메서드들 (GameManager 쪽 코드 그대로) ─────
         private IEnumerator HandleOneFlower(
@@ -115,12 +181,8 @@ namespace MCRGame.Game
         {
             if (rel == RelativeSeat.SELF)
             {
-                yield return gm.GameHandManager
-                               .RunExclusive(gm.GameHandManager.ApplyFlower(
-                                                 appliedFlowers[index]));
-                yield return gm.GameHandManager
-                               .RunExclusive(gm.GameHandManager.AddInitFlowerTsumo(
-                                                 newTiles[index]));
+                yield return gm.GameHandManager.RunExclusive(gm.GameHandManager.ApplyFlower(appliedFlowers[index]));
+                yield return gm.GameHandManager.RunExclusive(gm.GameHandManager.AddInitFlowerTsumo(newTiles[index]));
             }
             else
             {
