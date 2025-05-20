@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using DG.Tweening;
 using System;
+using UnityEngine.SocialPlatforms.Impl;
 
 namespace MCRGame.UI
 {
@@ -111,6 +112,10 @@ namespace MCRGame.UI
             {
                 int index = i;                // 클로저 방지
                 Yaku yaku = yakuScores[index].YakuId;
+                if (yaku == Yaku.FlowerPoint && yakuScores[index].Score == 0)
+                {
+                    continue;
+                }
                 string name = Enum.GetName(typeof(KRYaku), (KRYaku)yaku) ?? "";
                 string score = yakuScores[index].Score.ToString();
 
