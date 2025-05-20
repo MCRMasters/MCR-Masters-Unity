@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using DG.Tweening;
 using System;
+using UnityEngine.SocialPlatforms.Impl;
 
 namespace MCRGame.UI
 {
@@ -30,7 +31,8 @@ namespace MCRGame.UI
         {
             okButton.gameObject.SetActive(false);
         }
-        public void SetOKButtonActive(){
+        public void SetOKButtonActive()
+        {
             okButton.gameObject.SetActive(true);
         }
         public Sequence Initialize(WinningScoreData scoreData)
@@ -46,9 +48,11 @@ namespace MCRGame.UI
             string nick = GameManager.Instance.Players[GameManager.Instance.seatToPlayerIndex[scoreData.winnerSeat]].Nickname;
             winnerNicknameText.text = nick;
 
-            foreach(var p in GameManager.Instance.PlayerInfo){
-                if (p.nickname == nick){
-                    characterImage.sprite =  CharacterImageManager.Instance.get_character_sprite_by_code(p.current_character.code);
+            foreach (var p in GameManager.Instance.PlayerInfo)
+            {
+                if (p.nickname == nick)
+                {
+                    characterImage.sprite = CharacterImageManager.Instance.get_character_sprite_by_code(p.current_character.code);
                     characterImage.color = new Color(255, 255, 255, 255);
                     break;
                 }
@@ -58,27 +62,29 @@ namespace MCRGame.UI
             okButton.onClick.RemoveAllListeners();
             okButton.onClick.AddListener(() => Destroy(gameObject)); // 팝업 닫기
                                                                      // 야쿠 점수 표시 (애니메이션 완료 후 점수 표시)
-            return DisplayYakuScoresWithAnimation(
-                yakuOrigin.GetComponent<RectTransform>(),
-                yakuObjectPrefab,
-                scoreData.yaku_score_list,
-                () => DisplayScores(scoreData.singleScore, scoreData.totalScore) // Func<Sequence> 반환
-            );
-        }
+                                                                     // 야쿠 애니메이션 + 점수 애니메이션을 체이닝
+            return DOTween.Sequence()
+                .Append(DisplayYakuScoresWithAnimation(
+                    yakuOrigin.GetComponent<RectTransform>(),
+                    yakuObjectPrefab,
+                    scoreData.yaku_score_list,
+                    () => DOTween.Sequence()
+                ))
+                .Append(DisplayScores(scoreData.singleScore, scoreData.totalScore));
 
-        public Sequence DisplayYakuScoresWithAnimation(RectTransform panel, GameObject yakuObjectPrefab,
-                                                List<YakuScore> yakuScores, Func<Sequence> onComplete)
+        }
+        public Sequence DisplayYakuScoresWithAnimation(
+            RectTransform panel,
+            GameObject yakuObjectPrefab,
+            List<YakuScore> yakuScores,
+            Func<Sequence> onComplete)
         {
-            // 기존 애니메이션 중지 및 정리
+            // 기존 정리 로직 그대로
             if (yakuAnimationSequence != null && yakuAnimationSequence.IsActive())
-            {
                 yakuAnimationSequence.Kill();
-            }
 
             foreach (Transform child in panel)
-            {
-                Destroy(child.gameObject);
-            }
+                UnityEngine.Object.Destroy(child.gameObject);
 
             if (panel == null || yakuObjectPrefab == null)
             {
@@ -92,7 +98,6 @@ namespace MCRGame.UI
             float animationDuration = 0.5f;
             float delayBetweenItems = 0.5f;
 
-            // 패널 크기 계산
             float panelWidth = yakuPanel.GetComponent<RectTransform>().rect.width;
             int nOfRows = yakuScores.Count > 10 ? 5 : 4;
             int nOfColumns = yakuScores.Count > 8 ? 3 : 2;
@@ -100,48 +105,65 @@ namespace MCRGame.UI
             float yakuWidth = 500f * yakuScale;
             float yakuHeight = 100f * yakuScale;
 
-            // 각 야쿠 항목 애니메이션 추가
-            yakuScores.Sort((YakuScore a, YakuScore b) => { return a.CompareTo(b); });
+            // 점수 높은 순 정렬
+            yakuScores.Sort((a, b) => a.CompareTo(b));
+
             for (int i = 0; i < yakuScores.Count; i++)
             {
-                int index = i; // 클로저 캡처 방지
-                // string name = Enum.GetName(typeof(Yaku), yakuScores[index].YakuId) ?? "";
-                string name = Enum.GetName(typeof(KRYaku), (KRYaku)yakuScores[index].YakuId) ?? "";
+                int index = i;                // 클로저 방지
+                Yaku yaku = yakuScores[index].YakuId;
+                if (yaku == Yaku.FlowerPoint && yakuScores[index].Score == 0)
+                {
+                    continue;
+                }
+                string name = Enum.GetName(typeof(KRYaku), (KRYaku)yaku) ?? "";
                 string score = yakuScores[index].Score.ToString();
 
+                // 클립 로드
+                AudioClip clip = Resources.Load<AudioClip>($"Voices/YakuVoice/YakuVoice_{yaku}");
+                float voiceLen = clip != null ? clip.length : 0f;
+
+                // ──────────────────────────────
+                // ① 음성 + 애니메이션 동시 스타트
+                // ──────────────────────────────
                 yakuAnimationSequence.AppendCallback(() =>
                 {
-                    GameObject itemObj = Instantiate(yakuObjectPrefab, panel);
+                    // 1) 음성
+                    if (clip != null)
+                        YakuVoiceManager.Instance.PlayYakuVoice(yaku);
+
+                    // 2) 아이템 생성 + 애니메이션
+                    GameObject itemObj = UnityEngine.Object.Instantiate(yakuObjectPrefab, panel);
                     itemObj.transform.localScale = Vector3.one * yakuScale;
 
                     RectTransform rt = itemObj.GetComponent<RectTransform>();
-                    rt.anchoredPosition = new Vector2(-10f + yakuWidth * (index / nOfRows),
-                                                     startY - yakuHeight * (index % nOfRows));
+                    rt.anchoredPosition = new Vector2(
+                        -10f + yakuWidth * (index / nOfRows),
+                        startY - yakuHeight * (index % nOfRows)
+                    );
 
                     if (itemObj.TryGetComponent<YakuObject>(out var item))
-                    {
                         item.SetYakuInfo(name, score);
-                    }
 
-                    // 애니메이션 적용
-                    CanvasGroup cg = itemObj.GetComponent<CanvasGroup>();
-                    if (cg == null) cg = itemObj.AddComponent<CanvasGroup>();
-                    cg.alpha = 0;
+                    CanvasGroup cg = itemObj.GetComponent<CanvasGroup>() ?? itemObj.AddComponent<CanvasGroup>();
+                    cg.alpha = 0f;
 
                     rt.DOAnchorPosX(startX + yakuWidth * (index / nOfRows), animationDuration)
-                    .SetEase(Ease.OutBack);
-                    cg.DOFade(1, animationDuration);
+                      .SetEase(Ease.OutBack);
+                    cg.DOFade(1f, animationDuration);
                 });
 
-                yakuAnimationSequence.AppendInterval(delayBetweenItems);
+                // ② “음성·애니메이션 둘 다 끝날 때”까지 대기
+                float waitTime = Mathf.Max(animationDuration, voiceLen);
+                yakuAnimationSequence.AppendInterval(waitTime + delayBetweenItems);
             }
-
-            // 모든 애니메이션 완료 후 콜백 실행
             yakuAnimationSequence.OnComplete(() =>
             {
                 Sequence scoreSequence = onComplete?.Invoke();
-                yakuAnimationSequence.Join(scoreSequence);
+                if (scoreSequence != null)
+                    yakuAnimationSequence.Join(scoreSequence);
             });
+
             return yakuAnimationSequence;
         }
 
