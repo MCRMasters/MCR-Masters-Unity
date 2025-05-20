@@ -11,7 +11,7 @@ public class YakuVoiceManager : MonoBehaviour
     [Tooltip("역 음성을 재생할 AudioSource")]
     [SerializeField] private AudioSource audioSource;
 
-    // Resources/Voices/YakuVoice_<Yaku 이름>.wav
+    // Resources/Voices/YakuVoice/YakuVoice_<Yaku 이름>.wav
     private Dictionary<Yaku, AudioClip> voiceClips = new Dictionary<Yaku, AudioClip>();
 
     private void Awake()
