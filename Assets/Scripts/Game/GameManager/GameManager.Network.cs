@@ -81,7 +81,12 @@ namespace MCRGame.Game
             var payload = new
             {
                 event_type = (int)GameEventType.DISCARD,
-                data = new { tile = (int)tile, is_tsumogiri }
+                action_id = currentActionId,
+                data = new
+                {
+                    tile = (int)tile,
+                    is_tsumogiri,
+                }
             };
             GameWS.Instance.SendGameEvent(GameWSActionType.GAME_EVENT, payload);
         }
