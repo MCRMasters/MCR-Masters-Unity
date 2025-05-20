@@ -135,7 +135,7 @@ namespace MCRGame.Game
 
             // 2) 배경 & raycast 해제
             var bg = container.GetComponent<Image>();
-            bg.color = new Color(0f, 0f, 0f, 0.5f);
+            bg.color = new Color(0f, 0f, 0f, 0.85f);
             bg.raycastTarget = false;
 
             // 3) 가로 레이아웃 + ContentSizeFitter
