@@ -9,7 +9,7 @@ namespace MCRGame.Net
 
         public string AccessToken { get; private set; }
         public string RefreshToken { get; private set; }
-        public bool IsNewUser { get; private set; }
+        public bool IsNewUser { get; set; }
 
         // 새로 추가: 서버에서 가져온 유저 정보
         public string Uid { get; private set; } // 고유 사용자 ID (문자열)
