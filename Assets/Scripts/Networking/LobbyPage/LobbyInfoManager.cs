@@ -24,7 +24,14 @@ namespace MCRGame.Net
 
         private IEnumerator ToggleAllCharacters()
         {
-            List<string> characters = new List<string> {"c1", "c2", "c3"};
+            HashSet<string> characters = new HashSet<string> {"c1", "c2", "c3"};
+            foreach (var character in PlayerDataManager.Instance.OwnedCharacters)
+            {
+                if (characters.Contains(character.code))
+                {
+                    characters.Remove(character.code);
+                }
+            }
             foreach (string n in characters) yield return ToggleCharacter(n);
             yield return GetUserInfoFromServer();
         }
