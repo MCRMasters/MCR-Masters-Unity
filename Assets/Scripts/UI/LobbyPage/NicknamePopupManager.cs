@@ -11,7 +11,6 @@ namespace MCRGame.UI
     {
         [Header("UI References")]
         [SerializeField] private GameObject popupPanel;          // 팝업 전체 Panel (풀스크린 덮개 역할)
-        [SerializeField] private RectTransform popupWindow;      // 실제 닉네임 입력창이 있는 자식 윈도우
         [SerializeField] private InputField nicknameInput;       // 새 닉네임 입력창
         [SerializeField] private Text currentNicknameText;       // 로비에 표시중인 닉네임 텍스트
         [SerializeField] private Button confirmButton;           // 변경 확인 버튼
@@ -78,6 +77,7 @@ namespace MCRGame.UI
         public void ClosePopup()
         {
             // blocker도 해제
+            PlayerDataManager.Instance.IsNewUser = false;
             blockerImage.raycastTarget = false;
             popupPanel.SetActive(false);
         }

@@ -10,14 +10,31 @@ namespace MCRGame.UI
         [SerializeField] private Text nameText;
         [SerializeField] private Image readyIndicator;
         [SerializeField] private Image characterImage;
+        [SerializeField] private Button addBotButton;
+
+        private int slot_index;
         public string Uid { get; private set; }
 
-        public void Setup(RoomUserInfo info, string hostUid)
+        private void Awake()
+        {
+            // 클릭 리스너 등록
+            addBotButton.onClick.AddListener(OnAddBotClicked);
+        }
+
+        private void OnAddBotClicked()
+        {
+            Debug.Log($"[PlayerSlotUI] AddBot clicked for slot {slot_index}");
+            RoomService.Instance.AddBotToSlot(slot_index);
+        }
+
+        public void Setup(RoomUserInfo info, string hostUid, int index)
         {
             Uid = info.uid;
+            slot_index = index;
             nameText.gameObject.SetActive(true);
             readyIndicator.gameObject.SetActive(true);
             characterImage.gameObject.SetActive(true);
+            addBotButton.gameObject.SetActive(false);
             characterImage.sprite = CharacterImageManager.Instance.get_character_sprite_by_code(info.current_character.code);
             characterImage.color = new Color(255, 255, 255, 255);
             nameText.text = info.nickname + (info.uid == hostUid ? " (Host)" : "");
@@ -29,12 +46,13 @@ namespace MCRGame.UI
             readyIndicator.color = ready ? Color.green : Color.red;
         }
 
-        public void SetEmpty()
+        public void SetEmpty(int index)
         {
-            // 빈 슬롯은 이름/표시 모두 끄거나, 원하는 placeholder를 띄워도 좋습니다.
+            slot_index = index;
             nameText.gameObject.SetActive(false);
             readyIndicator.gameObject.SetActive(false);
             characterImage.gameObject.SetActive(false);
+            addBotButton.gameObject.SetActive(true);
         }
     }
 }

@@ -24,8 +24,7 @@ namespace MCRGame.Game
         {
             // • Application.isMobilePlatform은 Android/iOS,  
             //   WebGL 모바일 브라우저에서도 true  
-            // • touchSupported로 터치 가능한 PC 디바이스 일부도 보완
-            isMobile = Application.isMobilePlatform || Input.touchSupported;
+            isMobile = Application.isMobilePlatform;
         }
 
         // ────────── PC (Hover) ──────────
