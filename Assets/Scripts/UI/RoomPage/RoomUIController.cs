@@ -107,7 +107,6 @@ namespace MCRGame.UI
         private void OnLeaveClicked()
         {
             RoomService.Instance.LeaveRoom();
-            SceneManager.LoadScene("RoomListScene", LoadSceneMode.Single);
         }
     }
 }
