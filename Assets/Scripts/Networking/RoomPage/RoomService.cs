@@ -233,6 +233,33 @@ namespace MCRGame.Net
             }
         }
 
+        /// <summary>
+        /// 호스트가 특정 슬롯에 봇을 추가 요청합니다.
+        /// </summary>
+        /// <param name="slotIndex">추가할 슬롯 인덱스</param>
+        public void AddBotToSlot(int slotIndex)
+        {
+            if (websocket != null && websocket.State == WebSocketState.Open)
+            {
+                // JSON 메시지 생성
+                var msg = new JObject
+                {
+                    ["action"] = "add_bot",
+                    ["data"] = new JObject
+                    {
+                        ["slot_index"] = slotIndex
+                    }
+                }.ToString();
+
+                websocket.SendText(msg);
+                Debug.Log($"[RoomService] Sent ADD_BOT message → slot_index={slotIndex}");
+            }
+            else
+            {
+                Debug.LogWarning("[RoomService] Cannot send ADD_BOT: WebSocket is not open");
+            }
+        }
+
 
         public void StartGame() => StartCoroutine(StartGameCoroutine());
         private IEnumerator StartGameCoroutine()

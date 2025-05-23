@@ -65,13 +65,13 @@ namespace MCRGame.UI
                 if (user != null)
                 {
                     // 실제 유저가 있으면 세팅
-                    slotUI.Setup(user, hostUid);
+                    slotUI.Setup(user, hostUid, slotIndex);
                     slots.Add(slotIndex, slotUI);
                 }
                 else
                 {
                     // 비어있는 슬롯: 빈 UI로 표시
-                    slotUI.SetEmpty();
+                    slotUI.SetEmpty(slotIndex);
                 }
             }
 
