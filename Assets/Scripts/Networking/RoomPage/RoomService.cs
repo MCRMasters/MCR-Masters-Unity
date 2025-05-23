@@ -10,6 +10,7 @@ using Newtonsoft.Json.Linq;
 using System.Linq;
 using MCRGame.Common;
 using MCRGame.Game;
+using UnityEngine.SceneManagement;
 
 
 namespace MCRGame.Net
@@ -174,9 +175,9 @@ namespace MCRGame.Net
         {
             Debug.Log($"[RoomService] ▶ LeaveRoom start. RoomNumber={CurrentRoomNumber}");
             DisconnectWebSocket();
-            StartCoroutine(LeaveRoomCoroutine());
+            StartCoroutine(LeaveRoomAndUnloadCoroutine());
         }
-        private IEnumerator LeaveRoomCoroutine()
+        private IEnumerator LeaveRoomAndUnloadCoroutine()
         {
             var url = $"{httpBaseUrl}/{CurrentRoomNumber}/leave";
             Debug.Log($"[RoomService] ▶ LeaveRoom API call. URL={url}");
@@ -187,15 +188,24 @@ namespace MCRGame.Net
                 downloadHandler = new DownloadHandlerBuffer()
             };
             req.SetRequestHeader("Authorization", $"Bearer {PlayerDataManager.Instance.AccessToken}");
-            yield return req.SendWebRequest();
+            try
+            {
+                yield return req.SendWebRequest();
 
-            if (req.result != UnityWebRequest.Result.Success)
-            {
-                Debug.LogError($"[RoomService] ❌ LeaveRoom failed: {req.error}");
+                if (req.result != UnityWebRequest.Result.Success)
+                {
+                    Debug.LogError($"[RoomService] ❌ LeaveRoom failed: {req.error}");
+                }
+                else
+                {
+                    Debug.Log($"[RoomService] ✔ LeaveRoom success");
+                }
             }
-            else
+            finally
             {
-                Debug.Log($"[RoomService] ✔ LeaveRoom success");
+                // 네트워크 요청 성공/실패와 상관없이 반드시 호출됩니다.
+                Debug.Log("[RoomService] ▶ Finally: loading RoomListScene");
+                SceneManager.LoadScene("RoomListScene", LoadSceneMode.Single);
             }
         }
 

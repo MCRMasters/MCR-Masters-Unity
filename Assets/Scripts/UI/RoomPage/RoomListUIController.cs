@@ -4,12 +4,15 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using MCRGame.Net;
+using UnityEditor.Search;
 
 namespace MCRGame.UI
 {
     public class RoomListUIController : MonoBehaviour
     {
         [SerializeField] private Button createRoomButton;
+        
+        [SerializeField] private Button RefreshRoomListButton;
         [SerializeField] private Transform contentParent;
         [SerializeField] private GameObject roomItemPrefab;
 
@@ -19,12 +22,17 @@ namespace MCRGame.UI
         {
             RoomService.Instance.OnRoomListReceived += PopulateRoomList;
             createRoomButton.onClick.AddListener(OnCreateRoom);
-            
+            RefreshRoomListButton.onClick.AddListener(OnRefresh);
 
             // 즉시 한 번 호출
             RoomService.Instance.FetchRooms();
             // 자동 갱신 시작
             StartAutoRefresh();
+        }
+
+        private void OnRefresh()
+        {
+            RoomService.Instance.FetchRooms();
         }
 
         private void OnDisable()
