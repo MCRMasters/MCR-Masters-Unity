@@ -4,7 +4,6 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using MCRGame.Net;
-using UnityEditor.Search;
 
 namespace MCRGame.UI
 {

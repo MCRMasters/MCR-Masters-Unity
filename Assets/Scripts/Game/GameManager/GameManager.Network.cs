@@ -53,11 +53,10 @@ namespace MCRGame.Game
                     return;
                 }
 
-                currentActionId = jData.Value<int>("action_id");
                 remainingTime = jData.Value<float>("remaining_time");
 
                 // 3) 파싱된 값 사용 예시
-                Debug.Log($"[SetTimer] action_id: {currentActionId}, remaining_time: {remainingTime}");
+                Debug.Log($"[SetTimer] remaining_time: {remainingTime}");
 
                 if (timerText != null)
                 {
