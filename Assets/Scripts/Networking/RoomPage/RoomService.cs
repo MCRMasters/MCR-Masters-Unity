@@ -10,6 +10,7 @@ using Newtonsoft.Json.Linq;
 using System.Linq;
 using MCRGame.Common;
 using MCRGame.Game;
+using UnityEngine.SceneManagement;
 
 
 namespace MCRGame.Net
@@ -174,9 +175,9 @@ namespace MCRGame.Net
         {
             Debug.Log($"[RoomService] ▶ LeaveRoom start. RoomNumber={CurrentRoomNumber}");
             DisconnectWebSocket();
-            StartCoroutine(LeaveRoomCoroutine());
+            StartCoroutine(LeaveRoomAndUnloadCoroutine());
         }
-        private IEnumerator LeaveRoomCoroutine()
+        private IEnumerator LeaveRoomAndUnloadCoroutine()
         {
             var url = $"{httpBaseUrl}/{CurrentRoomNumber}/leave";
             Debug.Log($"[RoomService] ▶ LeaveRoom API call. URL={url}");
@@ -187,15 +188,24 @@ namespace MCRGame.Net
                 downloadHandler = new DownloadHandlerBuffer()
             };
             req.SetRequestHeader("Authorization", $"Bearer {PlayerDataManager.Instance.AccessToken}");
-            yield return req.SendWebRequest();
+            try
+            {
+                yield return req.SendWebRequest();
 
-            if (req.result != UnityWebRequest.Result.Success)
-            {
-                Debug.LogError($"[RoomService] ❌ LeaveRoom failed: {req.error}");
+                if (req.result != UnityWebRequest.Result.Success)
+                {
+                    Debug.LogError($"[RoomService] ❌ LeaveRoom failed: {req.error}");
+                }
+                else
+                {
+                    Debug.Log($"[RoomService] ✔ LeaveRoom success");
+                }
             }
-            else
+            finally
             {
-                Debug.Log($"[RoomService] ✔ LeaveRoom success");
+                // 네트워크 요청 성공/실패와 상관없이 반드시 호출됩니다.
+                Debug.Log("[RoomService] ▶ Finally: loading RoomListScene");
+                SceneManager.LoadScene("RoomListScene", LoadSceneMode.Single);
             }
         }
 
@@ -230,6 +240,33 @@ namespace MCRGame.Net
                 hasPendingReady = true;
                 pendingReadyState = isReady;
                 Debug.LogWarning("[RoomService] WebSocket not open — pending ready saved");
+            }
+        }
+
+        /// <summary>
+        /// 호스트가 특정 슬롯에 봇을 추가 요청합니다.
+        /// </summary>
+        /// <param name="slotIndex">추가할 슬롯 인덱스</param>
+        public void AddBotToSlot(int slotIndex)
+        {
+            if (websocket != null && websocket.State == WebSocketState.Open)
+            {
+                // JSON 메시지 생성
+                var msg = new JObject
+                {
+                    ["action"] = "add_bot",
+                    ["data"] = new JObject
+                    {
+                        ["slot_index"] = slotIndex
+                    }
+                }.ToString();
+
+                websocket.SendText(msg);
+                Debug.Log($"[RoomService] Sent ADD_BOT message → slot_index={slotIndex}");
+            }
+            else
+            {
+                Debug.LogWarning("[RoomService] Cannot send ADD_BOT: WebSocket is not open");
             }
         }
 
