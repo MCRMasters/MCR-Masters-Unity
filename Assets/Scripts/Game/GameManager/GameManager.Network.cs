@@ -4,17 +4,13 @@ using UnityEngine.UI;
 using System.Linq;
 using System;
 using System.Collections;
-using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
-using TMPro;
 
 using MCRGame.Common;
 using MCRGame.UI;
 using MCRGame.Net;
-using MCRGame.View;
 using MCRGame.Audio;
 using DG.Tweening;
-using UnityEngine.SocialPlatforms.Impl;
 
 
 namespace MCRGame.Game
@@ -179,6 +175,14 @@ namespace MCRGame.Game
                 Debug.Log("ConfirmCallBlock: Step 5 - Logging parsed values");
                 Debug.Log($"ConfirmCallBlock: seat = {seat}, callBlockData = {(callBlockData != null ? callBlockData.FirstTile.ToString() : "null")}");
 
+                if (jData.TryGetValue("action_id", out JToken actionIDToken))
+                {
+                    if (actionIDToken != null)
+                    {
+                        currentActionId = actionIDToken.ToObject<int>();
+                    }
+                }
+
                 Debug.Log("ConfirmCallBlock: Step 6 - Determining relative seat");
                 RelativeSeat relativeSeat = RelativeSeatExtensions.CreateFromAbsoluteSeats(currentSeat: MySeat, targetSeat: seat);
                 Debug.Log("ConfirmCallBlock: relativeSeat = " + relativeSeat);
@@ -194,6 +198,8 @@ namespace MCRGame.Game
                 Debug.Log("ConfirmCallBlock: sourceAbsoluteSeat = " + sourceAbsoluteSeat);
                 RelativeSeat sourceRelativeSeat = RelativeSeatExtensions.CreateFromAbsoluteSeats(currentSeat: MySeat, targetSeat: sourceAbsoluteSeat);
                 Debug.Log("ConfirmCallBlock: sourceRelativeSeat = " + sourceRelativeSeat);
+
+                
 
                 if (relativeSeat == RelativeSeat.SELF)
                 {
