@@ -16,8 +16,8 @@ namespace MCRGame.UI
         public Transform discardPosKAMI;
 
         [Header("타일 간격 설정")]
-        public float tileSpacing = 14f;
-        public float rowSpacing = 20f;
+        public float tileSpacing = 3.5f;
+        public float rowSpacing = 4.3f;
         public int maxTilesPerRow = 6;
 
         [Header("Discard Animation Settings")]

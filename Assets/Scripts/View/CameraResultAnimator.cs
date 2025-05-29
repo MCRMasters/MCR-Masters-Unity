@@ -6,7 +6,7 @@ namespace MCRGame.View
     public class CameraResultAnimator : MonoBehaviour
     {
         // [1] "기본" 상태 (Transform)
-        private Vector3 defaultPosition = new Vector3(0f, 60f, -30f);
+        private Vector3 defaultPosition = new Vector3(0f, 60f, -40f);
         private Vector3 defaultEulerAngles = new Vector3(60f, 0f, 0f);
 
         // [2] "결과 고지" 상태 (Transform)

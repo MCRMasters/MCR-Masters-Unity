@@ -11,7 +11,7 @@ namespace MCRGame.UI
         public List<GameObject> Tiles = new List<GameObject>();
 
         // SHOMIN_KONG 적용 시, 회전된 타일 위쪽(로컬 Y 방향)으로 배치할 오프셋 값
-        public float shominKongOffset = 0f;
+        public float shominKongOffset = -10f;
 
         public void InitializeCallBlock()
         {
@@ -126,7 +126,7 @@ namespace MCRGame.UI
                 // 필요하면 해당 타일에 대한 추가 회전을 적용 (AN_KONG은 이미 180도 회전했으므로 건너뛰거나 따로 처리)
                 if (Data.Type != CallBlockType.AN_KONG)
                 {
-                    Tiles[rotateIndex].transform.localRotation = Quaternion.Euler(0f, 0f, 90f);
+                    Tiles[rotateIndex].transform.localRotation = Quaternion.Euler(0f, 90f, 0f);
                 }
             }
         }
