@@ -11,7 +11,7 @@ namespace MCRGame.UI
         public List<GameObject> Tiles = new List<GameObject>();
 
         // SHOMIN_KONG 적용 시, 회전된 타일 위쪽(로컬 Y 방향)으로 배치할 오프셋 값
-        public float shominKongOffset = 10f;
+        public float shominKongOffset = 0f;
 
         public void InitializeCallBlock()
         {
