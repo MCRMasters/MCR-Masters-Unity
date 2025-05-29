@@ -10,7 +10,7 @@ namespace MCRGame.View
         private Vector3 defaultEulerAngles = new Vector3(60f, 0f, 0f);
 
         // [2] "결과 고지" 상태 (Transform)
-        private Vector3 changedPosition = new Vector3(0f, 330f, -170f);
+        private Vector3 changedPosition = new Vector3(0f, 100f, -40f);
         private Vector3 changedEulerAngles = new Vector3(70f, 0f, 0f);
 
         // [3] 이동 애니메이션 시간 (초 단위)
