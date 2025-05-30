@@ -10,7 +10,7 @@ namespace MCRGame.UI
         public CallBlockData Data;
         public List<GameObject> Tiles = new List<GameObject>();
 
-        // SHOMIN_KONG 적용 시, 회전된 타일 위쪽(로컬 Y 방향)으로 배치할 오프셋 값
+        // SHOMIN_KONG 적용 시, 회전된 타일 위쪽(로컬 Y 방향)으로 배치할 오프셋 값    z값으로 수정됨
         public float shominKongOffset = 10f;
 
         public void InitializeCallBlock()
@@ -56,15 +56,6 @@ namespace MCRGame.UI
                 {
                     // 뒤집기
                     tileObj.transform.localRotation = Quaternion.Euler(180f, 0f, 0f);
-
-                    // Z축 보정만: bounds 높이(deltaZ) 만큼 앞으로(+) 이동
-                    var bounds = GetTileLocalBounds(tileObj);
-                    if (bounds.HasValue)
-                    {
-                        float deltaZ = bounds.Value.max.z - bounds.Value.min.z;
-                        Debug.Log($"DeltaZ: {deltaZ}");
-                        tileObj.transform.localPosition += new Vector3(0f, 0f, deltaZ);
-                    }
                 }
 
                 Tiles.Add(tileObj);
@@ -126,7 +117,7 @@ namespace MCRGame.UI
                 // 필요하면 해당 타일에 대한 추가 회전을 적용 (AN_KONG은 이미 180도 회전했으므로 건너뛰거나 따로 처리)
                 if (Data.Type != CallBlockType.AN_KONG)
                 {
-                    Tiles[rotateIndex].transform.localRotation = Quaternion.Euler(0f, 0f, 90f);
+                    Tiles[rotateIndex].transform.localRotation = Quaternion.Euler(0f, 90f, 0f);
                 }
             }
         }
@@ -170,7 +161,7 @@ namespace MCRGame.UI
             Vector3 tileMax = bounds.Value.max;
 
             AdjustRightEdge(tile, ref offsetX, tileMax);
-            AdjustBottom(tile, tileMin);
+            AdjustBottom(tile, tileMax);
             UpdateOffsetX(ref offsetX, tileMin, tileMax);
         }
 
@@ -215,10 +206,10 @@ namespace MCRGame.UI
             tile.transform.localPosition += new Vector3(deltaX, 0f, 0f);
         }
 
-        private void AdjustBottom(GameObject tile, Vector3 tileMin)
+        private void AdjustBottom(GameObject tile, Vector3 tileMax)
         {
-            float deltaY = 0f - tileMin.y;
-            tile.transform.localPosition += new Vector3(0f, deltaY, 0f);
+            float deltaZ = 0 - tileMax.z;
+            tile.transform.localPosition += new Vector3(0f, 0f, deltaZ);
         }
 
         private void UpdateOffsetX(ref float offsetX, Vector3 tileMin, Vector3 tileMax)
@@ -269,23 +260,23 @@ namespace MCRGame.UI
             newTile.transform.localRotation = Tiles[rotatedIndex].transform.localRotation;
             Debug.Log("[ApplyShominKong] 새 타일 생성 및 부모/회전 설정 완료");
 
-            // 5. Y 오프셋 계산
+            // 5. z 오프셋 계산
             var bounds = GetTileLocalBounds(Tiles[rotatedIndex]);
-            float yOffset;
+            float zOffset;
             if (bounds.HasValue)
             {
-                yOffset = bounds.Value.max.y - bounds.Value.min.y;
-                Debug.Log($"[ApplyShominKong] 경계 계산 성공: yOffset = {yOffset:F3}");
+                zOffset = bounds.Value.max.z + bounds.Value.min.z;
+                Debug.Log($"[ApplyShominKong] 경계 계산 성공: zOffset = {zOffset:F3}");
             }
             else
             {
-                yOffset = shominKongOffset;
-                Debug.LogWarning($"[ApplyShominKong] 경계 계산 실패, 기본 offset 사용: {yOffset:F3}");
+                zOffset = shominKongOffset;
+                Debug.LogWarning($"[ApplyShominKong] 경계 계산 실패, 기본 offset 사용: {zOffset:F3}");
             }
 
             // 6. 위치 조정
             Vector3 basePos = Tiles[rotatedIndex].transform.localPosition;
-            Vector3 targetPos = basePos + new Vector3(0f, yOffset, 0f);
+            Vector3 targetPos = basePos + new Vector3(0f, 0f, zOffset);
             newTile.transform.localPosition = targetPos;
             Debug.Log($"[ApplyShominKong] 새 타일 위치 설정: basePos={basePos}, targetPos={targetPos}");
 
