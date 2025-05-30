@@ -161,7 +161,7 @@ namespace MCRGame.UI
             Vector3 tileMax = bounds.Value.max;
 
             AdjustRightEdge(tile, ref offsetX, tileMax);
-            AdjustBottom(tile, tileMin);
+            AdjustBottom(tile, tileMax);
             UpdateOffsetX(ref offsetX, tileMin, tileMax);
         }
 
@@ -206,9 +206,9 @@ namespace MCRGame.UI
             tile.transform.localPosition += new Vector3(deltaX, 0f, 0f);
         }
 
-        private void AdjustBottom(GameObject tile, Vector3 tileMin)
+        private void AdjustBottom(GameObject tile, Vector3 tileMax)
         {
-            float deltaZ = 0f + tileMin.z;
+            float deltaZ = 0 - tileMax.z;
             tile.transform.localPosition += new Vector3(0f, 0f, deltaZ);
         }
 
