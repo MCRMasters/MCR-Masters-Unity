@@ -14,12 +14,11 @@
 
     <style>
         /* ─── 풀스크린 + Flex 중앙정렬 ─── */
-        html,
-        body {
+        html, body {
             margin: 0;
             padding: 0;
-            width: 100vw;
-            height: 100vh;
+            width: 100%;
+            height: 100%;       /* 100vh → 100% 로 변경 */
             overflow: hidden;
             background: #000;
             display: flex;
@@ -31,9 +30,7 @@
         #unity-container {
             background: #000;
             overflow: hidden;
-            max-width: 100vw;
-            max-height: 100vh;
-            position: relative;
+            position: relative; /* JS에서 크기를 직접 설정 */
         }
 
         /* ─── 캔버스 ─── */
@@ -70,7 +67,7 @@
         </div>
     </div>
 
-    <!-- 0) visibilitychange 이벤트 차단 -->
+    <!-- 0) visibilitychange 이벤트 차단 (필요 시 유지) -->
     <script>
         document.addEventListener = (function (orig) {
             return function (type, listener, options) {
@@ -137,7 +134,7 @@
                 companyName: "Mahjong Party",
                 productName: "Mahjong Party",
                 productVersion: "1.0",
-                runInBackground: true    // ← 백그라운드에서도 엔진 루프 유지
+                runInBackground: true
             }, progress => {
                 barFull.style.width = `${100 * progress}%`;
             }).then(() => {

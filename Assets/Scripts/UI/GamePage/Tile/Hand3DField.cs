@@ -334,44 +334,71 @@ namespace MCRGame.UI
             RepositionInstant();
         }
 
-        // --- 타일 회전 & 튕김 애니메이션 ---
         public Sequence AnimateTileRotation(GameObject tile, float baseDuration, int handScore)
         {
             var seq = DOTween.Sequence();
             if (tile == null) return seq;
 
+            // 1) 회전 애니메이션 (원래대로)
             var startRot = tile.transform.localRotation;
             var euler = startRot.eulerAngles;
             float rotDuration = baseDuration / (1f + handScore / 10f);
-            seq.Append(tile.transform.DOLocalRotate(new Vector3(-90f, euler.y, euler.z), rotDuration).SetEase(Ease.OutQuad));
+            seq.Append(
+                tile.transform
+                    .DOLocalRotate(new Vector3(-90f, euler.y, euler.z), rotDuration)
+                    .SetEase(Ease.OutQuad)
+            );
 
+            // 2) 위치 애니메이션을 위한 준비
             Vector3 startPos = tile.transform.localPosition;
-            float ampY = Mathf.Max(1f, handScore);
+            float amp = Mathf.Max(1f, handScore);
+
+            // ▷ 여기서 이동 크기를 조정할 스케일 값을 정의합니다.
+            //    예: 0.1f → 원래 값의 10%만큼만 움직임
+            float positionScale = 0.1f;
+
             float freq = Mathf.PI * 4f * UnityEngine.Random.Range(0.8f, 1.2f);
             float dampY = 3f * UnityEngine.Random.Range(0.8f, 1.2f);
             float dampZ = 2f * UnityEngine.Random.Range(0.8f, 1.2f);
             float duration = baseDuration * UnityEngine.Random.Range(0.9f, 1.1f);
+
             float prevY = 0f;
             float currZ = 0f;
 
-            seq.Append(DOTween.To(
-                () => 0f,
-                x =>
-                {
-                    float elapsed = x;
-                    float t = Mathf.Clamp01(elapsed / duration);
-                    float y = ampY * Mathf.Exp(-dampY * t) * Mathf.Abs(Mathf.Sin(freq * t));
-                    if (prevY > 0f && y <= 0f)
+            // 3) 커스텀 Tween으로 Y,Z 움직임을 계산
+            seq.Append(
+                DOTween.To(
+                    () => 0f,
+                    elapsedValue =>
                     {
-                        float baseZ = ampY * UnityEngine.Random.Range(0.2f, 0.5f);
-                        float sign = UnityEngine.Random.value < 0.5f ? -1f : 1f;
-                        currZ = baseZ * sign * Mathf.Exp(-dampZ * t);
-                    }
-                    tile.transform.localPosition = startPos + new Vector3(0f, y, currZ);
-                    prevY = y;
-                }, duration, duration).SetEase(Ease.Linear)
+                        float elapsed = elapsedValue;
+                        float t = Mathf.Clamp01(elapsed / duration);
+
+                        // 원래 y 계산(탄젠트 + 감쇠)
+                        float rawY = amp * Mathf.Exp(-dampY * t) * Mathf.Abs(Mathf.Sin(freq * t));
+
+                        // 이전 y가 양수였다가 지금 y가 0 이하로 바뀔 때만 Z 축 흔들림 계산
+                        if (prevY > 0f && rawY <= 0f)
+                        {
+                            float baseZ = amp * UnityEngine.Random.Range(0.2f, 0.5f);
+                            float sign = (UnityEngine.Random.value < 0.5f) ? -1f : 1f;
+                            currZ = baseZ * sign * Mathf.Exp(-dampZ * t);
+                        }
+
+                        // ▷ Y와 Z를 서로 바꿔서 적용(원래는 new Vector3(0, rawY, currZ))
+                        //    그리고 positionScale로 전체 크기를 조절
+                        float moveY = currZ * positionScale; // 원래 Z 로직 → Y축으로
+                        float moveZ = rawY * positionScale; // 원래 Y 로직 → Z축으로
+
+                        tile.transform.localPosition = startPos + new Vector3(0f, moveY, moveZ);
+                        prevY = rawY;
+                    },
+                    duration,
+                    duration
+                ).SetEase(Ease.Linear)
             );
 
+            // 4) 마지막에 원복
             seq.AppendCallback(() =>
             {
                 tile.transform.localPosition = startPos;
