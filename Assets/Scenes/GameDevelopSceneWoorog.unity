@@ -478,6 +478,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 111835112716224325, guid: 664a0e6240d924e7b931bbeb2c8433c2, type: 3}
+      propertyPath: looping
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4792389700475920772, guid: 664a0e6240d924e7b931bbeb2c8433c2, type: 3}
       propertyPath: m_Name
       value: Particle System
