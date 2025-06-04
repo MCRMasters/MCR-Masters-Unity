@@ -308,27 +308,37 @@ namespace MCRGame.UI
             }
             return (localMin, localMax);
         }
-
         private IEnumerator AnimateCallBlock(GameObject obj, Vector3 finalPos, Renderer[] renderers)
         {
             float elapsed = 0f;
             float tTotal = cbDropDuration;
+
+            // 시작 위치 조정: X, Y, Z 모두 finalPos에서 약간만 떨어진 위치로 세팅
             Vector3 startLocal = obj.transform.localPosition;
+            startLocal.x = finalPos.x + 1f;    // X축 오프셋 (bulge 효과로 움직일 것이므로 작은 값)
+            startLocal.y = finalPos.y + 4f;      // Y축 높게 (Ease-out으로 떨어지도록)
+            startLocal.z = finalPos.z + 2f;    // Z축 오프셋 (단순 선형 보간)
+            obj.transform.localPosition = startLocal;
+
+            // bulge 효과 스케일을 약간 더 크게 (예: 0.1f)
+            float bulgeScale = 0.1f;
 
             while (elapsed < tTotal)
             {
                 elapsed += Time.deltaTime;
                 float tNorm = Mathf.Clamp01(elapsed / tTotal);
 
-                // X: 선형 보간
-                float x = Mathf.Lerp(startLocal.x, finalPos.x, tNorm);
-                // Z: Ease-out 보간
-                float z = Mathf.Lerp(startLocal.z, finalPos.z, 1f - Mathf.Pow(1f - tNorm, 2f));
-                // Y: 선형 보간 + 불룩 효과 (4*t*(1-t))
-                float baseY = Mathf.Lerp(startLocal.y, finalPos.y, tNorm);
+                // Y: Ease-Out 보간 (높은 곳에서 아래로 떨어지는 듯한 효과)
+                float y = Mathf.Lerp(startLocal.y, finalPos.y, 1f - Mathf.Pow(1f - tNorm, 2f));
+
+                // Z: startLocal.z에서 finalPos.z로 선형 보간
+                float z = Mathf.Lerp(startLocal.z, finalPos.z, tNorm);
+
+                // X: 선형 보간 + bulge 효과
+                float baseX = Mathf.Lerp(startLocal.x, finalPos.x, tNorm);
                 float dir = cbBulgeUp ? 1f : -1f;
-                float bulge = cbBulgeHeight * 4f * tNorm * (1f - tNorm) * dir;
-                float y = baseY + bulge;
+                float bulge = cbBulgeHeight * bulgeScale * 4f * tNorm * (1f - tNorm) * dir;
+                float x = baseX + bulge;
 
                 obj.transform.localPosition = new Vector3(x, y, z);
 
@@ -346,9 +356,11 @@ namespace MCRGame.UI
                         }
                     }
                 }
+
                 yield return null;
             }
 
+            // 최종 위치 및 알파/투명도 초기화
             obj.transform.localPosition = finalPos;
             foreach (var r in renderers)
             {

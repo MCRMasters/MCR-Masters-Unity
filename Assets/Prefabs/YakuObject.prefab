@@ -284,6 +284,7 @@ GameObject:
   - component: {fileID: 1054104180523290525}
   - component: {fileID: 8563013097808578158}
   - component: {fileID: 4156278894806742262}
+  - component: {fileID: 4072879347135503017}
   m_Layer: 5
   m_Name: YakuObject
   m_TagString: Untagged
@@ -364,3 +365,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   yakuNameText: {fileID: 6400312728911861869}
   scoreText: {fileID: 892526272393031382}
+--- !u!225 &4072879347135503017
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7803597423106955889}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
