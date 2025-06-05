@@ -1,111 +1,117 @@
 using UnityEngine;
+using System.Collections;
 
 /// <summary>
-/// Cylinder와 Circle 두 오브젝트에 "clip" 프로퍼티를  
-/// 시간에 따라 0 → 1로 서서히 증가시키며 페이드아웃(사라짐)을 구현하는 매니저 클래스
+/// 1) Cylinder는 씬 시작과 동시에 “위(높은 Y 위치)에서 아래(목표 위치)로 0.5초 동안 내려오는 연출”
+/// 2) Cylinder가 목표 위치에 도달한 뒤에는 2초간 그대로 유지
+/// 3) 그 뒤 Circle(물 퍼짐)이 활성화되어 1초 동안 페이드아웃(clip 0→1)
 /// </summary>
-public class ClipFadeController : MonoBehaviour
+public class CylinderDropController : MonoBehaviour
 {
-    [Header("메시에 할당된 Renderer들")]
-    [Tooltip("실린더 메쉬의 MeshRenderer")]
-    public MeshRenderer cylinderRenderer;
-    [Tooltip("원형(Circle) 메쉬의 MeshRenderer")]
+    [Header("Cylinder (기둥) 설정")]
+    [Tooltip("실린더 Transform (MeshRenderer 등을 포함)")]
+    public Transform cylinderTransform;
+
+    [Tooltip("Cylinder가 최종적으로 놓일 위치")]
+    public Vector3 targetPosition = Vector3.zero;
+    [Tooltip("시작 시 Cylinder를 목표 위치에서 얼마나 위로 띄울지")]
+    public float startHeightOffset = 5.0f;
+    [Tooltip("Cylinder가 위→아래로 내려오는 데 걸리는 시간(초)")]
+    public float dropDuration = 0.5f;
+    [Tooltip("Cylinder가 목표 위치에 도달한 뒤 머무를 시간(초)")]
+    public float keepDuration = 2.0f;
+
+    [Header("Circle(물 퍼짐) 설정")]
+    [Tooltip("Cylinder가 떨어진 뒤 활성화할 Circle MeshRenderer")]
     public MeshRenderer circleRenderer;
+    [Tooltip("Circle이 페이드아웃될 때 걸리는 시간(clip 0→1)")]
+    public float circleFadeDuration = 1.0f;
+    [Tooltip("Cylinder 도착 + 유지가 끝난 뒤 Circle을 활성화하기 전 추가 딜레이(초)")]
+    public float circleStartDelay = 0.0f;
 
-    [Header("Fade 설정")]
-    [Tooltip("clip 값이 0에서 1로 올라가는 데 걸리는 전체 시간(초)")]
-    public float fadeDuration = 2.0f;
-    [Tooltip("clip 값 증가 시작 딜레이(초)")]
-    public float startDelay = 0.0f;
-
-    // 내부적으로 MaterialPropertyBlock을 미리 만들어서 재사용
-    private MaterialPropertyBlock _mpbCylinder;
+    // 내부에서 쓸 MaterialPropertyBlock
     private MaterialPropertyBlock _mpbCircle;
-
-    private float _elapsed = 0f;
-    private bool _isFading = false;
 
     void Awake()
     {
-        // 1) Renderer들이 제대로 설정되어 있는지 확인
-        if (cylinderRenderer == null || circleRenderer == null)
+        if (cylinderTransform == null || circleRenderer == null)
         {
-            Debug.LogError("ClipFadeController: Cylinder 또는 Circle의 MeshRenderer가 할당되지 않았습니다.");
+            Debug.LogError("CylinderDropController: cylinderTransform 또는 circleRenderer가 할당되지 않았습니다.");
             enabled = false;
             return;
         }
 
-        // 2) 두 Renderer에 사용할 MaterialPropertyBlock을 각각 초기화
-        _mpbCylinder = new MaterialPropertyBlock();
+        // Circle은 처음에 비활성화
         _mpbCircle = new MaterialPropertyBlock();
-
-        // 3) 두 오브젝트가 동일 머티리얼 에셋을 참조 중이라면,  
-        //    Material 인스턴스를 만들어서 Renderer.material에 할당해 주세요.  
-        //    (즉, “씬의 실린더/원형마다 고유 Material 인스턴스”를 써야  
-        //     서로 다른 clip 값을 줄 때 내부적으로 인스턴싱해서 Draw Call이 늘어나는 걸 방지할 수 있음)
-
-        //  만약 “A번 인스턴싱 방식을 이미 적용했다”면 이 부분은 필요 없으니 건너뛰세요:
-        Material cylMatInst = Instantiate(cylinderRenderer.sharedMaterial);
-        cylinderRenderer.material = cylMatInst;
-        Material cirMatInst = Instantiate(circleRenderer.sharedMaterial);
-        circleRenderer.material = cirMatInst;
-
-        // 4) 초기 설정: 두 오브젝트 clip 값을 0으로 세팅(완전 숨김)
-        cylinderRenderer.GetPropertyBlock(_mpbCylinder);
-        _mpbCylinder.SetFloat("_clip", 0f);
-        cylinderRenderer.SetPropertyBlock(_mpbCylinder);
-
         circleRenderer.GetPropertyBlock(_mpbCircle);
         _mpbCircle.SetFloat("_clip", 0f);
         circleRenderer.SetPropertyBlock(_mpbCircle);
+        circleRenderer.gameObject.SetActive(false);
+
+        // Cylinder를 목표 위치 위쪽(startHeightOffset)으로 옮겨 놓음
+        Vector3 startPos = targetPosition + Vector3.up * startHeightOffset;
+        cylinderTransform.position = startPos;
     }
 
     void Start()
     {
-        // startDelay 이후에 페이드 애니메이션 시작
-        if (startDelay <= 0f)
-        {
-            _isFading = true;
-        }
-        else
-        {
-            Invoke(nameof(BeginFade), startDelay);
-        }
+        // Drop 시퀀스를 바로 실행
+        StartCoroutine(DropSequence());
     }
 
-    void BeginFade()
+    private IEnumerator DropSequence()
     {
-        _isFading = true;
-        _elapsed = 0f;
+        // 1) Cylinder를 위(목표위치+오프셋) → 아래(목표위치)로 dropDuration 동안 Lerp
+        Vector3 startPos = targetPosition + Vector3.up * startHeightOffset;
+        Vector3 endPos = targetPosition;
+        float elapsed = 0f;
+
+        while (elapsed < dropDuration)
+        {
+            elapsed += Time.deltaTime;
+            float t = Mathf.Clamp01(elapsed / dropDuration);
+            cylinderTransform.position = Vector3.Lerp(startPos, endPos, t);
+            yield return null;
+        }
+
+        // 확실히 목표 위치에 세팅
+        cylinderTransform.position = endPos;
+
+        // 2) 목표 위치에 도착한 뒤 keepDuration 동안 대기
+        if (keepDuration > 0f)
+            yield return new WaitForSeconds(keepDuration);
+
+        // 3) Cylinder 유지 끝난 뒤 Circle 활성화 및 페이드아웃
+        if (circleStartDelay > 0f)
+            yield return new WaitForSeconds(circleStartDelay);
+
+        circleRenderer.gameObject.SetActive(true);
+        StartCoroutine(CircleFadeRoutine());
     }
 
-    void Update()
+    private IEnumerator CircleFadeRoutine()
     {
-        if (!_isFading) return;
+        float elapsed = 0f;
 
-        // 1) 경과 시간 누적
-        _elapsed += Time.deltaTime;
-        float t = Mathf.Clamp01(_elapsed / fadeDuration);  // 0~1
+        while (elapsed < circleFadeDuration)
+        {
+            elapsed += Time.deltaTime;
+            float t = Mathf.Clamp01(elapsed / circleFadeDuration);
+            float clipValue = Mathf.Lerp(0f, 1f, t);
 
-        // 2) t 만큼 clip 값을 증가(0->1)
-        float clipValue = Mathf.Lerp(0f, 1f, t);
+            circleRenderer.GetPropertyBlock(_mpbCircle);
+            _mpbCircle.SetFloat("_clip", clipValue);
+            circleRenderer.SetPropertyBlock(_mpbCircle);
 
-        // 3) Cylinder에 PropertyBlock으로 clip 값 전달
-        cylinderRenderer.GetPropertyBlock(_mpbCylinder);
-        _mpbCylinder.SetFloat("_clip", clipValue);
-        cylinderRenderer.SetPropertyBlock(_mpbCylinder);
+            yield return null;
+        }
 
-        // 4) Circle에도 동일하게 전달 (원한다면 두 오브젝트 다른 속도로도 가능)
+        // 확실히 clip=1 (완전 사라짐) 세팅
         circleRenderer.GetPropertyBlock(_mpbCircle);
-        _mpbCircle.SetFloat("_clip", clipValue);
+        _mpbCircle.SetFloat("_clip", 1f);
         circleRenderer.SetPropertyBlock(_mpbCircle);
 
-        // 5) 애니메이션이 끝나면 _isFading 끄기
-        if (t >= 1f)
-        {
-            _isFading = false;
-            // 필요하다면 두 오브젝트를 비활성화하거나 Destroy 처리
-            // gameObject.SetActive(false);
-        }
+        // 필요하다면 이 시점에 오브젝트 비활성화
+        // circleRenderer.gameObject.SetActive(false);
     }
 }
