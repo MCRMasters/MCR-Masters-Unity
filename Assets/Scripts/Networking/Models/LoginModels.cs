@@ -38,4 +38,19 @@ namespace MCRGame.Net
         public string code;
         public string name;
     }
+
+    [System.Serializable]
+    public class IsPlayingResponse
+    {
+        public string message;
+        public IsPlayingData data;
+    }
+
+    [System.Serializable]
+    public class IsPlayingData
+    {
+        public bool in_playing_room;
+        public string game_id;
+    }
+
 }

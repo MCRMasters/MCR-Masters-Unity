@@ -496,6 +496,7 @@ namespace MCRGame.Game
 
         public void ReloadData(JObject data)
         {
+            isGameStarted = true;
             Players = data["player_list"]
                 .ToObject<List<Player>>();
 
