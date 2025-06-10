@@ -305,10 +305,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 7694124853369325359}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c11e19689a51d44d8a05132ef648cbc0, type: 3}
+  m_Script: {fileID: 11500000, guid: 1af8d237a707145e2bf2232c4e6e1a34, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  visibleClip: 0.1
+  visibleClip: 0.2
   invisibleClip: 1
   interval: 0.1
 --- !u!1 &9056231518551586903
