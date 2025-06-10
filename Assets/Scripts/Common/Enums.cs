@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using MCRGame.Game;
 
 namespace MCRGame.Common
 {
@@ -31,24 +32,66 @@ namespace MCRGame.Common
         public static int Number(this Round round)
         {
             if (round == Round.END)
-                throw new System.InvalidOperationException("game finished");
-            string name = round.ToString();
-            return int.Parse(name.Substring(1));
+                throw new InvalidOperationException("game finished");
+            return int.Parse(round.ToString().Substring(1));
         }
 
         public static string Wind(this Round round)
         {
             if (round == Round.END)
-                throw new System.InvalidOperationException("game finished");
-            string name = round.ToString();
-            return name.Substring(0, 1);
+                throw new InvalidOperationException("game finished");
+            return round.ToString().Substring(0, 1);
         }
 
         public static Round NextRound(this Round round)
         {
             if (round == Round.END)
-                throw new System.InvalidOperationException("game finished");
+                throw new InvalidOperationException("game finished");
             return (Round)((int)round + 1);
+        }
+
+        public static string ToLocalizedString(this Round round)
+        {
+            if (round == Round.END)
+                throw new InvalidOperationException("game finished");
+
+            int num = round.Number();
+            switch (GameManager.Instance.currentLanguage)
+            {
+                case Language.Korean:
+                    string kor = round.Wind() switch
+                    {
+                        "E" => "동",
+                        "S" => "남",
+                        "W" => "서",
+                        "N" => "북",
+                        _   => ""
+                    };
+                    return $"{kor}{num}";
+
+                case Language.Japanese:
+                    string jp = round.Wind() switch
+                    {
+                        "E" => "東",
+                        "S" => "南",
+                        "W" => "西",
+                        "N" => "北",
+                        _   => ""
+                    };
+                    return $"{jp}{num}";
+
+                case Language.English:
+                default:
+                    string en = round.Wind() switch
+                    {
+                        "E" => "E",
+                        "S" => "S",
+                        "W" => "W",
+                        "N" => "N",
+                        _   => ""
+                    };
+                    return $"{en}{num}";
+            }
         }
     }
 
@@ -70,6 +113,42 @@ namespace MCRGame.Common
         public static AbsoluteSeat NextSeatAfterAction(this AbsoluteSeat seat, GameAction action)
         {
             return (AbsoluteSeat)(((int)seat + (int)action.SeatPriority) % 4);
+        }
+                public static string ToLocalizedString(this AbsoluteSeat seat)
+        {
+            switch (GameManager.Instance.currentLanguage)
+            {
+                case Language.Korean:
+                    return seat switch
+                    {
+                        AbsoluteSeat.EAST  => "동",
+                        AbsoluteSeat.SOUTH => "남",
+                        AbsoluteSeat.WEST  => "서",
+                        AbsoluteSeat.NORTH => "북",
+                        _                  => throw new ArgumentOutOfRangeException(nameof(seat), seat, null)
+                    };
+
+                case Language.Japanese:
+                    return seat switch
+                    {
+                        AbsoluteSeat.EAST  => "東",
+                        AbsoluteSeat.SOUTH => "南",
+                        AbsoluteSeat.WEST  => "西",
+                        AbsoluteSeat.NORTH => "北",
+                        _                  => throw new ArgumentOutOfRangeException(nameof(seat), seat, null)
+                    };
+
+                case Language.English:
+                default:
+                    return seat switch
+                    {
+                        AbsoluteSeat.EAST  => "East",
+                        AbsoluteSeat.SOUTH => "South",
+                        AbsoluteSeat.WEST  => "West",
+                        AbsoluteSeat.NORTH => "North",
+                        _                  => throw new ArgumentOutOfRangeException(nameof(seat), seat, null)
+                    };
+            }
         }
     }
 
