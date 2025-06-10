@@ -1,15 +1,15 @@
 fileFormatVersion: 2
-guid: 72bfc7284841f4f32b5a17529c27a9ca
+guid: 8052b0c69c7a7446c87e645586ae8cf0
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -5130686204486642245
-    second: water1_0
+      213: -2532087816333192471
+    second: ring_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
     mipMapMode: 0
-    enableMipMap: 1
+    enableMipMap: 0
     sRGBTexture: 1
     linearTexture: 0
     fadeOut: 0
@@ -40,9 +40,9 @@ TextureImporter:
     filterMode: 1
     aniso: 1
     mipBias: 0
-    wrapU: 0
-    wrapV: 0
-    wrapW: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
@@ -55,9 +55,9 @@ TextureImporter:
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
-  alphaIsTransparency: 0
+  alphaIsTransparency: 1
   spriteTessellationDetail: -1
-  textureType: 0
+  textureType: 8
   textureShape: 1
   singleChannelComponent: 0
   flipbookRows: 1
@@ -113,7 +113,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: water1_0
+      name: ring_0
       rect:
         serializedVersion: 2
         x: 0
@@ -128,8 +128,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: bb5939f94142cc8b0800000000000000
-      internalID: -5130686204486642245
+      spriteID: 9e29d5feb873cdcd0800000000000000
+      internalID: -2532087816333192471
       vertices: []
       indices: 
       edges: []

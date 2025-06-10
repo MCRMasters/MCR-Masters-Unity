@@ -1,10 +1,16 @@
 fileFormatVersion: 2
-guid: 72bfc7284841f4f32b5a17529c27a9ca
+guid: 1d58409e32da94919ba7a695bf199107
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -5130686204486642245
-    second: water1_0
+      213: 5868612593429392887
+    second: waterdrop_0
+  - first:
+      213: 3542549478614447817
+    second: waterdrop_1
+  - first:
+      213: -5416647632203011763
+    second: waterdrop_2
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -113,13 +119,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: water1_0
+      name: waterdrop_0
       rect:
         serializedVersion: 2
-        x: 0
-        y: 0
-        width: 512
-        height: 512
+        x: 16
+        y: 63
+        width: 467
+        height: 443
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -128,8 +134,52 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: bb5939f94142cc8b0800000000000000
-      internalID: -5130686204486642245
+      spriteID: 7fd2ebb7f00817150800000000000000
+      internalID: 5868612593429392887
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: waterdrop_1
+      rect:
+        serializedVersion: 2
+        x: 357
+        y: 58
+        width: 9
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9c63f084bf9a92130800000000000000
+      internalID: 3542549478614447817
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: waterdrop_2
+      rect:
+        serializedVersion: 2
+        x: 348
+        y: 48
+        width: 7
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d4924195da334d4b0800000000000000
+      internalID: -5416647632203011763
       vertices: []
       indices: 
       edges: []
@@ -147,7 +197,10 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      waterdrop_0: 5868612593429392887
+      waterdrop_1: 3542549478614447817
+      waterdrop_2: -5416647632203011763
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
