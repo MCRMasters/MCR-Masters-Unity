@@ -50,6 +50,7 @@ namespace MCRGame.Game
         public EmojiPanelController EmojiPanelController => emojiPanelController;
 
         /* ---------- 글로벌 상태 플래그 ---------- */
+        public Language currentLanguage = Language.Korean;
         public bool IsFlowerConfirming = false;
         public bool IsRightClickTsumogiri;
 

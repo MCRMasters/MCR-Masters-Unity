@@ -100,7 +100,7 @@ namespace MCRGame.Game
 
         private void UpdateCurrentRoundUI()
         {
-            if (currentRoundText) currentRoundText.text = CurrentRound.ToString();
+            if (currentRoundText) currentRoundText.text = CurrentRound.ToLocalizedString();
             else Debug.LogWarning("currentRoundText UI가 할당되지 않았습니다.");
         }
 
@@ -245,9 +245,9 @@ namespace MCRGame.Game
             {
                 if (map.TryGetValue(rel,out var t) && t)
                 {
-                    string l = seat.ToString()[0].ToString();
+                    string l = seat.ToLocalizedString();
                     t.text  = l;
-                    t.color = l=="E"? eastWindColor : otherWindColor;
+                    t.color = seat == AbsoluteSeat.EAST? eastWindColor : otherWindColor;
                 }
                 seat = seat.NextSeat();
                 if (rel==RelativeSeat.KAMI) break;
