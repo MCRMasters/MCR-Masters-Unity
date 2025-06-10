@@ -790,9 +790,9 @@
     "m_Guid": {
         "m_GuidSerialized": "c40d9dbc-154f-43f9-92fd-cfc8e4aa037a"
     },
-    "m_Name": "clip",
+    "m_Name": "_clip",
     "m_DefaultRefNameVersion": 1,
-    "m_RefNameGeneratedByDisplayName": "clip",
+    "m_RefNameGeneratedByDisplayName": "_clip",
     "m_DefaultReferenceName": "_clip",
     "m_OverrideReferenceName": "",
     "m_GeneratePropertyBlock": true,
@@ -1965,10 +1965,10 @@
         "m_Expanded": true,
         "m_Position": {
             "serializedVersion": "2",
-            "x": 100.00007629394531,
-            "y": 533.4999389648438,
-            "width": 207.9999542236328,
-            "height": 302.0
+            "x": 100.00003051757813,
+            "y": 533.5,
+            "width": 208.0,
+            "height": 301.99993896484377
         }
     },
     "m_Slots": [
@@ -2306,7 +2306,7 @@
     "m_Type": "UnityEditor.ShaderGraph.Vector1MaterialSlot",
     "m_ObjectId": "ef0739ed839b43cf822133362e4a3df7",
     "m_Id": 0,
-    "m_DisplayName": "clip",
+    "m_DisplayName": "_clip",
     "m_SlotType": 1,
     "m_Hidden": false,
     "m_ShaderOutputName": "Out",

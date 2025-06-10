@@ -7835,7 +7835,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   waterColumnPrefab: {fileID: 343226197619095514, guid: 1283880e759e84c32ae81de01989de50, type: 3}
-  effectLifetime: 5
+  effectLifetime: 1
 --- !u!4 &1500867955
 Transform:
   m_ObjectHideFlags: 0
