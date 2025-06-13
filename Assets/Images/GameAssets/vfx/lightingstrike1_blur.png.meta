@@ -147,7 +147,8 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      lightingstrike1_blur_0: -7692353880980619738
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

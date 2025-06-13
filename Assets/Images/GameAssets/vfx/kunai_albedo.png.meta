@@ -172,7 +172,9 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      kunai_albedo_0: 7140875594229310467
+      kunai_albedo_1: 8750615722519946081
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
