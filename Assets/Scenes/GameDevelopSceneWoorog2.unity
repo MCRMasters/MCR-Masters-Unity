@@ -1974,11 +1974,6 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
---- !u!1 &816104797 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 343226197619095514, guid: 743dc13ac8bdb49e3beaf69554f2a9fe, type: 3}
-  m_PrefabInstance: {fileID: 716032375}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &866773030
 GameObject:
   m_ObjectHideFlags: 0
@@ -3952,7 +3947,6 @@ GameObject:
   m_Component:
   - component: {fileID: 1960930183}
   - component: {fileID: 1960930182}
-  - component: {fileID: 1960930184}
   m_Layer: 0
   m_Name: GameObject
   m_TagString: Untagged
@@ -3967,7 +3961,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1960930181}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 1f3f8150337d24555b2440f62c498245, type: 3}
   m_Name: 
@@ -3991,20 +3985,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1960930184
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1960930181}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5ebb8ce07c8694796a3db1f145caa249, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  waterColumnPrefab: {fileID: 816104797}
-  effectLifetime: 5
 --- !u!1 &1986841733
 GameObject:
   m_ObjectHideFlags: 0

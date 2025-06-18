@@ -1936,7 +1936,7 @@
     },
     "m_DefaultValue": {
         "x": 0.0,
-        "y": 0.0
+        "y": 1.0
     },
     "m_Labels": []
 }
@@ -2419,8 +2419,8 @@
         "y": 1.0
     },
     "m_DefaultValue": {
-        "x": 0.0,
-        "y": 0.0
+        "x": -1.0,
+        "y": 1.0
     },
     "m_Labels": []
 }
@@ -2774,8 +2774,8 @@
     "m_ObjectId": "2f67e1586fa34939ac2a0ef2c87b44f3",
     "m_Title": "VERTEX OFFSET",
     "m_Position": {
-        "x": -1221.5821533203125,
-        "y": -1287.194580078125
+        "x": -1222.0,
+        "y": -1286.5
     }
 }
 
@@ -3010,8 +3010,8 @@
         "y": 1.0
     },
     "m_DefaultValue": {
-        "x": 0.0,
-        "y": 0.0
+        "x": 1.0,
+        "y": 1.0
     },
     "m_Labels": []
 }
@@ -3287,8 +3287,8 @@
         "y": 1.0
     },
     "m_DefaultValue": {
-        "x": 0.0,
-        "y": 0.0
+        "x": 1.0,
+        "y": 1.0
     },
     "m_Labels": []
 }
@@ -4698,8 +4698,8 @@
     "m_ObjectId": "71e8246a217d49438837d3b9694684de",
     "m_Title": "DISSOLVE",
     "m_Position": {
-        "x": -1658.0,
-        "y": 567.0
+        "x": -1343.0,
+        "y": 567.5
     }
 }
 
@@ -4910,6 +4910,9 @@
     "m_AlphaClip": true,
     "m_CastShadows": true,
     "m_ReceiveShadows": true,
+    "m_DisableTint": false,
+    "m_AdditionalMotionVectorMode": 0,
+    "m_AlembicMotionVectors": false,
     "m_SupportsLODCrossFade": false,
     "m_CustomEditorGUI": "",
     "m_SupportVFX": false
@@ -5504,7 +5507,7 @@
     "m_StageCapability": 3,
     "m_BareResource": false,
     "m_Texture": {
-        "m_SerializedTexture": "{\"texture\":{\"instanceID\":0}}",
+        "m_SerializedTexture": "",
         "m_Guid": ""
     },
     "m_DefaultType": 0
@@ -6092,8 +6095,8 @@
     "m_ObjectId": "a036813e36cc465ea245779f303746f0",
     "m_Title": "DEPTH INTERSECTION",
     "m_Position": {
-        "x": 234.99990844726563,
-        "y": 577.0000610351563
+        "x": 235.0,
+        "y": 577.5
     }
 }
 
@@ -6231,7 +6234,7 @@
     "m_Title": "MAIN TEX + DISTORTION",
     "m_Position": {
         "x": -3307.0,
-        "y": 567.0000610351563
+        "y": 567.5
     }
 }
 
@@ -6433,7 +6436,7 @@
     "hlslDeclarationOverride": 0,
     "m_Hidden": false,
     "m_Value": {
-        "m_SerializedTexture": "{\"texture\":{\"fileID\":2800000,\"guid\":\"cb14b94bafd6c3b4f80b6e870f051218\",\"type\":3}}",
+        "m_SerializedTexture": "",
         "m_Guid": ""
     },
     "isMainTexture": false,
@@ -6762,8 +6765,8 @@
     "m_ObjectId": "c079b3e8d2d941768c82195154ca0437",
     "m_Title": "MASK",
     "m_Position": {
-        "x": -929.9999389648438,
-        "y": -12.000022888183594
+        "x": -930.0,
+        "y": -11.5
     }
 }
 
