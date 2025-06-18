@@ -50,6 +50,38 @@ namespace MCRGame.Net
             DontDestroyOnLoad(gameObject);
         }
 
+        /*────────────── ① Scene 전환 훅 등록 ──────────────*/
+        private void OnEnable()
+        {
+            // 씬이 바뀔 때마다 호출
+            SceneManager.activeSceneChanged += HandleActiveSceneChanged;
+        }
+
+        private void OnDisable()
+        {
+            SceneManager.activeSceneChanged -= HandleActiveSceneChanged;
+        }
+
+        /*────────────── ② Scene 전환 처리 ──────────────*/
+        private void HandleActiveSceneChanged(Scene from, Scene to)
+        {
+            // ── 1) RoomScene을 벗어나는 순간 → 반드시 끊기
+            if (from.name == "RoomScene" && websocket != null && websocket.State == WebSocketState.Open)
+            {
+                Debug.Log("[RoomService] Scene changed - leaving RoomScene → disconnect WebSocket");
+                DisconnectWebSocket();
+            }
+
+            // ── 2) RoomScene에 재진입했을 때 → 필요하면 재연결
+            if (to.name == "RoomScene" &&
+                CurrentRoomNumber > 0 &&                          // 이미 방 정보를 갖고 있고
+                (websocket == null || websocket.State != WebSocketState.Open))
+            {
+                Debug.Log("[RoomService] Scene changed - entered RoomScene → reconnect WebSocket");
+                ConnectWebSocket(CurrentRoomNumber);              // 기존 메서드 재사용
+            }
+        }
+
         #region ▶ HTTP API
 
         public void FetchRooms() => StartCoroutine(FetchRoomsCoroutine());

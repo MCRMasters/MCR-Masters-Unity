@@ -1,0 +1,55 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &7385161785590945160
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3157374621000555336}
+  - component: {fileID: 5696982901272723455}
+  m_Layer: 0
+  m_Name: SettingsUIManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3157374621000555336
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7385161785590945160}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 564.96405, y: 168.98367, z: 7.3796883}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &5696982901272723455
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7385161785590945160}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 90c520b6516cf1e46b13d73b6d100f4c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  settingsButton: {fileID: 0}
+  settingsPanel: {fileID: 0}
+  closeButton: {fileID: 0}
+  contentContainer: {fileID: 0}
+  voiceContentPrefab: {fileID: 7009065929104702425, guid: b6e0f387aa5dcae4782efcff645fe6f9, type: 3}
+  sfxContentPrefab: {fileID: 7009065929104702425, guid: d640e3c795b56504f92cb6d01c816f1e, type: 3}
+  rightTsumoContentPrefab: {fileID: 1036078981924610361, guid: 0f2db469d4bf2dc4889354f8af94fb90, type: 3}
+  autoHuDefaultContentPrefab: {fileID: 1036078981924610361, guid: dce9c65eb67db7244a5bb706f1ec92b8, type: 3}
+  autoFlowerDefaultContentPrefab: {fileID: 1036078981924610361, guid: a03bf596e9296c74d86da288f84805e0, type: 3}

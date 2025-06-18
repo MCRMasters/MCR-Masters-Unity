@@ -1,7 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using MCRGame.Common;   // GameActionType, CallBlockType
+using MCRGame.Common;
+using UnityEngine.SceneManagement;   // GameActionType, CallBlockType
 
 namespace MCRGame.Audio
 {
@@ -29,6 +30,36 @@ namespace MCRGame.Audio
             Instance = this;
             DontDestroyOnLoad(gameObject);
             if (audioSource == null) audioSource = gameObject.AddComponent<AudioSource>();
+        }
+
+        private void OnEnable()
+        {
+            SceneManager.sceneLoaded += OnSceneLoaded;
+        }
+
+        private void OnDisable()
+        {
+            SceneManager.sceneLoaded -= OnSceneLoaded;
+        }
+
+        private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            if (scene.name == "GameScene")
+            {
+                ResetState();
+                Debug.Log("[ActionAudioManager] ResetState 호출");
+            }
+        }
+
+        /// <summary>
+        /// 씬 재진입 시 큐를 비우고 사운드 재생을 멈춥니다.
+        /// </summary>
+        private void ResetState()
+        {
+            clipQueue.Clear();
+            isPlaying = false;
+            StopAllCoroutines();
+            audioSource.Stop();
         }
 
         /* ───────────────────── 퍼블릭 API ───────────────────── */

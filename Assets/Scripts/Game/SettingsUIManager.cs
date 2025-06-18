@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using MCRGame.Audio;
 using MCRGame.Game;
+using MCRGame.UI;
 
 namespace MCRgame.Game
 {
@@ -33,53 +34,51 @@ namespace MCRgame.Game
         private const string PREF_DISCARD_VOL = "DiscardVolume";
         private const string PREF_RIGHT_CLICK = "RightClickTsumogiri";
 
-        private void Awake()
-        {
-            // 1) Content에 각 Row Prefab을 생성
-            PopulateContentRows();
-        }
 
-        void Start()
+
+        /// <summary>
+        /// GameManager.OnSceneLoaded 에서 인스턴스화 직후 한 번만 호출하세요.
+        /// </summary>
+        public void Initialize(SettingsUIReferences refs)
         {
-            // 2) 버튼 콜백 연결
+            // 1) refs → 내부 필드 복사
+            settingsButton = refs.SettingsButton;
+            settingsPanel = refs.SettingsPanel;
+            closeButton = refs.CloseButton;
+            contentContainer = refs.ContentContainer;
+            voiceContentPrefab = refs.VoiceContentPrefab;
+            sfxContentPrefab = refs.SFXContentPrefab;
+            rightTsumoContentPrefab = refs.RightTsumoContentPrefab;
+            autoHuDefaultContentPrefab = refs.AutoHuDefaultContentPrefab;
+            autoFlowerDefaultContentPrefab = refs.AutoFlowerDefaultContentPrefab;
+
+            // 2) UI rows 생성
+            PopulateContentRows();
+
+            // 3) Start() 로 하던 나머지 초기화
             settingsButton.onClick.AddListener(OpenPanel);
             closeButton.onClick.AddListener(ClosePanel);
-
-            // 3) 패널 초기 상태
             settingsPanel.SetActive(false);
 
-            // 1) 저장값 로드 (자동 Hu: default false, 자동 Flower: default true)
             bool huDefault = PlayerPrefs.GetInt(PREF_AUTO_HU_DEFAULT, 0) == 1;
             bool flowerDefault = PlayerPrefs.GetInt(PREF_AUTO_FLOWER_DEFAULT, 1) == 1;
-
-            // 2) 토글 초기화
             autoHuDefaultToggle.isOn = huDefault;
             autoFlowerDefaultToggle.isOn = flowerDefault;
-
-            // 3) GameManager 에 즉시 적용
             GameManager.Instance.IsAutoHuDefault = huDefault;
             GameManager.Instance.IsAutoFlowerDefault = flowerDefault;
-
-            // 4) 토글 이벤트 연결
             autoHuDefaultToggle.onValueChanged.AddListener(OnAutoHuDefaultChanged);
             autoFlowerDefaultToggle.onValueChanged.AddListener(OnAutoFlowerDefaultChanged);
 
-
-            // 4) 저장된 값 로드 (없으면 default)
             float aVol = PlayerPrefs.GetFloat(PREF_ACTION_VOL, 1f);
             float dVol = PlayerPrefs.GetFloat(PREF_DISCARD_VOL, 0.2f);
             bool rightOn = PlayerPrefs.GetInt(PREF_RIGHT_CLICK, 0) == 1;
-
             actionVolumeSlider.value = aVol;
             discardVolumeSlider.value = dVol;
             rightClickTsumogiriToggle.isOn = rightOn;
-
-            // 5) 슬라이더·토글 이벤트
             actionVolumeSlider.onValueChanged.AddListener(OnActionVolumeChanged);
             discardVolumeSlider.onValueChanged.AddListener(OnDiscardVolumeChanged);
             rightClickTsumogiriToggle.onValueChanged.AddListener(OnRightClickToggled);
 
-            // 6) 바로 적용
             ApplyActionVolume(aVol);
             ApplyDiscardVolume(dVol);
             GameManager.Instance.IsRightClickTsumogiri = rightOn;

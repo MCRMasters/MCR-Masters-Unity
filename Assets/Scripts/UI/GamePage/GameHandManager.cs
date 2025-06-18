@@ -12,7 +12,7 @@ namespace MCRGame.UI
 {
     public class GameHandManager : MonoBehaviour
     {
-        [SerializeField] private GameObject baseTilePrefab;
+        [SerializeField] public GameObject baseTilePrefab;
         [SerializeField] private CallBlockField callBlockField;
         [SerializeField] private DiscardManager discardManager;
 
@@ -129,6 +129,23 @@ namespace MCRGame.UI
             isTileOpRunning = false;
         }
 
+
+        /// <summary>
+        /// GameManager.OnSceneLoaded 에서 호출하여
+        /// 필수 컴포넌트들을 주입해줍니다.
+        /// </summary>
+        public void Initialize(
+            CallBlockField callBlockFieldRef,
+            DiscardManager discardManagerRef
+        )
+        {
+            // 1) Inspector 필드가 비어 있으면 외부에서 받은 참조로 채워줌
+            if (callBlockField == null)
+                callBlockField = callBlockFieldRef;
+            if (discardManager == null)
+                discardManager = discardManagerRef;
+        }
+
         public IEnumerator RequestDiscardRightmostTile()
         {
             TileManager tileManager = null;
@@ -214,21 +231,18 @@ namespace MCRGame.UI
 
         public void clear()
         {
+            // --- 이제 callBlockField가 null이 아님! ---
             if (tileObjects != null)
-            {
-                foreach (GameObject tileObj in tileObjects)
-                {
-                    if (tileObj == null)
-                    {
-                        continue;
-                    }
-                    Destroy(tileObj);
-                }
-            }
+                foreach (var t in tileObjects)
+                    if (t != null) Destroy(t);
+
             gameHand.Clear();
             tileObjects.Clear();
             tsumoTile = null;
+
+            // null-safe 호출
             callBlockField.InitializeCallBlockField();
+
             IsAnimating = true;
             ResetPositionAll();
         }
@@ -704,83 +718,77 @@ namespace MCRGame.UI
 
         private IEnumerator AnimateReposition()
         {
-            bool alreadyAnimating = false;
-            if (IsAnimating == true)
-                alreadyAnimating = true;
+            bool nested = IsAnimating;
             IsAnimating = true;
-            ResetPositionAll();
-            if (tileObjects.Count == 0) yield break;
-
-            // 기준 타일 너비 계산
-            var firstRect = tileObjects[0].GetComponent<RectTransform>();
-            float tileWidth = firstRect != null ? firstRect.rect.width : 1f;
-
-            // 초기 위치와 목표 위치를 계산할 딕셔너리 생성
-            var initialPos = new Dictionary<GameObject, Vector2>();
-            var targetPos = new Dictionary<GameObject, Vector2>();
-
-            // tsumo 타일을 제외한 일반 타일들의 순서를 위한 인덱스
-            int idx = 0;
-            foreach (var go in tileObjects)
+            try
             {
-                var rt = go.GetComponent<RectTransform>();
-                if (rt == null) continue;
+                // 1) 리스트에서 파괴된 항목 제거
+                tileObjects.RemoveAll(go => go == null);
 
-                // 각 타일의 현재 위치 저장
-                initialPos[go] = rt.anchoredPosition;
+                if (tileObjects.Count == 0) yield break;
 
-                if (go == tsumoTile)
+                // 2) 기준 값 계산
+                var firstRect = tileObjects[0].GetComponent<RectTransform>();
+                float tileWidth = firstRect != null ? firstRect.rect.width : 1f;
+
+                var initialPos = new Dictionary<GameObject, Vector2>();
+                var targetPos = new Dictionary<GameObject, Vector2>();
+
+                int idx = 0;
+                foreach (var go in tileObjects)
                 {
-                    // tsumo 타일은 나중에 처리
-                    continue;
-                }
-
-                // tsumo 타일이 아닌 경우: 순차적으로 배치 (idx * (타일너비 + gap))
-                targetPos[go] = new Vector2(idx * (tileWidth + gap), 0f);
-                idx++;
-            }
-
-            // tsumo 타일이 있다면, extra gap을 반영하여 최종 위치 계산 (예: tileWidth*0.2f 추가)
-            if (tsumoTile != null)
-            {
-                Vector2 tsumoTarget = new Vector2(idx * (tileWidth + gap) + tileWidth * 0.2f, 0f);
-                var tsumoRect = tsumoTile.GetComponent<RectTransform>();
-                if (tsumoRect != null)
-                {
-                    initialPos[tsumoTile] = tsumoRect.anchoredPosition;
-                }
-                targetPos[tsumoTile] = tsumoTarget;
-            }
-
-            // SmoothStep 이징 애니메이션을 통해 각 타일을 목표 위치로 이동
-            float elapsed = 0f;
-            while (elapsed < slideDuration)
-            {
-                elapsed += Time.deltaTime;
-                float t = Mathf.Clamp01(elapsed / slideDuration);
-                float easeT = Mathf.SmoothStep(0f, 1f, t);
-
-                foreach (var kv in targetPos)
-                {
-                    var go = kv.Key;
+                    if (go == null) continue;                  // ← 추가
                     var rt = go.GetComponent<RectTransform>();
                     if (rt == null) continue;
-                    rt.anchoredPosition = Vector2.Lerp(initialPos[go], kv.Value, easeT);
-                }
-                yield return null;
-            }
 
-            // 애니메이션 종료 후 최종 위치 확정
-            foreach (var kv in targetPos)
-            {
-                var go = kv.Key;
-                var rt = go.GetComponent<RectTransform>();
-                if (rt != null)
-                    rt.anchoredPosition = kv.Value;
+                    initialPos[go] = rt.anchoredPosition;
+
+                    if (go == tsumoTile) continue;
+
+                    targetPos[go] = new Vector2(idx * (tileWidth + gap), 0f);
+                    idx++;
+                }
+
+                if (tsumoTile != null && tsumoTile != null)   // null 중복체크
+                {
+                    var tsumoRect = tsumoTile.GetComponent<RectTransform>();
+                    if (tsumoRect != null)
+                    {
+                        initialPos[tsumoTile] = tsumoRect.anchoredPosition;
+                        targetPos[tsumoTile] =
+                            new Vector2(idx * (tileWidth + gap) + tileWidth * 0.2f, 0f);
+                    }
+                }
+
+                // 3) 이동 애니메이션
+                float elapsed = 0f;
+                while (elapsed < slideDuration)
+                {
+                    elapsed += Time.deltaTime;
+                    float easeT = Mathf.SmoothStep(0f, 1f, elapsed / slideDuration);
+
+                    foreach (var kv in targetPos)
+                    {
+                        var go = kv.Key;
+                        if (go == null) continue;              // ← 추가
+                        var rt = go.GetComponent<RectTransform>();
+                        if (rt == null) continue;
+                        rt.anchoredPosition = Vector2.Lerp(initialPos[go], kv.Value, easeT);
+                    }
+                    yield return null;
+                }
+
+                // 4) 최종 위치 스냅
+                foreach (var kv in targetPos)
+                {
+                    if (kv.Key == null) continue;
+                    var rt = kv.Key.GetComponent<RectTransform>();
+                    if (rt != null) rt.anchoredPosition = kv.Value;
+                }
             }
-            if (alreadyAnimating == false)
+            finally
             {
-                IsAnimating = false;
+                if (!nested) IsAnimating = false;
             }
         }
 
@@ -834,80 +842,81 @@ namespace MCRGame.UI
                 yield return RunExclusive(ProcessDiscardRequest(request));
             }
         }
-
-        // 개별 폐기 요청 처리 코루틴: 타일 리스트에서 해당 타일 제거 후, 나머지 타일의 위치를 애니메이션으로 이동
         private IEnumerator ProcessDiscardRequest(DiscardRequest request)
         {
-            IsAnimating = true;
-            ResetPositionAll();
-            // 먼저, 해당 인덱스의 타일이 리스트에 남아 있다면 Destroy 처리
-            if (request.index >= 0 && request.index < tileObjects.Count)
+            bool nested = IsAnimating;   // 이미 애니메이션 중이었는지 기억
+            IsAnimating = true;          // 무조건 true로 올려 둠
+
+            try
             {
-                GameObject discardedTile = tileObjects[request.index];
-                // 삭제된 타일은 즉시 리스트에서 제거
-                tileObjects.RemoveAt(request.index);
-                if (discardedTile != null)
+                ResetPositionAll();
+
+                /* --- ① 버릴 타일 제거 --------------------- */
+                if (request.index >= 0 && request.index < tileObjects.Count)
                 {
-                    Destroy(discardedTile);
+                    var discarded = tileObjects[request.index];
+                    tileObjects.RemoveAt(request.index);
+                    if (discarded != null) Destroy(discarded);
+                    tsumoTile = null;
                 }
-                // tsumoTile 참조 초기화
-                tsumoTile = null;
-            }
+                tileObjects.RemoveAll(go => go == null);   // 파괴된 참조 정리
+                SortTileList();
 
-            SortTileList();
+                if (tileObjects.Count == 0)
+                    yield break;
 
-            // 재배열 대상 : 현재 tileObjects에 남은 모든 타일들(순서대로 배치)
-            if (tileObjects.Count == 0)
-                yield break;
+                /* --- ② 위치 계산 -------------------------- */
+                float tileWidth = 1f;
+                var firstRT = tileObjects[0].GetComponent<RectTransform>();
+                if (firstRT != null) tileWidth = firstRT.rect.width;
 
-            RectTransform firstRect = tileObjects[0].GetComponent<RectTransform>();
-            float tileWidth = (firstRect != null) ? firstRect.rect.width : 1f;
+                var initialPos = new Dictionary<GameObject, Vector2>();
+                var targetPos = new Dictionary<GameObject, Vector2>();
 
-            var initialPositions = new Dictionary<GameObject, Vector2>();
-            var targetPositions = new Dictionary<GameObject, Vector2>();
-
-            for (int i = 0; i < tileObjects.Count; i++)
-            {
-                var tileObj = tileObjects[i];
-                var rect = tileObj.GetComponent<RectTransform>();
-                if (rect == null) continue;
-
-                initialPositions[tileObj] = rect.anchoredPosition;
-
-                targetPositions[tileObj] = new Vector2(i * (tileWidth + gap), 0f);
-            }
-
-            float elapsed = 0f;
-            while (elapsed < slideDuration)
-            {
-                elapsed += Time.deltaTime;
-                float t = Mathf.Clamp01(elapsed / slideDuration);
-                // SmoothStep을 써서 0→1 구간에서 가속→감속 이징
-                float easeT = Mathf.SmoothStep(0f, 1f, t);
-
-                foreach (var kvp in targetPositions)
+                for (int i = 0; i < tileObjects.Count; i++)
                 {
-                    var tileObj = kvp.Key;
-                    if (tileObj == null) continue;
-                    var rect = tileObj.GetComponent<RectTransform>();
-                    if (rect == null) continue;
-                    rect.anchoredPosition = Vector2.Lerp(initialPositions[tileObj], kvp.Value, easeT);
+                    var go = tileObjects[i];
+                    if (go == null) continue;
+                    var rt = go.GetComponent<RectTransform>();
+                    if (rt == null) continue;
+
+                    initialPos[go] = rt.anchoredPosition;
+                    targetPos[go] = new Vector2(i * (tileWidth + gap), 0f);
                 }
 
-                yield return null;
-            }
+                /* --- ③ 슬라이드 애니메이션 ---------------- */
+                float elapsed = 0f;
+                while (elapsed < slideDuration)
+                {
+                    elapsed += Time.deltaTime;
+                    float easeT = Mathf.SmoothStep(0f, 1f, elapsed / slideDuration);
 
-            // 최종 위치 확정
-            foreach (var kvp in targetPositions)
+                    foreach (var kv in targetPos)
+                    {
+                        var go = kv.Key;
+                        if (go == null) continue;
+                        var rt = go.GetComponent<RectTransform>();
+                        if (rt == null) continue;
+                        rt.anchoredPosition = Vector2.Lerp(initialPos[go], kv.Value, easeT);
+                    }
+                    yield return null;
+                }
+
+                foreach (var kv in targetPos)
+                {
+                    if (kv.Key == null) continue;
+                    var rt = kv.Key.GetComponent<RectTransform>();
+                    if (rt != null) rt.anchoredPosition = kv.Value;
+                }
+
+                /* --- ④ 후속 재배치 ------------------------ */
+                yield return RunExclusive(AnimateReposition());
+            }
+            finally
             {
-                var tileObj = kvp.Key;
-                var rect = tileObj.GetComponent<RectTransform>();
-                if (rect != null)
-                    rect.anchoredPosition = kvp.Value;
+                // 내가 '최상위' 애니메이션이었다면 플래그 해제
+                if (!nested) IsAnimating = false;
             }
-
-            yield return RunExclusive(AnimateReposition());
-            IsAnimating = false;
         }
     }
 }

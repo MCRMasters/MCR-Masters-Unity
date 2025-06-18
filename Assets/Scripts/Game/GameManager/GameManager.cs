@@ -14,6 +14,8 @@ using MCRGame.Net;
 using MCRGame.View;
 using MCRGame.Audio;
 using DG.Tweening;
+using UnityEngine.SceneManagement;
+using MCRgame.Game;
 
 
 namespace MCRGame.Game
@@ -43,11 +45,14 @@ namespace MCRGame.Game
         [SerializeField] private GameHandManager gameHandManager;
         public GameHandManager GameHandManager => gameHandManager;
         public GameHand GameHand => gameHandManager != null ? gameHandManager.GameHandPublic : null;
+        [SerializeField] private GameObject discardManagerPrefab;
+        [SerializeField] private GameObject emojiPanelPrefab;
+        [SerializeField] private GameObject settingsUIPrefab;
 
-        [SerializeField] private DiscardManager discardManager;
+        public DiscardManager discardManager;
+        public EmojiPanelController emojiPanelController;
+        public SettingsUIManager settingsUIManager;
 
-        [SerializeField] private EmojiPanelController emojiPanelController;
-        public EmojiPanelController EmojiPanelController => emojiPanelController;
 
         /* ---------- 글로벌 상태 플래그 ---------- */
         public Language currentLanguage = Language.Korean;
@@ -118,9 +123,20 @@ namespace MCRGame.Game
         // 자동 꽃(default true)
         public bool IsAutoFlowerDefault { get; set; } = true;
 
+        public bool IsSceneReady { get; private set; } = false;
 
         public GameTile? NowHoverTile = null;
         public TileManager NowHoverSource;
+
+
+        // ▶ 씬 전용 Prefab 할당 슬롯
+        [Header("Scene Prefabs")]
+        [SerializeField] private GameObject main2DCanvasPrefab;
+        [SerializeField] private GameObject prefab3DField;
+
+        // ▶ 런타임에 Instantiate 된 인스턴스
+        public GameObject _canvasInstance;
+        private GameObject _field3DInstance;
 
         /* ---------- 타일/도움 dict ---------- */
         public Dictionary<GameTile, List<TenpaiAssistEntry>> tenpaiAssistDict = new();
@@ -191,7 +207,7 @@ namespace MCRGame.Game
         [SerializeField] private Sprite defaultProfileImageSprite;
 
         [Header("Tsumo Action UI")]
-        [SerializeField] private RectTransform actionButtonPanel;
+        private RectTransform actionButtonPanel;
         [SerializeField] private GameObject actionButtonPrefab;
         [SerializeField] private Sprite skipButtonSprite;
         [SerializeField] private Sprite chiiButtonSprite;
@@ -202,7 +218,7 @@ namespace MCRGame.Game
         [SerializeField] private GameObject backButtonPrefab;
 
         [Header("Timer UI")]
-        [SerializeField] private TextMeshProUGUI timerText;
+        private TextMeshProUGUI timerText;
         private float remainingTime;
         private int currentActionId;
 
@@ -231,15 +247,244 @@ namespace MCRGame.Game
             }
             Instance = this;
 
+            /* 씬 전환 시 파괴되지 않도록 설정 */
+            DontDestroyOnLoad(gameObject);
+
             SetUIActive(false);
             ClearActionUI();
             isGameStarted = false;
         }
-
         private void Update()
         {
+            // 현재 씬이 "GameScene"이 아닐 땐 타이머 업데이트 스킵
+            if (SceneManager.GetActiveScene().name != "GameScene")
+                return;
+
             UpdateTimerText();
         }
+
+        // --- 씬 로드 콜백 등록/해제 ---
+        private void OnEnable()
+        {
+            SceneManager.sceneLoaded += OnSceneLoaded;
+        }
+
+        private void OnDisable()
+        {
+            SceneManager.sceneLoaded -= OnSceneLoaded;
+        }
+
+        private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            if (scene.name != "GameScene")
+            {
+                IsSceneReady = false;
+                return;
+            }
+            IsSceneReady = false;
+            // ─── 1) 2D Canvas 먼저 ───────────────────────────────
+            if (_canvasInstance != null) Destroy(_canvasInstance);
+            _canvasInstance = Instantiate(main2DCanvasPrefab);
+
+            var uiRefs = _canvasInstance.GetComponent<CanvasUIReferences>();
+            if (uiRefs == null)
+            {
+                Debug.LogError("CanvasUIReferences 컴포넌트가 없습니다!");
+                return;
+            }
+
+            // UI 전용 필드 바인딩 (Timer, ActionPanel, Profile 등)
+            timerText = uiRefs.TimerText;
+            actionButtonPanel = uiRefs.ActionButtonPanel;
+            profileImages = uiRefs.ProfileImages;
+            profileFrameImages = uiRefs.ProfileFrameImages;
+            nicknameTexts = uiRefs.NicknameTexts;
+            flowerImages = uiRefs.FlowerImages;
+            flowerCountTexts = uiRefs.FlowerCountTexts;
+
+            // CanvasUIReferences 에 선언된 GameHandManager 할당
+            gameHandManager = uiRefs.gameHandManager;
+            if (gameHandManager == null)
+            {
+                Debug.LogError("CanvasUIReferences.gameHandManager 가 할당되지 않았습니다!");
+            }
+
+            // ─── 4) Settings, Emoji 등 기타 초기화 ───────────────────
+            // 1-A) Settings UI Instantiate
+            if (settingsUIPrefab != null)
+            {
+                var settingsGO = Instantiate(settingsUIPrefab, _canvasInstance.transform);
+                settingsUIManager = settingsGO.GetComponent<SettingsUIManager>();
+                var settingsRefs = _canvasInstance.GetComponent<SettingsUIReferences>();
+                if (settingsUIManager != null && settingsRefs != null)
+                    settingsUIManager.Initialize(settingsRefs);
+            }
+            // 1-B) Emoji Panel Instantiate
+            if (emojiPanelPrefab != null)
+            {
+                var emojiGO = Instantiate(emojiPanelPrefab, _canvasInstance.transform);
+                emojiPanelController = emojiGO.GetComponent<EmojiPanelController>();
+                var emojiRefs = _canvasInstance.GetComponent<EmojiPanelReferences>();
+                if (emojiPanelController != null && emojiRefs != null)
+                    emojiPanelController.Initialize(emojiRefs);
+            }
+            // ─── 2) 3D Field 인스턴스화 ───────────────────────────────
+            if (_field3DInstance != null) Destroy(_field3DInstance);
+            _field3DInstance = Instantiate(prefab3DField);
+
+            var fRefs = _field3DInstance.GetComponent<FieldReferences>();
+            if (fRefs == null)
+            {
+                Debug.LogError("FieldReferences 가 없습니다!");
+                return;
+            }
+
+            // 3D Field 전용 필드 바인딩 (TurnImages, WindTexts, ScoreTexts, Hand3DFields, CallBlockOrigins 등)
+            for (int i = 0; i < 4; i++)
+                BlinkTurnImages[i] = fRefs.TurnImages[i];
+
+            windText_Self = fRefs.WindTexts[0];
+            windText_Shimo = fRefs.WindTexts[1];
+            windText_Toi = fRefs.WindTexts[2];
+            windText_Kami = fRefs.WindTexts[3];
+
+            scoreText_Self = fRefs.ScoreTexts[0];
+            scoreText_Shimo = fRefs.ScoreTexts[1];
+            scoreText_Toi = fRefs.ScoreTexts[2];
+            scoreText_Kami = fRefs.ScoreTexts[3];
+
+            currentRoundText = fRefs.RoundText;
+            leftTilesText = fRefs.LeftTileText;
+
+            BlinkTurnImages = fRefs.TurnImages;
+            playersHand3DFields = fRefs.Hand3DFields;
+            callBlockFields = fRefs.CallBlockOrigins
+                                      .Select(t => t.GetComponent<CallBlockField>())
+                                      .ToArray();
+
+            // 2-A) DiscardManager Prefab Instantiate
+            if (discardManagerPrefab != null)
+            {
+                var dmGO = Instantiate(discardManagerPrefab, _field3DInstance.transform);
+                discardManager = dmGO.GetComponent<DiscardManager>();
+            }
+            else
+            {
+                // 3DField 안에 이미 붙어 있는 경우
+                discardManager = _field3DInstance.GetComponentInChildren<DiscardManager>();
+            }
+            if (discardManager == null) Debug.LogError("DiscardManager 누락!");
+
+            // DiscardManager 위치 세팅
+            discardManager?.SetPositions(fRefs.DiscardPositions);
+
+            // ─── 3) GameHandManager 초기화 ───────────────────────────────
+            if (gameHandManager != null)
+            {
+                if (callBlockFields.Length == 0)
+                {
+                    Debug.LogError("callBlockFields 배열이 비어 있습니다!");
+                }
+                else
+                {
+                    gameHandManager.Initialize(
+                        callBlockFieldRef: callBlockFields[0],
+                        discardManagerRef: discardManager
+                    );
+                }
+            }
+            BindCameraResultAnimator();
+            // ─── 5) 상태 초기화 ───────────────────────────────
+            ResetState();
+            IsSceneReady = true;
+            Debug.Log("[GameManager] Scene → Prefab 바인딩 & ResetState 완료");
+        }
+
+        /// <summary>
+        /// 현재 씬에 존재하는 Main Camera에서 CameraResultAnimator를 찾아 바인딩
+        /// </summary>
+        private void BindCameraResultAnimator()
+        {
+            cameraResultAnimator = null;          // 이전 참조 무효화
+
+            // ① 기본적인 찾기 – Unity 기본 태그를 썼다면
+            var cam = Camera.main;
+
+            // ② 혹시 커스텀 프리팹 안에 들어있다면
+            if (cam == null && _field3DInstance != null)
+                cam = _field3DInstance.GetComponentInChildren<Camera>();
+
+            if (cam == null)
+            {
+                Debug.LogError("[GameManager] MainCamera를 찾지 못했습니다.");
+                return;
+            }
+
+            cameraResultAnimator = cam.GetComponent<CameraResultAnimator>();
+            if (cameraResultAnimator == null)
+            {
+                Debug.LogError("[GameManager] MainCamera에 CameraResultAnimator가 없습니다.");
+                return;
+            }
+
+            // 필요하다면 여기서 이벤트 재-구독이나 초기화 메서드 호출
+            // cameraResultAnimator.Initialize(...);
+            Debug.Log("[GameManager] CameraResultAnimator 재바인딩 완료");
+        }
+
+        /// <summary>
+        /// 씬 재진입할 때, Awake 이후 할당된 초기값과 
+        /// 게임 진행 중 변경된 모든 내부 상태를 클리어합니다.
+        /// </summary>
+        private void ResetState()
+        {
+            // IsSceneReady = false;
+
+            // (1) 돌고 있는 코루틴 중지
+            StopAllCoroutines();
+
+            // (2) 언어 및 플래그 리셋
+            // currentLanguage = Language.Korean;
+            IsFlowerConfirming = false;
+            IsRightClickTsumogiri = false;
+            AutoHuFlag = IsAutoHuDefault;
+            PreventCallFlag = false;
+            AutoFlowerFlag = IsAutoFlowerDefault;
+            TsumogiriFlag = false;
+            isGameStarted = false;
+            IsMyTurn = false;
+            isInitHandDone = false;
+            isActionUIActive = false;
+            isAfterTsumoAction = false;
+            CanClick = false;
+
+            // (3) 게임 상태 관련 컬렉션 및 값들 초기화
+            Players = new List<Player>();
+            PlayerInfo = new List<RoomUserInfo>();
+            MySeat = default;
+            CurrentTurnSeat = default;
+            CurrentRound = Round.E1;
+            NowHoverTile = null;
+            NowHoverSource = null;
+
+            tenpaiAssistDict.Clear();
+            NowTenpaiAssistList.Clear();
+            flowerQueue.Clear();
+            seatToPlayerIndex?.Clear();
+            playerIndexToSeat?.Clear();
+            playerUidToIndex?.Clear();
+
+            prevBlinkSeat = -1;
+
+            // (4) UI 리셋
+            SetUIActive(false);
+            ClearActionUI();
+            InitializeFlowerUI();
+            leftTilesText.text = "";
+            currentRoundText.text = "";
+            timerText.text = "";
+        }
+
 
         #endregion
 

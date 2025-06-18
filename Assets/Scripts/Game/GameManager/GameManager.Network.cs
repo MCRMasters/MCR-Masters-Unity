@@ -861,7 +861,7 @@ namespace MCRGame.Game
             targetHandField.clear();
             targetHandField.MakeRealHand(winningTile, handTiles, tsumoTile.HasValue);
             // "Main 2D Canvas" 이름의 GameObject 찾기
-            GameObject canvas = GameObject.Find("Main 2D Canvas");
+            GameObject canvas = _canvasInstance;
             if (canvas == null)
             {
                 Debug.LogWarning("Main 2D Canvas를 찾을 수 없습니다.");

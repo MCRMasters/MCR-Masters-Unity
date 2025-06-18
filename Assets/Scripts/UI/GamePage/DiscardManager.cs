@@ -58,6 +58,23 @@ namespace MCRGame.UI
         }
 
         /// <summary>
+        /// Prefab에서 바인딩된 DiscardPositions 배열을 받아
+        /// SELF→SHIMO→TOI→KAMI 순서로 각 Transform에 할당합니다.
+        /// </summary>
+        public void SetPositions(Transform[] positions)
+        {
+            if (positions == null || positions.Length < 4)
+            {
+                Debug.LogWarning("SetPositions: positions 배열이 잘못되었습니다.");
+                return;
+            }
+            discardPosSELF = positions[(int)RelativeSeat.SELF];
+            discardPosSHIMO = positions[(int)RelativeSeat.SHIMO];
+            discardPosTOI = positions[(int)RelativeSeat.TOI];
+            discardPosKAMI = positions[(int)RelativeSeat.KAMI];
+        }
+
+        /// <summary>
         /// 현재 GameManager에 기록된 hover 타일과 같다면 하이라이트를 다시 적용합니다.
         /// </summary>
         private void HighlightIfHovering(GameTile tile)
@@ -288,7 +305,10 @@ namespace MCRGame.UI
             Vector3 finalPos,
             Quaternion finalRot)
         {
-            /* ───────────── ① 시작 위치 세팅 ───────────── */
+            /* ── 0. 타일 존재 여부 확인 ── */
+            if (tile == null) yield break;
+
+            /* ── 1. 시작 위치 세팅 ── */
             Vector3 dirCol, dirRow;
             switch (seat)
             {
@@ -297,20 +317,23 @@ namespace MCRGame.UI
                 case RelativeSeat.TOI: dirCol = Vector3.left; dirRow = Vector3.forward; break;
                 default: dirCol = Vector3.back; dirRow = Vector3.left; break;
             }
+
             Vector3 startOffset = dirCol * (col * tileSpacing)
                                 + dirRow * ((row + extraRowOffset) * rowSpacing);
             Vector3 startPos = origin.position + startOffset + Vector3.up * dropHeight;
             tile.transform.SetPositionAndRotation(startPos, finalRot);
 
-            /* ───────────── ② 머티리얼 캐싱 & 투명 모드 ───────────── */
-            var cachedMats = new List<Material>();
-            foreach (var r in tile.GetComponentsInChildren<Renderer>())
+            /* ── 2. 머티리얼 캐싱 & 투명 모드 ── */
+            List<Material> cachedMats = new();
+            foreach (var rend in tile.GetComponentsInChildren<Renderer>(true))
             {
-                var mats = r.materials;           // ← 여기서 한 번만 복사
-                cachedMats.AddRange(mats);
-
-                foreach (var mat in mats)
+                if (rend == null) continue;
+                // sharedMaterials 로 교체하면 인스턴스 생성 방지
+                foreach (var mat in rend.sharedMaterials)
                 {
+                    if (mat == null) continue;
+                    cachedMats.Add(mat);
+
                     SetMaterialTransparent(mat);
                     if (mat.HasProperty("_Color"))
                     {
@@ -319,38 +342,41 @@ namespace MCRGame.UI
                 }
             }
 
-            /* ───────────── ③ 낙하 + 페이드인 ───────────── */
+            /* ── 3. 낙하 + 페이드인 ── */
             float elapsed = 0f;
             float a = 2f * (finalPos.y - startPos.y) / (dropDuration * dropDuration);
 
-            Vector3 horizStart = new Vector3(startPos.x, 0f, startPos.z);
-            Vector3 horizEnd = new Vector3(finalPos.x, 0f, finalPos.z);
+            Vector3 horizStart = new(startPos.x, 0f, startPos.z);
+            Vector3 horizEnd = new(finalPos.x, 0f, finalPos.z);
 
             while (elapsed < dropDuration)
             {
+                // 타일이 중간에 파괴‧비활성화됐다면 즉시 종료
+                if (tile == null) yield break;
+
                 elapsed += Time.deltaTime;
                 float tNorm = Mathf.Clamp01(elapsed / dropDuration);
-
-                // 위치 보간
-                Vector3 horiz = Vector3.Lerp(horizStart, horizEnd, tNorm);
+                float easeT = tNorm;                         // 직선 이동이면 Lerp 그대로
+                Vector3 horiz = Vector3.Lerp(horizStart, horizEnd, easeT);
                 float y = startPos.y + 0.5f * a * elapsed * elapsed;
                 tile.transform.position = new Vector3(horiz.x, y, horiz.z);
 
-                // 알파 보간
                 float alphaT = Mathf.Clamp01(elapsed / fadeDuration);
                 foreach (var mat in cachedMats)
-                    if (mat.HasProperty("_Color"))
-                    {
-                        Color c = mat.color; c.a = alphaT; mat.color = c;
-                    }
-
+                {
+                    if (mat == null || !mat.HasProperty("_Color")) continue;
+                    Color c = mat.color; c.a = alphaT; mat.color = c;
+                }
                 yield return null;
             }
 
-            /* ───────────── ④ 최종 보정 & Opaque 복구 ───────────── */
+            /* ── 4. 최종 보정 & Opaque 복구 ── */
+            if (tile == null) yield break;   // 마지막 순간 파괴 가능성
+
             tile.transform.position = finalPos;
             foreach (var mat in cachedMats)
             {
+                if (mat == null) continue;
                 if (mat.HasProperty("_Color"))
                 {
                     Color c = mat.color; c.a = 1f; mat.color = c;
@@ -358,6 +384,7 @@ namespace MCRGame.UI
                 SetMaterialOpaque(mat);
             }
         }
+
 
         // Standard Shader를 Transparent 모드로 전환
         private void SetMaterialTransparent(Material mat)
