@@ -4,61 +4,81 @@ using DG.Tweening;
 using System;
 using MCRGame.Common;
 using MCRGame.Net;
+using MCRGame.UI;
 
 namespace MCRGame.Game
 {
     public class EmojiPanelController : MonoBehaviour
     {
-        [Header("Buttons & Panels")]
-        [SerializeField] private Button openButton;         // OpenEmojiButton
-        [SerializeField] private RectTransform panelRect;   // EmojiPanel RectTransform
-        [SerializeField] private Button closeButton;        // 패널 왼쪽 닫기 버튼
+        private Button openButton;
+        private RectTransform panelRect;
+        private Button closeButton;
 
-        [Header("Scroll & Content")]
-        [SerializeField] private Transform contentContainer;   // ScrollRect → Viewport → Content
-        [SerializeField] private GameObject emojiButtonPrefab; // Prefab: Button + Image
+        private Transform contentContainer;
+        private GameObject emojiButtonPrefab;
 
-        [Header("Popup")]
-        [SerializeField] private RectTransform[] popupAnchors = new RectTransform[4];
-        // [SerializeField] private Vector2 popupOffset     = new Vector2(-320, -150);
-        [SerializeField] private Transform popupRoot;          // 캔버스 최상단에 빈 Transform
-        [SerializeField] private GameObject emojiPopupPrefab;  // Prefab: Image 단일 (튕겨 나올 이모티콘)
+        private RectTransform[] popupAnchors;
+        private Transform popupRoot;
+        private GameObject emojiPopupPrefab;
 
-        [Header("Animation Settings")]
-        [SerializeField] private float animDuration = 0.4f;
-        [SerializeField] private Ease animEase = Ease.OutBack;
-        [SerializeField] private float popupAnimDuration = 0.3f;
+        private float animDuration;
+        private Ease animEase;
+        private float popupAnimDuration;
 
-        [Header("Hidden / Shown X Positions")]
-        [SerializeField] private float panelHiddenX = 1188.15f;  // 패널이 숨겨질 때 localX
-        [SerializeField] private float panelShownX = 728.2f;  // 패널이 보일 때 localX
-        [SerializeField] private float buttonHiddenX = 998.5f;  // openButton 숨길 때 localX
-        [SerializeField] private float buttonShownX = 932.8f;  // openButton 보일 때 localX
+        private float panelHiddenX;
+        private float panelShownX;
+        private float buttonHiddenX;
+        private float buttonShownX;
 
-        // Resources 로드용 경로 (Assets/Resources/Images/CharacterEmoji)
-        private const string EmojiPath = "Images/CharacterEmoji";
         private Sprite[] emojiSprites;
+        private bool _initialized = false;
+        /// <summary>
+        /// GameManager에서 한 번만 호출해 모든 의존성을 주입합니다.
+        /// </summary>
+        public void Initialize(EmojiPanelReferences refs)
+        {
+            if (_initialized) return;
+            _initialized = true;
 
+            // 1) copy references
+            openButton = refs.OpenButton;
+            panelRect = refs.PanelRect;
+            closeButton = refs.CloseButton;
+            contentContainer = refs.ContentContainer;
+            emojiButtonPrefab = refs.EmojiButtonPrefab;
+            popupAnchors = refs.PopupAnchors;
+            popupRoot = refs.PopupRoot;
+            emojiPopupPrefab = refs.EmojiPopupPrefab;
+            animDuration = refs.AnimDuration;
+            animEase = refs.AnimEase;
+            popupAnimDuration = refs.PopupAnimDuration;
+            panelHiddenX = refs.PanelHiddenX;
+            panelShownX = refs.PanelShownX;
+            buttonHiddenX = refs.ButtonHiddenX;
+            buttonShownX = refs.ButtonShownX;
+
+            // 2) now do what used to be in Start()
+            SetupUI();
+        }
 
         private void Awake()
         {
-            // Resources 폴더에서 스프라이트 일괄 로드
-            emojiSprites = Resources.LoadAll<Sprite>(EmojiPath);
-            Debug.Log($"[EmojiPanel] Loaded {emojiSprites.Length} sprites from Resources/{EmojiPath}");
+            // 이모지 스프라이트만 Resources 폴더에서 즉시 로드
+            emojiSprites = Resources.LoadAll<Sprite>("Images/CharacterEmoji");
         }
 
 
-        private void Start()
+        private void SetupUI()
         {
-            // 1) 패널·버튼 초기 위치
+            // initial positions
             openButton.transform.localPosition = new Vector3(buttonShownX, openButton.transform.localPosition.y, 0);
             panelRect.localPosition = new Vector3(panelHiddenX, panelRect.localPosition.y, 0);
 
-            // 2) 버튼 리스너
+            // button listeners
             openButton.onClick.AddListener(ShowPanel);
             closeButton.onClick.AddListener(HidePanel);
 
-            // 3) 이모티콘 버튼 생성 (내 클릭용)
+            // emoji buttons
             foreach (var sp in emojiSprites)
             {
                 var go = Instantiate(emojiButtonPrefab, contentContainer);
@@ -66,8 +86,7 @@ namespace MCRGame.Game
                 img.sprite = sp;
                 go.GetComponent<Button>().onClick.AddListener(() =>
                 {
-                    var myAnchor = popupAnchors[(int)RelativeSeat.SELF];
-                    ShowPopup(sp, myAnchor);
+                    ShowPopup(sp, popupAnchors[(int)RelativeSeat.SELF]);
                     SendEmojiToServer(sp.name);
                 });
             }

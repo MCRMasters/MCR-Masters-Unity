@@ -1,6 +1,7 @@
 using UnityEngine;
 using MCRGame.Common;
 using DG.Tweening;
+using UnityEngine.SceneManagement;
 
 namespace MCRGame.UI
 {
@@ -23,6 +24,36 @@ namespace MCRGame.UI
             DontDestroyOnLoad(gameObject);
 
         }
+
+
+        private void OnEnable()
+        {
+            SceneManager.sceneLoaded += OnSceneLoaded;
+        }
+
+        private void OnDisable()
+        {
+            SceneManager.sceneLoaded -= OnSceneLoaded;
+        }
+
+        private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            if (scene.name == "GameScene")
+            {
+                ResetState();
+                Debug.Log("[ScorePopupManager] ResetState 호출");
+            }
+        }
+
+        /// <summary>
+        /// 씬 재진입 시 기존 팝업 삭제 및 내부 상태 초기화
+        /// </summary>
+        private void ResetState()
+        {
+            DeleteWinningPopup();
+            popup = null;
+        }
+
 
         public void DeleteWinningPopup()
         {

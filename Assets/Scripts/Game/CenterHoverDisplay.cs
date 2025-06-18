@@ -22,9 +22,9 @@ namespace MCRGame.Game
         [SerializeField] private TextMeshProUGUI scoreText_Kami;
 
         [Header("Colors")]
-        [SerializeField] private Color positiveColor = new (0x23/255f, 0xE6/255f, 0xA5/255f); // #23E6A5
-        [SerializeField] private Color zeroColor     = new (0xC0/255f, 0xC0/255f, 0xC0/255f); // #C0C0C0
-        [SerializeField] private Color negativeColor = new (0xFF/255f, 0x6A/255f, 0x6A/255f); // #FF6A6A
+        [SerializeField] private Color positiveColor = new(0x23 / 255f, 0xE6 / 255f, 0xA5 / 255f); // #23E6A5
+        [SerializeField] private Color zeroColor = new(0xC0 / 255f, 0xC0 / 255f, 0xC0 / 255f); // #C0C0C0
+        [SerializeField] private Color negativeColor = new(0xFF / 255f, 0x6A / 255f, 0x6A / 255f); // #FF6A6A
 
         private Dictionary<RelativeSeat, TextMeshProUGUI> seatToText;
         private bool hovering;
@@ -80,14 +80,35 @@ namespace MCRGame.Game
             if (!hovering && GameManager.Instance != null)
                 GameManager.Instance.UpdateScoreText();
         }
-
         private void ShowDifference()
         {
             var gm = GameManager.Instance;
-            if (gm == null || gm.Players == null) return;
+            var pdm = PlayerDataManager.Instance;
 
+            // ① GameManager/PlayerDataManager/Players 가 없으면 중단
+            if (gm == null || gm.Players == null || pdm == null)
+            {
+                Debug.LogWarning("[CenterScoreHoverDisplay] GameManager 또는 PlayerDataManager.Instance 가 null 입니다.");
+                return;
+            }
+
+            // ② seatToText 딕셔너리가 없으면 중단
+            if (seatToText == null)
+            {
+                Debug.LogWarning("[CenterScoreHoverDisplay] seatToText 가 초기화되지 않았습니다.");
+                return;
+            }
+
+            // ③ seatToPlayerIndex 매핑이 없으면 중단
+            if (gm.seatToPlayerIndex == null)
+            {
+                Debug.LogWarning("[CenterScoreHoverDisplay] GameManager.seatToPlayerIndex 가 초기화되지 않았습니다.");
+                return;
+            }
+
+            // (원래 로직)
             int selfScore = 0;
-            var me = gm.Players.Find(p => p.Uid == PlayerDataManager.Instance.Uid);
+            var me = gm.Players.Find(p => p.Uid == pdm.Uid);
             if (me != null) selfScore = me.Score;
 
             foreach (var (rel, txt) in seatToText)
@@ -95,8 +116,8 @@ namespace MCRGame.Game
                 if (txt == null) continue;
 
                 AbsoluteSeat abs = rel.ToAbsoluteSeat(gm.MySeat);
-                if (!gm.seatToPlayerIndex.TryGetValue(abs, out int idx) ||
-                    idx < 0 || idx >= gm.Players.Count)
+                if (!gm.seatToPlayerIndex.TryGetValue(abs, out int idx)
+                    || idx < 0 || idx >= gm.Players.Count)
                 {
                     txt.text = "--";
                     txt.color = zeroColor;
@@ -104,7 +125,9 @@ namespace MCRGame.Game
                 }
 
                 var player = gm.Players[idx];
-                int diff = (rel == RelativeSeat.SELF) ? 0 : player.Score - selfScore;
+                int diff = (rel == RelativeSeat.SELF)
+                    ? 0
+                    : player.Score - selfScore;
                 ApplyStyle(txt, diff);
             }
         }
@@ -113,17 +136,17 @@ namespace MCRGame.Game
         {
             if (value > 0)
             {
-                txt.text  = "+" + value;
+                txt.text = "+" + value;
                 txt.color = positiveColor;
             }
             else if (value < 0)
             {
-                txt.text  = value.ToString();
+                txt.text = value.ToString();
                 txt.color = negativeColor;
             }
             else
             {
-                txt.text  = "+0";
+                txt.text = "+0";
                 txt.color = zeroColor;
             }
         }

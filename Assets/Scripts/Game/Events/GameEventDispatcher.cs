@@ -4,7 +4,8 @@ using Newtonsoft.Json.Linq;
 using UnityEngine;
 
 using MCRGame.Net;      // GameWSMessage, GameWSActionType
-using MCRGame.Common;   // GameEventType
+using MCRGame.Common;
+using UnityEngine.SceneManagement;   // GameEventType
 
 namespace MCRGame.Game.Events
 {
@@ -48,6 +49,35 @@ namespace MCRGame.Game.Events
             if (Instance == this) Instance = null;
         }
 
+        private void OnEnable()
+        {
+            SceneManager.sceneLoaded += OnSceneLoaded;
+        }
+
+        private void OnDisable()
+        {
+            SceneManager.sceneLoaded -= OnSceneLoaded;
+        }
+
+        private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            if (scene.name == "GameScene")
+            {
+                ResetState();
+                Debug.Log("[GameEventDispatcher] ResetState 호출");
+            }
+        }
+
+        /// <summary>
+        /// 씬 재진입 시 핸들러 테이블을 비우고 다시 등록합니다.
+        /// </summary>
+        private void ResetState()
+        {
+            _handlers.Clear();
+            RegisterHandlers();
+        }
+
+
         /*────────────── Handler Table ───────────*/
         private readonly Dictionary<GameEventType, IGameEventHandler> _handlers = new();
 
@@ -58,7 +88,7 @@ namespace MCRGame.Game.Events
                 switch (h)
                 {
                     case CallBlockHandler cb:
-                        foreach (var evt in new[]{ GameEventType.CHII, GameEventType.PON, GameEventType.DAIMIN_KAN, GameEventType.SHOMIN_KAN, GameEventType.AN_KAN })
+                        foreach (var evt in new[] { GameEventType.CHII, GameEventType.PON, GameEventType.DAIMIN_KAN, GameEventType.SHOMIN_KAN, GameEventType.AN_KAN })
                             _handlers[evt] = cb;
                         break;
                     case TsumoHandler t:

@@ -1,13 +1,13 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using System.Collections;
+using UnityEngine.SceneManagement;
 
 using MCRGame.Common;
 using MCRGame.UI;
 using MCRGame.Net;
 using System;
-
 
 namespace MCRGame.Game
 {
@@ -19,6 +19,9 @@ namespace MCRGame.Game
         [SerializeField] private GameObject flowerPhaseEffectPrefab;
         [SerializeField] private GameObject roundStartEffectPrefab;
 
+        /*──────────────────────────────────────────────*/
+        /*  Life-cycle                                  */
+        /*──────────────────────────────────────────────*/
         private void Awake()
         {
             if (Instance != null && Instance != this)
@@ -27,62 +30,105 @@ namespace MCRGame.Game
                 return;
             }
             Instance = this;
+            Debug.Log("[FR] Awake");
         }
 
-        /// GameManager 쪽에서 호출하는 진입점
+        private void OnEnable() => SceneManager.sceneLoaded += OnSceneLoaded;
+        private void OnDisable() => SceneManager.sceneLoaded -= OnSceneLoaded;
+
+        private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            if (scene.name == "GameScene")
+            {
+                ResetState();
+                Debug.Log("[FR] OnSceneLoaded → ResetState()");
+            }
+        }
+
+        private void ResetState()
+        {
+            Debug.Log("[FR] ResetState : StopAllCoroutines");
+            StopAllCoroutines();
+        }
+
+        /*──────────────────────────────────────────────*/
+        /*  Public Entry                                */
+        /*──────────────────────────────────────────────*/
         public IEnumerator StartFlowerReplacement(
             List<GameTile> newTiles,
             List<GameTile> appliedFlowers,
             List<int> flowerCounts)
         {
-            yield return GameManager.Instance.GameHandManager.RunExclusive(FlowerReplacementCoroutine(newTiles: newTiles, appliedFlowers: appliedFlowers, flowerCounts: flowerCounts));
+            Debug.Log($"[FR] ▶ StartFlowerReplacement  new={newTiles.Count}, " +
+                      $"applied={appliedFlowers.Count}, counts=({string.Join(",", flowerCounts)})");
+
+            yield return GameManager.Instance.GameHandManager
+                .RunExclusive(FlowerReplacementCoroutine(newTiles, appliedFlowers, flowerCounts));
+
+            Debug.Log("[FR] ◀ StartFlowerReplacement finished");
+
             GameManager.Instance.GameHandManager.IsAnimating = false;
             GameManager.Instance.CanClick = false;
         }
 
+        /*──────────────────────────────────────────────*/
+        /*  Core Coroutine                              */
+        /*──────────────────────────────────────────────*/
         private IEnumerator FlowerReplacementCoroutine(
             List<GameTile> newTiles,
             List<GameTile> appliedFlowers,
             List<int> flowerCounts)
         {
+            Debug.Log("[FR]   FlowerReplacementCoroutine BEGIN");
+
             GameManager gm = GameManager.Instance;
             if (gm == null)
+            {
+                Debug.LogError("[FR] GameManager.Instance is null - abort");
                 yield break;
+            }
 
-            // (1) 캔버스 찾아서 부모로 지정
-            GameObject canvas = GameObject.Find("Main 2D Canvas");
+            /* 1) 캔버스 찾기 */
+            GameObject canvas = gm._canvasInstance;
             Transform canvasTr = canvas != null ? canvas.transform : transform;
 
-            // (2) FLOWER PHASE 효과 연출 (Fade-In)
+            /* 2) PHASE 효과 */
             GameObject effectGO = null;
             if (flowerPhaseEffectPrefab != null)
             {
                 effectGO = Instantiate(flowerPhaseEffectPrefab, canvasTr);
+                Debug.Log("[FR]   Flower phase effect instanced");
                 var img = effectGO.GetComponentInChildren<Image>();
                 img.raycastTarget = false;
                 yield return StartCoroutine(FadeIn(img, 0.2f));
             }
 
-            // (3) 좌석 순서대로 화패 교체
-            AbsoluteSeat[] seats = {
-                AbsoluteSeat.EAST,
-                AbsoluteSeat.SOUTH,
-                AbsoluteSeat.WEST,
-                AbsoluteSeat.NORTH
-            };
-
-            foreach (var abs in seats)
+            /* 3) 교체 루프 */
+            AbsoluteSeat[] seats = { AbsoluteSeat.EAST, AbsoluteSeat.SOUTH, AbsoluteSeat.WEST, AbsoluteSeat.NORTH };
+            for (int s = 0; s < seats.Length; ++s)
             {
-                int count = flowerCounts[(int)abs];
+                var abs = seats[s];
+                int cnt = flowerCounts[(int)abs];
+                if (cnt == 0)
+                {
+                    Debug.Log($"[FR]   Seat {abs} → skip (0)");
+                    continue;
+                }
+
+                Debug.Log($"[FR]   Seat {abs} → {cnt} flower(s)");
                 RelativeSeat rel = RelativeSeatExtensions.CreateFromAbsoluteSeats(gm.MySeat, abs);
 
-                for (int i = 0; i < count; i++)
+                for (int i = 0; i < cnt; ++i)
                 {
+                    Debug.Log($"[FR]     Seat {abs}/{rel}  step {i + 1}/{cnt}");
+
                     if (rel == RelativeSeat.SELF)
                     {
+                        Debug.Log("[FR]       SELF animation");
                         int prev = gm.flowerCountMap[rel];
                         int next = prev + 1;
                         bool animDone = false;
+
                         StartCoroutine(gm.AnimateFlowerCount(rel, prev, next, () => animDone = true));
 
                         yield return gm.GameHandManager
@@ -96,34 +142,35 @@ namespace MCRGame.Game
                     }
                     else
                     {
+                        Debug.Log("[FR]       OPPONENT animation");
                         int prev = gm.flowerCountMap[rel];
                         int next = prev + 1;
 
-                        // 화패 카운트 애니메이션
                         yield return StartCoroutine(gm.AnimateFlowerCount(rel, prev, next, null));
-                        // 상대 3D 애니메이션
-                        yield return StartCoroutine(ProcessOpponentFlowerOperation(gm.playersHand3DFields[(int)rel], null));
-                        // 업데이트
+                        yield return StartCoroutine(ProcessOpponentFlowerOperation(
+                            gm.playersHand3DFields[(int)rel], null));
+
                         gm.SetFlowerCount(rel, next);
                         gm.UpdateLeftTilesByDelta(-1);
                     }
 
-                    // 다음 교체 전 잠시 여유
                     yield return new WaitForSeconds(0.3f);
                 }
             }
 
-            // (4) FLOWER PHASE Fade-Out
+            /* 4) 효과 Fade-out */
             if (effectGO != null)
             {
+                Debug.Log("[FR]   Flower phase effect fade-out");
                 var img = effectGO.GetComponentInChildren<Image>();
                 yield return StartCoroutine(FadeOut(img, 0.2f));
                 Destroy(effectGO);
             }
 
-            // (5) ROUND START 연출
+            /* 5) ROUND START 효과 */
             if (roundStartEffectPrefab != null)
             {
+                Debug.Log("[FR]   RoundStart effect");
                 var go = Instantiate(roundStartEffectPrefab, canvasTr);
                 var img = go.GetComponentInChildren<Image>();
                 img.raycastTarget = false;
@@ -131,90 +178,67 @@ namespace MCRGame.Game
                 Destroy(go);
             }
 
-            // (6) 서버에 INIT_FLOWER_OK 전송
+            /* 6) 서버 OK 전송 */
             if (GameWS.Instance != null)
             {
-                // 서버 OK 전송
-                GameWS.Instance.SendGameEvent(GameWSActionType.GAME_EVENT,
+                Debug.Log("[FR]   Send INIT_FLOWER_OK");
+                GameWS.Instance.SendGameEvent(
+                    GameWSActionType.GAME_EVENT,
                     new
                     {
                         event_type = (int)GameEventType.INIT_FLOWER_OK,
                         data = new Dictionary<string, object>()
-                    }
-                );
+                    });
             }
-            yield break;
+            else
+            {
+                Debug.LogWarning("[FR]   GameWS.Instance is null – OK not sent");
+            }
+
+            Debug.Log("[FR]   FlowerReplacementCoroutine END");
         }
 
-        /// <summary>
-        /// 상대 3D 핸드 쪽 꽃 교체 애니메이션을 처리하고 완료 콜백을 호출합니다.
-        /// </summary>
+        /*──────────────────────────────────────────────*/
+        /*  Helper Coroutines                           */
+        /*──────────────────────────────────────────────*/
         private IEnumerator ProcessOpponentFlowerOperation(
             Hand3DField handField,
             Action onComplete)
         {
+            Debug.Log("[FR]       Opponent discard + tsumo");
             yield return handField.RequestDiscardRandom();
             yield return handField.RequestInitFlowerTsumo();
             onComplete?.Invoke();
         }
 
-
-        // 지정한 Image 컴포넌트가 fade in 효과로 나타나도록 처리 (fadeDuration 동안)
-        private IEnumerator FadeIn(Image img, float fadeDuration)
+        // Fade helpers with simple logs (원하면 로그 더 추가)
+        private IEnumerator FadeIn(Image img, float d)
         {
-            Color origColor = img.color;
-            float elapsed = 0f;
-            while (elapsed < fadeDuration)
+            Color c = img.color; float t = 0;
+            while (t < d)
             {
-                elapsed += Time.deltaTime;
-                float t = Mathf.Clamp01(elapsed / fadeDuration);
-                img.color = new Color(origColor.r, origColor.g, origColor.b, t);
+                t += Time.deltaTime;
+                img.color = new Color(c.r, c.g, c.b, Mathf.Clamp01(t / d));
                 yield return null;
             }
-            img.color = new Color(origColor.r, origColor.g, origColor.b, 1f);
         }
 
-        // 지정한 Image 컴포넌트가 fade out 효과로 사라지도록 처리 (fadeDuration 동안)
-        private IEnumerator FadeOut(Image img, float fadeDuration)
+        private IEnumerator FadeOut(Image img, float d)
         {
-            Color origColor = img.color;
-            float elapsed = 0f;
-            while (elapsed < fadeDuration)
+            Color c = img.color; float t = 0;
+            while (t < d)
             {
-                elapsed += Time.deltaTime;
-                float t = Mathf.Clamp01(elapsed / fadeDuration);
-                img.color = new Color(origColor.r, origColor.g, origColor.b, 1 - t);
+                t += Time.deltaTime;
+                img.color = new Color(c.r, c.g, c.b, 1 - Mathf.Clamp01(t / d));
                 yield return null;
             }
-            img.color = new Color(origColor.r, origColor.g, origColor.b, 0f);
         }
 
-
-        /// <summary>
-        /// Image 컴포넌트에 대해 FadeIn 후 일정 시간 유지, FadeOut 애니메이션을 수행합니다.
-        /// </summary>
-        private IEnumerator FadeInAndOut(Image img, float fadeDuration, float displayDuration)
+        private IEnumerator FadeInAndOut(Image img, float d, float hold)
         {
-            Color origColor = img.color;
-            // Fade In
-            float elapsed = 0f;
-            while (elapsed < fadeDuration)
-            {
-                elapsed += Time.deltaTime;
-                float t = Mathf.Clamp01(elapsed / fadeDuration);
-                img.color = new Color(origColor.r, origColor.g, origColor.b, t);
-                yield return null;
-            }
-            yield return new WaitForSeconds(displayDuration);
-            // Fade Out
-            elapsed = 0f;
-            while (elapsed < fadeDuration)
-            {
-                elapsed += Time.deltaTime;
-                float t = Mathf.Clamp01(elapsed / fadeDuration);
-                img.color = new Color(origColor.r, origColor.g, origColor.b, 1 - t);
-                yield return null;
-            }
+            yield return FadeIn(img, d);
+            yield return new WaitForSeconds(hold);
+            yield return FadeOut(img, d);
         }
     }
 }

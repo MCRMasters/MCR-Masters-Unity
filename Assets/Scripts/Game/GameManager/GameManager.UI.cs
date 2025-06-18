@@ -77,6 +77,7 @@ namespace MCRGame.Game
         private void ClearActionUI()
         {
             isAfterTsumoAction = false;
+            if (actionButtonPanel == null) return;
             ClearActionButtons();
             if (timerText) timerText.gameObject.SetActive(false);
         }
