@@ -20,7 +20,7 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: FlareTails
+  m_Name: FlareTails 1
   m_Shader: {fileID: -6465566751694194690, guid: 5a5d27a50c7aa4051afccf22fbab0575, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
@@ -133,7 +133,7 @@ Material:
     - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _Color1: {r: 2.6390157, g: 2.6390157, b: 2.6390157, a: 1}
-    - _Color2: {r: 2.297397, g: 1.7419823, b: 0, a: 1}
+    - _Color2: {r: 29.857056, g: 23.514313, b: 3.520879, a: 1}
     - _DissolveSpeed: {r: -0.5, g: 0, b: 0, a: 0}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _MainTexspeed: {r: -0.5, g: 0, b: 0, a: 0}
