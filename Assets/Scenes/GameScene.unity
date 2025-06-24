@@ -724,6 +724,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 748ad97e61cf72d49834ee6cd6c283bc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  bloomPrefab: {fileID: 2929940928954147278, guid: 0709413603b07486c89db0b101781044, type: 3}
   gameHandManager: {fileID: 0}
   discardManagerPrefab: {fileID: 2152387688654873450, guid: 1a9022e080fd49e42a3e40da343a08af, type: 3}
   emojiPanelPrefab: {fileID: 8498868396473130761, guid: 2be57e85c114a084685257566f1b4cf7, type: 3}

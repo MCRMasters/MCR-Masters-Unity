@@ -41,6 +41,10 @@ namespace MCRGame.Game
         public RelativeSeat CurrentTurnSeat { get; private set; }
         public Round CurrentRound { get; private set; }
 
+        /* ---------- Post-Processing ---------- */
+        [SerializeField] private GameObject bloomPrefab;   // 에디터에서 할당할 Bloom Prefab
+        private GameObject bloomInstance;                  // 런타임에 생성된 인스턴스
+
         /* ---------- Manager refs ---------- */
         [SerializeField] private GameHandManager gameHandManager;
         public GameHandManager GameHandManager => gameHandManager;
@@ -138,6 +142,8 @@ namespace MCRGame.Game
         public GameObject _canvasInstance;
         private GameObject _field3DInstance;
 
+
+
         /* ---------- 타일/도움 dict ---------- */
         public Dictionary<GameTile, List<TenpaiAssistEntry>> tenpaiAssistDict = new();
         public List<TenpaiAssistEntry> NowTenpaiAssistList = new();
@@ -148,6 +154,7 @@ namespace MCRGame.Game
         public Dictionary<AbsoluteSeat, int> seatToPlayerIndex;
         private Dictionary<int, AbsoluteSeat> playerIndexToSeat;
         private Dictionary<string, int> playerUidToIndex;
+
 
         /* ---------- Hand & CallBlock Field ---------- */
         [SerializeField] public Hand3DField[] playersHand3DFields;
@@ -339,6 +346,8 @@ namespace MCRGame.Game
                 return;
             }
 
+
+
             // 3D Field 전용 필드 바인딩 (TurnImages, WindTexts, ScoreTexts, Hand3DFields, CallBlockOrigins 등)
             for (int i = 0; i < 4; i++)
                 BlinkTurnImages[i] = fRefs.TurnImages[i];
@@ -394,6 +403,14 @@ namespace MCRGame.Game
                 }
             }
             BindCameraResultAnimator();
+
+
+
+            // ─── 4) Bloom 생성 ───────────────────────────────
+            if (bloomPrefab != null)
+            { 
+                bloomInstance = Instantiate(bloomPrefab);
+            }
             // ─── 5) 상태 초기화 ───────────────────────────────
             ResetState();
             IsSceneReady = true;
