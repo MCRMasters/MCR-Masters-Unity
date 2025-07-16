@@ -4,7 +4,7 @@ using MCRGame.Audio;
 using MCRGame.Game;
 using MCRGame.UI;
 
-namespace MCRgame.Game
+namespace MCRGame.Game
 {
     public class SettingsUIManager : MonoBehaviour
     {

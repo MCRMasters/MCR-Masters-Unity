@@ -269,6 +269,7 @@ namespace MCRGame.UI
 
             // ★ 부모를 discardPos의 자식으로 설정
             instantiatedTile.transform.SetParent(origin, true);
+            GameManager.Instance.NowFocus3DTile = instantiatedTile;
 
             // 리스트에 추가
             kawas[seat].Add(instantiatedTile);
