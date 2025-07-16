@@ -71,7 +71,7 @@ public class KunaiDropManager2 : MonoBehaviour
 
         // 회전 애니메이션 (딱 dropDuration 동안)
         kunai.transform
-            .DORotate(new Vector3(30f, 0f, 30f), dropDuration)
+            .DORotate(new Vector3(30f, 30f, 30f), dropDuration)
             .SetEase(Ease.InQuad)
             .OnComplete(() => {
                 SpawnImpact(kunai.transform, arrivalPos);

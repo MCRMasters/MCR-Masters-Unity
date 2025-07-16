@@ -292,9 +292,17 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 1161915360993296381, guid: 4a4fbeddd6771492dbbbca8829e6d1b1, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 10.6
+      objectReference: {fileID: 0}
+    - target: {fileID: 1161915360993296381, guid: 4a4fbeddd6771492dbbbca8829e6d1b1, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 6.8
+      objectReference: {fileID: 0}
     - target: {fileID: 5712599755142847916, guid: 4a4fbeddd6771492dbbbca8829e6d1b1, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -16.2
+      value: 42.5
       objectReference: {fileID: 0}
     - target: {fileID: 5712599755142847916, guid: 4a4fbeddd6771492dbbbca8829e6d1b1, type: 3}
       propertyPath: m_LocalPosition.y
@@ -333,8 +341,16 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6647883305255972365, guid: 4a4fbeddd6771492dbbbca8829e6d1b1, type: 3}
+      propertyPath: m_Time
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 6647883305255972365, guid: 4a4fbeddd6771492dbbbca8829e6d1b1, type: 3}
       propertyPath: m_Parameters.widthCurve.m_Curve.Array.data[1].time
-      value: 0.29888916
+      value: 0.50507355
+      objectReference: {fileID: 0}
+    - target: {fileID: 6647883305255972365, guid: 4a4fbeddd6771492dbbbca8829e6d1b1, type: 3}
+      propertyPath: m_Parameters.widthCurve.m_Curve.Array.data[1].value
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7030541508922589495, guid: 4a4fbeddd6771492dbbbca8829e6d1b1, type: 3}
       propertyPath: m_Name
@@ -402,100 +418,6 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 719292d8709bc4fc095adccc8260c664, type: 3}
---- !u!1 &878095899
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 878095900}
-  - component: {fileID: 878095901}
-  m_Layer: 0
-  m_Name: GameObject
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 0
---- !u!4 &878095900
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 878095899}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &878095901
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 878095899}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1f3f8150337d24555b2440f62c498245, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  kunaiPrefab: {fileID: 7030541508922589495, guid: 4a4fbeddd6771492dbbbca8829e6d1b1, type: 3}
-  impactEffectPrefab: {fileID: 2708564902525552732, guid: 719292d8709bc4fc095adccc8260c664, type: 3}
-  startOffset: {x: 50, y: 50, z: 50}
-  dropDuration: 1
---- !u!1 &1500867953
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1500867955}
-  - component: {fileID: 1500867954}
-  m_Layer: 0
-  m_Name: WaterColumnTester
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &1500867954
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1500867953}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5ebb8ce07c8694796a3db1f145caa249, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  waterColumnPrefab: {fileID: 343226197619095514, guid: 1283880e759e84c32ae81de01989de50, type: 3}
-  effectLifetime: 1
---- !u!4 &1500867955
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1500867953}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1800113851
 GameObject:
   m_ObjectHideFlags: 0
@@ -778,7 +700,6 @@ GameObject:
   m_Component:
   - component: {fileID: 2131535027}
   - component: {fileID: 2131535026}
-  - component: {fileID: 2131535028}
   m_Layer: 0
   m_Name: Bloom
   m_TagString: Untagged
@@ -818,22 +739,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &2131535028
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2131535025}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1f3f8150337d24555b2440f62c498245, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  kunaiPrefab: {fileID: 4626597436060760511, guid: 1da2101db585a420aa6fb40b110d90ad, type: 3}
-  impactEffectPrefab: {fileID: 2708564902525552732, guid: 719292d8709bc4fc095adccc8260c664, type: 3}
-  startOffset: {x: 50, y: 50, z: 50}
-  dropDuration: 1
 --- !u!1 &2146684238
 GameObject:
   m_ObjectHideFlags: 0
@@ -865,6 +770,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   kunaiPrefab: {fileID: 7030541508922589495, guid: 4a4fbeddd6771492dbbbca8829e6d1b1, type: 3}
   impactEffectPrefab: {fileID: 2708564902525552732, guid: 719292d8709bc4fc095adccc8260c664, type: 3}
+  arrivalOffset: {x: 0, y: 0, z: 0}
   startOffset: {x: 50, y: 50, z: 50}
   dropDuration: 1
 --- !u!4 &2146684240
@@ -889,10 +795,8 @@ SceneRoots:
   - {fileID: 1800113854}
   - {fileID: 1807988297}
   - {fileID: 152682702}
-  - {fileID: 1500867955}
   - {fileID: 2131535027}
   - {fileID: 392855948}
-  - {fileID: 878095900}
   - {fileID: 2146684240}
   - {fileID: 494063358}
   - {fileID: 702270875}
