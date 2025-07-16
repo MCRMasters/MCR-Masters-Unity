@@ -284,83 +284,6 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 131.43272, y: 12.312009, z: 131.43272}
   m_Center: {x: 0, y: 0, z: 0}
---- !u!1001 &494063358
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 0}
-    m_Modifications:
-    - target: {fileID: 1161915360993296381, guid: 4a4fbeddd6771492dbbbca8829e6d1b1, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 10.6
-      objectReference: {fileID: 0}
-    - target: {fileID: 1161915360993296381, guid: 4a4fbeddd6771492dbbbca8829e6d1b1, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 6.8
-      objectReference: {fileID: 0}
-    - target: {fileID: 5712599755142847916, guid: 4a4fbeddd6771492dbbbca8829e6d1b1, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 42.5
-      objectReference: {fileID: 0}
-    - target: {fileID: 5712599755142847916, guid: 4a4fbeddd6771492dbbbca8829e6d1b1, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 6.165968
-      objectReference: {fileID: 0}
-    - target: {fileID: 5712599755142847916, guid: 4a4fbeddd6771492dbbbca8829e6d1b1, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 26.410881
-      objectReference: {fileID: 0}
-    - target: {fileID: 5712599755142847916, guid: 4a4fbeddd6771492dbbbca8829e6d1b1, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 5712599755142847916, guid: 4a4fbeddd6771492dbbbca8829e6d1b1, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5712599755142847916, guid: 4a4fbeddd6771492dbbbca8829e6d1b1, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5712599755142847916, guid: 4a4fbeddd6771492dbbbca8829e6d1b1, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5712599755142847916, guid: 4a4fbeddd6771492dbbbca8829e6d1b1, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5712599755142847916, guid: 4a4fbeddd6771492dbbbca8829e6d1b1, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5712599755142847916, guid: 4a4fbeddd6771492dbbbca8829e6d1b1, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6647883305255972365, guid: 4a4fbeddd6771492dbbbca8829e6d1b1, type: 3}
-      propertyPath: m_Time
-      value: 0.5
-      objectReference: {fileID: 0}
-    - target: {fileID: 6647883305255972365, guid: 4a4fbeddd6771492dbbbca8829e6d1b1, type: 3}
-      propertyPath: m_Parameters.widthCurve.m_Curve.Array.data[1].time
-      value: 0.50507355
-      objectReference: {fileID: 0}
-    - target: {fileID: 6647883305255972365, guid: 4a4fbeddd6771492dbbbca8829e6d1b1, type: 3}
-      propertyPath: m_Parameters.widthCurve.m_Curve.Array.data[1].value
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7030541508922589495, guid: 4a4fbeddd6771492dbbbca8829e6d1b1, type: 3}
-      propertyPath: m_Name
-      value: Kunaiset1
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 4a4fbeddd6771492dbbbca8829e6d1b1, type: 3}
 --- !u!1001 &702270875
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -771,7 +694,7 @@ MonoBehaviour:
   kunaiPrefab: {fileID: 7030541508922589495, guid: 4a4fbeddd6771492dbbbca8829e6d1b1, type: 3}
   impactEffectPrefab: {fileID: 2708564902525552732, guid: 719292d8709bc4fc095adccc8260c664, type: 3}
   arrivalOffset: {x: 0, y: 0, z: 0}
-  startOffset: {x: 50, y: 50, z: 50}
+  startOffset: {x: 20, y: 20, z: 20}
   dropDuration: 1
 --- !u!4 &2146684240
 Transform:
@@ -798,5 +721,4 @@ SceneRoots:
   - {fileID: 2131535027}
   - {fileID: 392855948}
   - {fileID: 2146684240}
-  - {fileID: 494063358}
   - {fileID: 702270875}

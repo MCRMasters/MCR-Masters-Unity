@@ -1,7 +1,7 @@
 using UnityEngine;
 using DG.Tweening;  // DOTween 네임스페이스
 
-public class KunaiDropManager2 : MonoBehaviour
+public class KunaiTest1 : MonoBehaviour
 {
     [Header("References")]
     [Tooltip("Kunai prefab to instantiate and drop")]
@@ -9,13 +9,9 @@ public class KunaiDropManager2 : MonoBehaviour
     [Tooltip("Prefab containing particle systems to spawn on impact")]
     public GameObject impactEffectPrefab;
 
-    [Header("Offsets")]
-    [Tooltip("도착 지점에서 얼마만큼 보정하여 임팩트 위치를 계산할지")]
-    public Vector3 arrivalOffset = Vector3.zero;
-    [Tooltip("도착 위치(보정 후)에서 얼마만큼 위/뒤에서 시작할지")]
-    public Vector3 startOffset = new Vector3(30f, 50f, 50f);
-
     [Header("Drop Settings")]
+    [Tooltip("Offset above target position")]
+    public Vector3 startOffset = new Vector3(50f, 50f, 50f);
     [Tooltip("Time to drop from start to target (seconds)")]
     public float dropDuration = 1.0f;
 
@@ -24,7 +20,7 @@ public class KunaiDropManager2 : MonoBehaviour
 
     void OnGUI()
     {
-        GUI.Box(new Rect(10, 10, 320, 220), "Kunai Drop (DOTween)");
+        GUI.Box(new Rect(10, 10, 300, 180), "Kunai Drop (DOTween)");
 
         GUI.Label(new Rect(20, 40, 80, 20), "Target X:");
         inputX = GUI.TextField(new Rect(100, 40, 80, 20), inputX);
@@ -33,11 +29,11 @@ public class KunaiDropManager2 : MonoBehaviour
         GUI.Label(new Rect(20, 100, 80, 20), "Target Z:");
         inputZ = GUI.TextField(new Rect(100, 100, 80, 20), inputZ);
 
-        GUI.Label(new Rect(20, 130, 120, 20), "Duration(s):");
-        string dur = GUI.TextField(new Rect(140, 130, 60, 20), dropDuration.ToString("F2"));
+        GUI.Label(new Rect(20, 130, 100, 20), "Duration(s):");
+        string dur = GUI.TextField(new Rect(120, 130, 60, 20), dropDuration.ToString("F2"));
         float.TryParse(dur, out dropDuration);
 
-        if (GUI.Button(new Rect(20, 160, 260, 30), "Drop"))
+        if (GUI.Button(new Rect(200, 130, 80, 25), "Drop"))
         {
             if (float.TryParse(inputX, out float tx) &&
                 float.TryParse(inputY, out float ty) &&
@@ -45,52 +41,51 @@ public class KunaiDropManager2 : MonoBehaviour
             {
                 LaunchKunai(new Vector3(tx, ty, tz));
             }
-            else Debug.LogError("Invalid target input.");
+            else
+            {
+                Debug.LogError("Invalid target input.");
+            }
         }
     }
 
     private void LaunchKunai(Vector3 targetPos)
     {
-        if (kunaiPrefab == null)
-        {
-            Debug.LogError("kunaiPrefab is null");
-            return;
-        }
+        if (kunaiPrefab == null) { Debug.LogError("kunaiPrefab is null"); return; }
 
-        // 1) 도착 보정 위치 계산
-        Vector3 arrivalPos = targetPos + arrivalOffset;
-        // 2) 시작 위치는 arrivalPos + startOffset
-        Vector3 startPos = arrivalPos + startOffset;
-
+        // 시작 위치 = 목표점 + offset
+        Vector3 startPos = targetPos + startOffset;
         GameObject kunai = Instantiate(kunaiPrefab, startPos, Quaternion.identity);
 
-        // 낙하 애니메이션 (가속감)
+        // 1) 낙하 애니메이션: InQuad 이징으로 가속감 추가
         kunai.transform
-            .DOMove(arrivalPos, dropDuration)
+            .DOMove(targetPos, dropDuration)
             .SetEase(Ease.InQuad);
 
-        // 회전 애니메이션 (딱 dropDuration 동안)
+        // 2) 회전 애니메이션: 0° → 60° (Z축 예시)
         kunai.transform
-            .DORotate(new Vector3(30f, 30f, 30f), dropDuration)
+            .DORotate(new Vector3(20f, 30f, 45f), dropDuration)
             .SetEase(Ease.InQuad)
             .OnComplete(() => {
-                SpawnImpact(kunai.transform, arrivalPos);
+                // 임팩트 이펙트 실행
+                SpawnImpact(kunai.transform, targetPos);
+                // 2초 뒤에 쿠나이 삭제
                 Destroy(kunai, 2f);
             });
     }
 
-    private void SpawnImpact(Transform kunaiTransform, Vector3 impactPos)
+    private void SpawnImpact(Transform kunaiTransform, Vector3 targetPos)
     {
         if (impactEffectPrefab == null) return;
 
-        // TipAnchor가 있으면 그 위치, 없으면 impactPos
-        Vector3 spawnPos = impactPos;
+        // TipAnchor가 있으면 그 위치, 없으면 목표점
+        Vector3 spawnPos = targetPos;
         var tip = kunaiTransform.Find("TipAnchor");
         if (tip != null) spawnPos = tip.position;
 
         GameObject fx = Instantiate(impactEffectPrefab, spawnPos, Quaternion.identity);
+        var systems = fx.GetComponentsInChildren<ParticleSystem>();
         float maxDur = 0f;
-        foreach (var ps in fx.GetComponentsInChildren<ParticleSystem>())
+        foreach (var ps in systems)
         {
             ps.Play();
             maxDur = Mathf.Max(maxDur, ps.main.duration + ps.main.startLifetime.constantMax);
