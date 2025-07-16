@@ -311,27 +311,33 @@ namespace MCRGame.UI
         }
 
         // --- Real Hand 생성 ---
-        public void MakeRealHand(GameTile winningTile, List<GameTile> originalHandTiles, bool isTsumo)
+        public GameObject MakeRealHand(GameTile winningTile, List<GameTile> originalHandTiles, bool isTsumo)
         {
             clear();
             var tiles = new List<GameTile>(originalHandTiles);
             if (tiles.Contains(winningTile)) tiles.Remove(winningTile);
+            GameObject go;
             foreach (var t in tiles)
             {
-                var go = CreateRealTile(t);
+                go = CreateRealTile(t);
                 if (go != null) handTiles.Add(go);
             }
             RepositionInstant();
             if (isTsumo)
             {
-                var go = CreateRealTile(winningTile);
+                go = CreateRealTile(winningTile);
                 if (go != null)
                 {
                     handTiles.Add(go);
                     tsumoTile = go;
                 }
             }
+            else
+            {
+                go = null;
+            }
             RepositionInstant();
+            return go;
         }
 
         public Sequence AnimateTileRotation(GameObject tile, float baseDuration, int handScore)

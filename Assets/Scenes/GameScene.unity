@@ -357,6 +357,50 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 264313ad7694e1b42a2554ce7fb2f19b, type: 3}
+--- !u!1 &623532380
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 623532382}
+  - component: {fileID: 623532381}
+  m_Layer: 0
+  m_Name: WinningEffectManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &623532381
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 623532380}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5f8cdd12de142c94999a28def73cd1ac, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!4 &623532382
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 623532380}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 960, y: 540, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &922867345
 GameObject:
   m_ObjectHideFlags: 0
@@ -742,6 +786,7 @@ MonoBehaviour:
   isAfterTsumoAction: 0
   CanClick: 0
   NowHoverSource: {fileID: 0}
+  NowFocus3DTile: {fileID: 0}
   main2DCanvasPrefab: {fileID: 355854287976405979, guid: 9b31c1c20b951ba4d87936987b7708aa, type: 3}
   prefab3DField: {fileID: 5353610171328486653, guid: 651454e8eaeca7444b3e52b7852c7c63, type: 3}
   _canvasInstance: {fileID: 0}
@@ -806,6 +851,7 @@ MonoBehaviour:
   FlowerIcon_Red: {fileID: -7115806580219000095, guid: 470315f4f0524a740ae77bbe723e0e2f, type: 3}
   flowerPhaseEffectPrefab: {fileID: 988111730318827120, guid: 4a38a319ff01e5a48b2b136cfd541d22, type: 3}
   roundStartEffectPrefab: {fileID: 7131176115911774369, guid: a16a8301208e4ff49aed228813b7869c, type: 3}
+  winningEffectName: WaterColumn
   defaultFrameSprite: {fileID: 21300000, guid: fe3b4f528d464b24db501451562d3523, type: 3}
   defaultProfileImageSprite: {fileID: 21300000, guid: 8f7ac08d74964644bbac6a270868e5c2, type: 3}
   actionButtonPrefab: {fileID: 8209973736230947900, guid: a8c7dfbd12ef909429ee90d67826c85b, type: 3}
@@ -1082,52 +1128,6 @@ Transform:
   m_GameObject: {fileID: 1375321604}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &1500867953
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1500867955}
-  - component: {fileID: 1500867954}
-  m_Layer: 0
-  m_Name: WaterColumnTester
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 0
---- !u!114 &1500867954
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1500867953}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5ebb8ce07c8694796a3db1f145caa249, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  waterColumnPrefab: {fileID: 343226197619095514, guid: 1283880e759e84c32ae81de01989de50, type: 3}
-  effectLifetime: 1
---- !u!4 &1500867955
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1500867953}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -1424,4 +1424,4 @@ SceneRoots:
   - {fileID: 927001353}
   - {fileID: 1299348019}
   - {fileID: 585288995}
-  - {fileID: 1500867955}
+  - {fileID: 623532382}

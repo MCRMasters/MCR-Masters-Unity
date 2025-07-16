@@ -10,6 +10,7 @@ using MCRGame.Common;
 using MCRGame.UI;
 using MCRGame.Net;
 using MCRGame.Audio;
+using MCRGame.Effect;
 using DG.Tweening;
 
 
@@ -859,7 +860,12 @@ namespace MCRGame.Game
             // (tsumoTile과 동일한 타일 한 개는 표시하지 않고, 마지막에 tsumoTile을 추가하여 extra gap이 적용되도록)
             Hand3DField targetHandField = playersHand3DFields[(int)RelativeSeatExtensions.CreateFromAbsoluteSeats(currentSeat: MySeat, targetSeat: winPlayerSeat)];
             targetHandField.clear();
-            targetHandField.MakeRealHand(winningTile, handTiles, tsumoTile.HasValue);
+            GameObject winningTileGo = targetHandField.MakeRealHand(winningTile, handTiles, tsumoTile.HasValue);
+            if (winningTileGo == null)
+            {
+                // 창깡이면 그 타일 위치, 론이면 강에 있는 그 타일 위치 반환
+                winningTileGo = NowFocus3DTile;
+            }
             // "Main 2D Canvas" 이름의 GameObject 찾기
             GameObject canvas = _canvasInstance;
             if (canvas == null)
@@ -872,8 +878,13 @@ namespace MCRGame.Game
             yield return StartCoroutine(cameraResultAnimator.PlayResultAnimation());
             Sequence seq = targetHandField.AnimateAllTilesRotationDomino(baseDuration:0.4f, handScore:singleScore);
             yield return seq.WaitForCompletion();
-            
-            yield return new WaitForSeconds(2f);
+            if (winningTileGo != null)
+            {
+                // 화료 연출
+                Sequence winningEffectSeq = WinningEffectManager.Instance.PlayEffectAtTile(WinningEffectName, winningTileGo);
+                yield return winningEffectSeq.WaitForCompletion();
+            }
+            yield return new WaitForSeconds(0.5f);
             yield return ScorePopupManager.Instance.ShowWinningPopup(wsd).WaitForCompletion();
             ScorePopupManager.Instance.ShowButton();
             Debug.Log("processed hu hand.");

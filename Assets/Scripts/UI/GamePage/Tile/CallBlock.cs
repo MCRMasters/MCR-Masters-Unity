@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using MCRGame.Common;
 using System;
+using MCRGame.Game;
 
 namespace MCRGame.UI
 {
@@ -256,6 +257,7 @@ namespace MCRGame.UI
                 Debug.LogError("[ApplyShominKong] 실패: 새 타일 생성 중 오류");
                 return;
             }
+            GameManager.Instance.NowFocus3DTile = newTile;
             newTile.transform.SetParent(transform, false);
             newTile.transform.localRotation = Tiles[rotatedIndex].transform.localRotation;
             Debug.Log("[ApplyShominKong] 새 타일 생성 및 부모/회전 설정 완료");

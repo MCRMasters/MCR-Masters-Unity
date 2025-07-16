@@ -45,6 +45,8 @@ namespace MCRGame.Game
             tenpaiAssistDict.Clear();
             NowTenpaiAssistList.Clear();
 
+            NowFocus3DTile = null;
+
             SetUIActive(true);
             ClearActionUI();
 

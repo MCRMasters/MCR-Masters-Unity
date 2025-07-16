@@ -15,7 +15,6 @@ using MCRGame.View;
 using MCRGame.Audio;
 using DG.Tweening;
 using UnityEngine.SceneManagement;
-using MCRgame.Game;
 
 
 namespace MCRGame.Game
@@ -132,6 +131,8 @@ namespace MCRGame.Game
         public GameTile? NowHoverTile = null;
         public TileManager NowHoverSource;
 
+        public GameObject NowFocus3DTile = null;
+
 
         // ▶ 씬 전용 Prefab 할당 슬롯
         [Header("Scene Prefabs")]
@@ -208,6 +209,10 @@ namespace MCRGame.Game
         [Header("Effect Prefabs")]
         [SerializeField] private GameObject flowerPhaseEffectPrefab;
         [SerializeField] private GameObject roundStartEffectPrefab;
+
+        [Header("Winning Effect")]
+        [SerializeField] private string winningEffectName = "WaterColumn";
+        public string WinningEffectName => winningEffectName;
 
         [Header("Default Profile Frame/Image")]
         [SerializeField] private Sprite defaultFrameSprite;
@@ -408,7 +413,7 @@ namespace MCRGame.Game
 
             // ─── 4) Bloom 생성 ───────────────────────────────
             if (bloomPrefab != null)
-            { 
+            {
                 bloomInstance = Instantiate(bloomPrefab);
             }
             // ─── 5) 상태 초기화 ───────────────────────────────
@@ -463,7 +468,7 @@ namespace MCRGame.Game
             // (2) 언어 및 플래그 리셋
             // currentLanguage = Language.Korean;
             IsFlowerConfirming = false;
-            IsRightClickTsumogiri = false;
+            // IsRightClickTsumogiri = false;
             AutoHuFlag = IsAutoHuDefault;
             PreventCallFlag = false;
             AutoFlowerFlag = IsAutoFlowerDefault;
