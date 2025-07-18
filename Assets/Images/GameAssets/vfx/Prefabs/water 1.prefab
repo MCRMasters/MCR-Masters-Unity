@@ -187,7 +187,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: -876546973899608171, guid: 6700e4399015047ab8bde227f12a86a9, type: 3}
+  - {fileID: -876546973899608171, guid: b20b61086a18c4a75a55c67cb85a3e2f, type: 3}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -220,14 +220,13 @@ GameObject:
   - component: {fileID: 2355916898609004861}
   - component: {fileID: 4023325270754012398}
   - component: {fileID: 4941613143201031358}
-  - component: {fileID: 5431827268049677761}
   m_Layer: 0
   m_Name: wall
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &2355916898609004861
 Transform:
   m_ObjectHideFlags: 0
@@ -296,21 +295,6 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!114 &5431827268049677761
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7694124853369325359}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1af8d237a707145e2bf2232c4e6e1a34, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  visibleClip: 0.2
-  invisibleClip: 1
-  interval: 0.1
 --- !u!1 &9056231518551586903
 GameObject:
   m_ObjectHideFlags: 0
