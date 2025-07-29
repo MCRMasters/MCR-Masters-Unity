@@ -200,7 +200,7 @@ namespace MCRGame.Game
                 RelativeSeat sourceRelativeSeat = RelativeSeatExtensions.CreateFromAbsoluteSeats(currentSeat: MySeat, targetSeat: sourceAbsoluteSeat);
                 Debug.Log("ConfirmCallBlock: sourceRelativeSeat = " + sourceRelativeSeat);
 
-                
+
 
                 if (relativeSeat == RelativeSeat.SELF)
                 {
@@ -639,7 +639,8 @@ namespace MCRGame.Game
             {
                 var type = kv.Key;
                 var actionsOfType = kv.Value;
-                if (PreventCallFlag && has_hu_action && type != GameActionType.HU){
+                if (PreventCallFlag && has_hu_action && type != GameActionType.HU)
+                {
                     continue;
                 }
                 // CHII 또는 KAN 이고 선택지가 2개 이상이면 "추가 선택지" 버튼 생성
@@ -876,12 +877,38 @@ namespace MCRGame.Game
             canvas.SetActive(false);
             Debug.Log("Canvas 비활성화 완료.");
             yield return StartCoroutine(cameraResultAnimator.PlayResultAnimation());
-            Sequence seq = targetHandField.AnimateAllTilesRotationDomino(baseDuration:0.4f, handScore:singleScore);
+            Sequence seq = targetHandField.AnimateAllTilesRotationDomino(baseDuration: 0.4f, handScore: singleScore);
             yield return seq.WaitForCompletion();
             if (winningTileGo != null)
             {
-                // 화료 연출
-                Sequence winningEffectSeq = WinningEffectManager.Instance.PlayEffectAtTile(WinningEffectName, winningTileGo);
+                // 1) Players 리스트에서 Index가 일치하는 Player 찾기
+                var winningPlayer = Players
+                    .FirstOrDefault(p => p.Index == seatToPlayerIndex[winPlayerSeat]);
+                var winningru = PlayerInfo.FirstOrDefault(p => p.uid == winningPlayer.Uid);
+                if (winningPlayer == null)
+                {
+                    Debug.LogError($"[ProcessHuHand] No player found with Index={winPlayerSeat}");
+                    yield break;
+                }
+
+                // 2) CurrentCharacter null 체크
+                var winningChar = winningru.current_character;
+                if (winningChar == null)
+                {
+                    Debug.LogError($"[ProcessHuHand] CurrentCharacter is null for player Index={winPlayerSeat}");
+                    yield break;
+                }
+
+                // 3) effect 이름 결정
+                string winnersEffectName = (winningChar.code == "c1")
+                    ? "KunaiDrop"
+                    : "WaterColumn";
+
+                // 4) 연출 실행
+                Sequence winningEffectSeq =
+                    WinningEffectManager.Instance
+                        .PlayEffectAtTile(winnersEffectName, winningTileGo);
+
                 yield return winningEffectSeq.WaitForCompletion();
             }
             yield return new WaitForSeconds(0.5f);
