@@ -355,23 +355,36 @@ namespace MCRGame.UI
             int groupSize = 4;
             float dropHeight = 300f;
             float duration = 0.2f;
+
+            var targets = new List<Vector2>(count);
+            foreach (var t in tileObjectsExcludeTsumo)
+                targets.Add(new Vector2(targets.Count * (tileWidth + gap), 0f));
+
             for (int i = 0; i < count; i++)
             {
-                var tileObj = tileObjectsExcludeTsumo[i];
-                var rt = tileObj.GetComponent<RectTransform>();
-                var img = tileObj.transform.Find("ImageField")?.GetComponent<Image>();
-                Vector2 target = new Vector2(i * (tileWidth + gap), 0f);
+                var rt = tileObjectsExcludeTsumo[i].GetComponent<RectTransform>();
+                var img = tileObjectsExcludeTsumo[i].transform.Find("ImageField")?.GetComponent<Image>();
                 if (rt != null)
-                    rt.anchoredPosition = target + Vector2.up * dropHeight;
-                if (img != null)
-                    img.color = new Color(img.color.r, img.color.g, img.color.b, 0f);
-                if (rt != null)
-                    seq.Append(rt.DOAnchorPos(target, duration).SetEase(Ease.OutQuad));
-                if (img != null)
-                    seq.Join(img.DOFade(1f, duration));
-                if ((i + 1) % groupSize == 0)
-                    seq.AppendInterval(0.1f);
+                    rt.anchoredPosition = targets[i] + Vector2.up * dropHeight;
             }
+
+            int groups = (count - 1) / groupSize + 1;
+            for (int g = 0; g < groups; g++)
+            {
+                int start = g * groupSize;
+                int end = Mathf.Min(start + groupSize, count);
+                for (int i = start; i < end; i++)
+                {
+                    var rt = tileObjectsExcludeTsumo[i].GetComponent<RectTransform>();
+                    var img = tileObjectsExcludeTsumo[i].transform.Find("ImageField")?.GetComponent<Image>();
+                    if (rt != null)
+                        seq.Join(rt.DOAnchorPos(targets[i], duration).SetEase(Ease.OutQuad));
+                    if (img != null)
+                        seq.Join(img.DOFade(1f, duration));
+                }
+                seq.AppendInterval(0.1f);
+            }
+
             seq.AppendCallback(() => SortTileList());
             seq.Append(AnimateRepositionSequence());
             seq.OnComplete(() => { IsAnimating = false; });
@@ -463,7 +476,7 @@ namespace MCRGame.UI
             );
             var tsumoRt = tsumoTile.GetComponent<RectTransform>();
             var img = tsumoTile.GetComponentInChildren<Image>();
-            Color origColor = img != null ? img.color : Color.white;
+            Color origColor = img != null ? new Color(img.color.r, img.color.g, img.color.b, 1f) : Color.white;
             if (tsumoRt != null)
             {
                 tsumoRt.anchoredPosition = tsumoTarget + Vector2.up * tsumoDropHeight;
@@ -662,23 +675,25 @@ namespace MCRGame.UI
 
             var firstRect = tileObjects[0].GetComponent<RectTransform>();
             float tileWidth = firstRect != null ? firstRect.rect.width : 1f;
-
+            Dictionary<GameObject, Vector2> targets = new Dictionary<GameObject, Vector2>();
             int idx = 0;
             foreach (var go in tileObjects)
             {
+                if (go == tsumoTile) continue;
                 var rt = go?.GetComponent<RectTransform>();
                 if (rt == null) continue;
-
-                Vector2 target;
-                if (go == tsumoTile)
-                    target = new Vector2(idx * (tileWidth + gap) + tileWidth * 0.2f, 0f);
-                else
-                {
-                    target = new Vector2(idx * (tileWidth + gap), 0f);
-                    idx++;
-                }
-
-                seq.Join(rt.DOAnchorPos(target, slideDuration).SetEase(Ease.InOutQuad));
+                targets[go] = new Vector2(idx * (tileWidth + gap), 0f);
+                idx++;
+            }
+            if (tsumoTile != null)
+            {
+                targets[tsumoTile] = new Vector2(idx * (tileWidth + gap) + tileWidth * 0.2f, 0f);
+            }
+            foreach (var kv in targets)
+            {
+                var rt = kv.Key?.GetComponent<RectTransform>();
+                if (rt == null) continue;
+                seq.Join(rt.DOAnchorPos(kv.Value, slideDuration).SetEase(Ease.InOutQuad));
             }
             seq.OnComplete(() => { if (!nested) IsAnimating = false; });
             return seq;
