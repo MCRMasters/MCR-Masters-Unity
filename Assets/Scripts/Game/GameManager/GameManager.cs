@@ -199,6 +199,10 @@ namespace MCRGame.Game
         [SerializeField] private TextMeshProUGUI[] nicknameTexts = new TextMeshProUGUI[4];
         [SerializeField] private Image[] flowerImages = new Image[4];
         [SerializeField] private TextMeshProUGUI[] flowerCountTexts = new TextMeshProUGUI[4];
+        // Store the default scale of each flower count container so we can reset it
+        private Vector3[] flowerCountBaseScales = new Vector3[4];
+        // Keep track of running flower count DOTween sequences per seat
+        private Tween[] flowerCountTweens = new Tween[4];
 
         [SerializeField] private Sprite FlowerIcon_White;
         [SerializeField] private Sprite FlowerIcon_Yellow;
@@ -313,6 +317,13 @@ namespace MCRGame.Game
             nicknameTexts = uiRefs.NicknameTexts;
             flowerImages = uiRefs.FlowerImages;
             flowerCountTexts = uiRefs.FlowerCountTexts;
+            flowerCountBaseScales = new Vector3[flowerCountTexts.Length];
+            flowerCountTweens = new Tween[flowerCountTexts.Length];
+            for (int i = 0; i < flowerCountTexts.Length; i++)
+            {
+                var txt = flowerCountTexts[i];
+                flowerCountBaseScales[i] = txt != null ? txt.transform.parent.localScale : Vector3.one;
+            }
 
             // CanvasUIReferences 에 선언된 GameHandManager 할당
             gameHandManager = uiRefs.gameHandManager;
@@ -464,6 +475,16 @@ namespace MCRGame.Game
 
             // (1) 돌고 있는 코루틴 중지
             StopAllCoroutines();
+            // 화패 카운트 애니메이션이 중단되었다면 스케일을 원래값으로 돌려둔다
+            ResetFlowerCountContainerScales();
+            if (flowerCountTweens != null)
+            {
+                for (int i = 0; i < flowerCountTweens.Length; i++)
+                {
+                    flowerCountTweens[i]?.Kill();
+                    flowerCountTweens[i] = null;
+                }
+            }
 
             // (2) 언어 및 플래그 리셋
             // currentLanguage = Language.Korean;
@@ -505,6 +526,26 @@ namespace MCRGame.Game
             leftTilesText.text = "";
             currentRoundText.text = "";
             timerText.text = "";
+        }
+
+        /// <summary>
+        /// 모든 화패 카운트 텍스트의 컨테이너 스케일을 기본값으로 되돌립니다.
+        /// 애니메이션이 중단되거나 UI가 초기화될 때 호출합니다.
+        /// </summary>
+        public void ResetFlowerCountContainerScales()
+        {
+            if (flowerCountTexts == null) return;
+            for (int i = 0; i < flowerCountTexts.Length; i++)
+            {
+                var txt = flowerCountTexts[i];
+                if (txt == null) continue;
+                Transform container = txt.transform.parent;
+                if (container == null) continue;
+                Vector3 baseScale = (flowerCountBaseScales != null && i < flowerCountBaseScales.Length)
+                    ? flowerCountBaseScales[i]
+                    : Vector3.one;
+                container.localScale = baseScale;
+            }
         }
 
 

@@ -1,6 +1,9 @@
 # Created by https://www.toptal.com/developers/gitignore/api/unity,python,pycharm+all,csharp,c++,web,visualstudio,visualstudiocode,macos,linux
 # Edit at https://www.toptal.com/developers/gitignore?templates=unity,python,pycharm+all,csharp,c++,web,visualstudio,visualstudiocode,macos,linux
 .utmp/
+
+*.patch
+
 ### C++ ###
 # Prerequisites
 *.d

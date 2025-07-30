@@ -311,32 +311,31 @@ namespace MCRGame.Game
             {
                 bool animateDone = false;
                 yield return gameHandManager.RunExclusive(gameHandManager.ApplyFlower(tile: floweredTile));
-                int currentFlowerCount = flowerCountMap[floweredRelativeSeat];
-                int previousCount = currentFlowerCount;
-                currentFlowerCount++;
+                int previousCount = flowerCountMap[floweredRelativeSeat];
+                int currentFlowerCount = previousCount + 1;
+                flowerCountMap[floweredRelativeSeat] = currentFlowerCount; // update early so next requests see the increment
 
-
-                StartCoroutine(AnimateFlowerCount(floweredRelativeSeat, previousCount, currentFlowerCount, () => { animateDone = true; }));
+                PlayFlowerCountAnimation(floweredRelativeSeat, previousCount, currentFlowerCount, () => { animateDone = true; });
                 yield return new WaitUntil(() => animateDone);
-                SetFlowerCount(floweredRelativeSeat, currentFlowerCount);
+                SetFlowerCount(floweredRelativeSeat, flowerCountMap[floweredRelativeSeat]);
             }
             else
             {
                 // 상대의 경우: Hand3DField를 이용해 요청
                 Hand3DField handField = playersHand3DFields[(int)floweredRelativeSeat];
-                int currentFlowerCount = flowerCountMap[floweredRelativeSeat];
-                int previousCount = currentFlowerCount;
-                currentFlowerCount++;
+                int previousCount = flowerCountMap[floweredRelativeSeat];
+                int currentFlowerCount = previousCount + 1;
+                flowerCountMap[floweredRelativeSeat] = currentFlowerCount;
 
                 bool animateDone = false;
 
                 // 동시에 꽃 카운트 애니메이션 실행
-                StartCoroutine(AnimateFlowerCount(floweredRelativeSeat, previousCount, currentFlowerCount, () => { animateDone = true; }));
+                PlayFlowerCountAnimation(floweredRelativeSeat, previousCount, currentFlowerCount, () => { animateDone = true; });
                 // Hand3DField의 RequestDiscardRandom과 RequestInitFlowerTsumo를 순차 실행하는 코루틴
                 yield return StartCoroutine(handField.RequestDiscardRandom());
                 yield return new WaitUntil(() => animateDone);
 
-                SetFlowerCount(floweredRelativeSeat, currentFlowerCount);
+                SetFlowerCount(floweredRelativeSeat, flowerCountMap[floweredRelativeSeat]);
             }
             IsFlowerConfirming = false;
         }
