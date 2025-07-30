@@ -49,6 +49,8 @@ namespace MCRGame.Game
         {
             Debug.Log("[FR] ResetState : StopAllCoroutines");
             StopAllCoroutines();
+            // 진행 중이던 화패 카운트 애니메이션의 스케일을 원래대로 복구
+            GameManager.Instance?.ResetFlowerCountContainerScales();
         }
 
         /*──────────────────────────────────────────────*/
@@ -127,9 +129,10 @@ namespace MCRGame.Game
                         Debug.Log("[FR]       SELF animation");
                         int prev = gm.flowerCountMap[rel];
                         int next = prev + 1;
+                        gm.flowerCountMap[rel] = next; // update map immediately so later iterations see correct value
                         bool animDone = false;
 
-                        StartCoroutine(gm.AnimateFlowerCount(rel, prev, next, () => animDone = true));
+                        gm.PlayFlowerCountAnimation(rel, prev, next, () => animDone = true);
 
                         yield return gm.GameHandManager
                             .RunExclusive(gm.GameHandManager.ApplyFlower(appliedFlowers[i]));
@@ -137,7 +140,7 @@ namespace MCRGame.Game
                         yield return gm.GameHandManager
                             .RunExclusive(gm.GameHandManager.AddInitFlowerTsumo(newTiles[i]));
 
-                        gm.SetFlowerCount(rel, next);
+                        gm.SetFlowerCount(rel, gm.flowerCountMap[rel]);
                         gm.UpdateLeftTilesByDelta(-1);
                     }
                     else
@@ -145,12 +148,13 @@ namespace MCRGame.Game
                         Debug.Log("[FR]       OPPONENT animation");
                         int prev = gm.flowerCountMap[rel];
                         int next = prev + 1;
+                        gm.flowerCountMap[rel] = next;
 
-                        yield return StartCoroutine(gm.AnimateFlowerCount(rel, prev, next, null));
+                        yield return gm.PlayFlowerCountAnimation(rel, prev, next, null);
                         yield return StartCoroutine(ProcessOpponentFlowerOperation(
                             gm.playersHand3DFields[(int)rel], null));
 
-                        gm.SetFlowerCount(rel, next);
+                        gm.SetFlowerCount(rel, gm.flowerCountMap[rel]);
                         gm.UpdateLeftTilesByDelta(-1);
                     }
 

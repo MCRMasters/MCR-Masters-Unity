@@ -85,32 +85,65 @@ namespace MCRGame.Game
         /* ───────── ②  화패 카운트 애니메이션 ───────── */
         #region ▶ Flower Count Pop 애니메이션
 
-        public IEnumerator AnimateFlowerCount(RelativeSeat rel, int fromValue, int toValue, System.Action onComplete)
-        {
-            float duration = 0.1f;
-            float elapsed = 0f;
-            TextMeshProUGUI flowerTxt = flowerCountTexts[(int)rel];
-            Transform container = flowerTxt.transform.parent;
+        private const float FlowerAnimDuration = 0.2f;
 
-            Vector3 originalScale = container.localScale;
+        /// <summary>
+        /// Plays a flower count pop animation using DOTween. Any existing animation
+        /// for the seat is killed before starting the new one, and the count text
+        /// is updated immediately.
+        /// </summary>
+        public Coroutine PlayFlowerCountAnimation(RelativeSeat rel, int fromValue, int toValue, System.Action onComplete = null)
+        {
+            return StartCoroutine(PlayFlowerCountAnimationRoutine(rel, toValue, onComplete));
+        }
+
+        private IEnumerator PlayFlowerCountAnimationRoutine(RelativeSeat rel, int toValue, System.Action onComplete)
+        {
+            int idx = (int)rel;
+            if (flowerCountTexts == null || idx >= flowerCountTexts.Length) yield break;
+
+            TextMeshProUGUI flowerTxt = flowerCountTexts[idx];
+            if (flowerTxt == null) yield break;
+            Transform container = flowerTxt.transform.parent;
+            Vector3 baseScale = flowerCountBaseScales[idx];
+
+            setRelativeSeatFlowerUIActive(true, rel);
+
+            // Kill any existing tween and reset scale
+            if (flowerCountTweens[idx] != null)
+            {
+                flowerCountTweens[idx].Kill();
+                flowerCountTweens[idx] = null;
+                container.localScale = baseScale;
+                // ensure text shows the latest count after kill
+                flowerTxt.text = $"X{flowerCountMap[rel]}";
+            }
+
             float popScale = 1.3f;
 
-            setRelativeSeatFlowerUIActive(active: true, seat: rel);
-
-            while (elapsed < duration)
-            {
-                elapsed += Time.deltaTime;
-                float t = Mathf.Clamp01(elapsed / duration);
-                int val = fromValue + Mathf.RoundToInt(Mathf.SmoothStep(0, 1, t) * (toValue - fromValue));
-                flowerTxt.text = "X" + val;
-
-                float scaleFactor = 1 + (popScale - 1) * (4 * t * (1 - t));
-                container.localScale = originalScale * scaleFactor;
-                yield return null;
-            }
+            // Update text and flower image immediately before animating
             flowerTxt.text = "X" + toValue;
-            container.localScale = originalScale;
-            onComplete?.Invoke();
+            if (flowerImages != null && idx < flowerImages.Length)
+            {
+                var img = flowerImages[idx];
+                if (img != null)
+                {
+                    img.sprite = GetFlowerIconByCount(toValue);
+                }
+            }
+            container.localScale = baseScale;
+
+            Sequence seq = DOTween.Sequence();
+            seq.Append(container.DOScale(baseScale * popScale, FlowerAnimDuration * 0.5f).SetEase(Ease.OutBack));
+            seq.Append(container.DOScale(baseScale, FlowerAnimDuration * 0.5f).SetEase(Ease.InBack));
+            seq.OnComplete(() =>
+            {
+                flowerCountTweens[idx] = null;
+                onComplete?.Invoke();
+            });
+
+            flowerCountTweens[idx] = seq;
+            yield return seq.WaitForCompletion();
         }
 
         #endregion

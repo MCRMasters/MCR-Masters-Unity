@@ -132,6 +132,8 @@ namespace MCRGame.Game
                 var img = flowerImages[i];
                 var txt = flowerCountTexts[i];
                 int cnt = flowerCountMap.GetValueOrDefault(rel,0);
+                if (txt != null)
+                    txt.transform.parent.localScale = flowerCountBaseScales[i];
 
                 if (cnt==0)
                 {
@@ -145,15 +147,20 @@ namespace MCRGame.Game
                     img?.gameObject.SetActive(true);
                     txt?.gameObject.SetActive(true);
 
-                    img.sprite = cnt switch
-                    {
-                        <=3 => FlowerIcon_White,
-                        <=6 => FlowerIcon_Yellow,
-                        _   => FlowerIcon_Red
-                    };
+                    img.sprite = GetFlowerIconByCount(cnt);
                     txt.text = $"X{cnt}";
                 }
             }
+        }
+
+        /// <summary>
+        /// Returns the appropriate flower icon sprite for the given count.
+        /// </summary>
+        private Sprite GetFlowerIconByCount(int count)
+        {
+            if (count <= 3) return FlowerIcon_White;
+            if (count <= 6) return FlowerIcon_Yellow;
+            return FlowerIcon_Red;
         }
 
         private void setRelativeSeatFlowerUIActive(bool active,RelativeSeat seat)
