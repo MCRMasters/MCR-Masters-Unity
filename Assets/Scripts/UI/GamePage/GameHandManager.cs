@@ -328,6 +328,10 @@ namespace MCRGame.UI
             {
                 // tsumo도 큐로 처리해도 좋지만, 기존처럼 바로 드롭
                 yield return RunExclusive(AddTsumo(receivedTsumoTile.Value));
+
+                // 화패 교환 시작 전 정렬 보장
+                SortTileList();
+                yield return RunExclusive(AnimateReposition());
             }
 
             IsInitHandComplete = true;
@@ -475,7 +479,8 @@ namespace MCRGame.UI
                 0f
             );
             var tsumoRt = tsumoTile.GetComponent<RectTransform>();
-            var img = tsumoTile.GetComponentInChildren<Image>();
+            var imgField = tsumoTile.transform.Find("ImageField");
+            var img = imgField != null ? imgField.GetComponent<Image>() : null;
             Color origColor = img != null ? new Color(img.color.r, img.color.g, img.color.b, 1f) : Color.white;
             if (tsumoRt != null)
             {
