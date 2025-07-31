@@ -689,7 +689,6 @@ namespace MCRGame.Game
                 yield return gameHandManager.RunExclusive(gameHandManager.AddTsumoSequence(newTsumoTile));
             }
 
-
             var list = data["actions"].ToObject<List<GameAction>>();
             list.Sort();
             foreach (var action in list)

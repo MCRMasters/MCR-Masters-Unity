@@ -349,7 +349,7 @@ namespace MCRGame.UI
             if (receivedTsumoTile.HasValue)
             {
                 // tsumo도 큐로 처리해도 좋지만, 기존처럼 바로 드롭
-                yield return RunExclusive(AddTsumo(receivedTsumoTile.Value));
+                yield return RunExclusive(AddTsumoSequence(receivedTsumoTile.Value));
 
                 // 화패 교환 시작 전 정렬 보장
                 SortTileList();
@@ -422,43 +422,63 @@ namespace MCRGame.UI
             yield return AnimateInitHandSequence().WaitForCompletion();
         }
 
+        public Sequence AddInitFlowerTsumoSequence(GameTile tile)
+        {
+            float prevSlide = slideDuration;
+            var seq = DOTween.Sequence();
+            GameObject newTileObj = null;
+            seq.AppendCallback(() =>
+            {
+                IsAnimating = true;
+                ResetPositionAll();
+                gameHand.ApplyTsumo(tile);
+                newTileObj = AddTile(tile.ToCustomString());
+                tsumoTile = newTileObj;
+            });
+            seq.Append(AnimateTsumoDropSequence());
+            seq.AppendCallback(() =>
+            {
+                if (gameHand.HandSize == GameHand.FULL_HAND_SIZE)
+                    tsumoTile = newTileObj;
+                else
+                    tsumoTile = null;
+                SortTileList();
+                slideDuration = 0.1f;
+            });
+            seq.Append(AnimateRepositionSequence());
+            seq.OnComplete(() =>
+            {
+                slideDuration = prevSlide;
+                IsAnimating = false;
+            });
+            return seq;
+        }
+
         public IEnumerator AddInitFlowerTsumo(GameTile tile)
         {
-            IsAnimating = true;
-            ResetPositionAll();
-            gameHand.ApplyTsumo(tile);
+            yield return AddInitFlowerTsumoSequence(tile).WaitForCompletion();
+        }
 
-            string tileName = tile.ToCustomString();
-            var newTileObj = AddTile(tileName);
-            tsumoTile = newTileObj;
-
-            yield return AnimateTsumoDropSequence().WaitForCompletion();
-
-            if (gameHand.HandSize == GameHand.FULL_HAND_SIZE)
+        public Sequence AddTsumoSequence(GameTile tile)
+        {
+            var seq = DOTween.Sequence();
+            seq.AppendCallback(() =>
+            {
+                gameHand.ApplyTsumo(tile);
+                string tileName = tile.ToCustomString();
+                var newTileObj = AddTile(tileName);
                 tsumoTile = newTileObj;
-            else
-                tsumoTile = null;
-
-            SortTileList();
-            var prevSlide = slideDuration;
-            slideDuration = 0.1f;
-            yield return AnimateRepositionSequence().WaitForCompletion();
-            slideDuration = prevSlide;
-            IsAnimating = false;
+            });
+            seq.Append(AnimateTsumoDropSequence());
+            return seq;
         }
 
         public IEnumerator AddTsumo(GameTile tile)
         {
-            gameHand.ApplyTsumo(tile);
-
-            string tileName = tile.ToCustomString();
-            var newTileObj = AddTile(tileName);
-            tsumoTile = newTileObj;
-
-            yield return AnimateTsumoDropSequence().WaitForCompletion();
+            yield return AddTsumoSequence(tile).WaitForCompletion();
         }
 
-        public Sequence AnimateTsumoDropSequence()
+        private Sequence AnimateTsumoDropSequence()
         {
             var seq = DOTween.Sequence();
             if (tsumoTile == null) return seq;
@@ -588,7 +608,7 @@ namespace MCRGame.UI
             gameHand.ApplyCall(cbData);
             // 2) UI에 CallBlock 추가
             callBlockField.AddCallBlock(cbData);
-            // 3) 처리 코루틴을 큐로 등록
+            // 3) 처리 시퀀스를 큐로 등록
             StartCoroutine(RunExclusive(ProcessCallUISequence(cbData)));
         }
 
@@ -652,7 +672,6 @@ namespace MCRGame.UI
                     }
                 }
                 SortTileList();
-                ImmediateReplaceTiles();
             });
             seq.Append(AnimateRepositionSequence());
             seq.OnComplete(() =>
@@ -794,5 +813,3 @@ namespace MCRGame.UI
         }
     }
 }
-
-
