@@ -173,25 +173,34 @@ namespace MCRGame.UI
                 discardManager = discardManagerRef;
         }
 
+        public Sequence RequestDiscardRightmostTileSequence()
+        {
+            var seq = DOTween.Sequence();
+            seq.AppendCallback(() =>
+            {
+                TileManager tileManager = null;
+                if (tsumoTile != null)
+                    tileManager = tsumoTile.GetComponent<TileManager>();
+                if (tileManager == null)
+                {
+                    for (int i = tileObjects.Count - 1; i >= 0; --i)
+                    {
+                        if (tileObjects[i] == null) continue;
+                        tileManager = tileObjects[i].GetComponent<TileManager>();
+                        if (tileManager != null) break;
+                    }
+                }
+                if (tileManager != null)
+                {
+                    RequestDiscard(tileManager);
+                }
+            });
+            return seq;
+        }
+
         public IEnumerator RequestDiscardRightmostTile()
         {
-            TileManager tileManager = null;
-            if (tsumoTile != null)
-                tileManager = tsumoTile.GetComponent<TileManager>();
-            if (tileManager == null)
-            {
-                for (int i = tileObjects.Count - 1; i >= 0; --i)
-                {
-                    if (tileObjects[i] == null) continue;
-                    tileManager = tileObjects[i].GetComponent<TileManager>();
-                    if (tileManager != null) break;
-                }
-            }
-            if (tileManager != null)
-            {
-                RequestDiscard(tileManager);
-            }
-            yield break;
+            yield return RequestDiscardRightmostTileSequence().WaitForCompletion();
         }
 
         /// <summary>
