@@ -40,10 +40,26 @@ namespace MCRGame.UI
             yield return new WaitUntil(() => !isProcessing && requestQueue.Count == 0);
         }
 
+        public Sequence RequestTsumoSequence()
+        {
+            var seq = DOTween.Sequence();
+            seq.AppendCallback(() => EnqueueRequest(new HandRequest(RequestType.Tsumo)));
+            seq.Append(WaitUntilTween(() => !isProcessing && requestQueue.Count == 0));
+            return seq;
+        }
+
         public IEnumerator RequestInitFlowerTsumo()
         {
             EnqueueRequest(new HandRequest(RequestType.InitFlowerTsumo));
             yield return new WaitUntil(() => !isProcessing && requestQueue.Count == 0);
+        }
+
+        public Sequence RequestInitFlowerTsumoSequence()
+        {
+            var seq = DOTween.Sequence();
+            seq.AppendCallback(() => EnqueueRequest(new HandRequest(RequestType.InitFlowerTsumo)));
+            seq.Append(WaitUntilTween(() => !isProcessing && requestQueue.Count == 0));
+            return seq;
         }
 
         public IEnumerator RequestDiscardRightmost()
@@ -52,16 +68,40 @@ namespace MCRGame.UI
             yield return new WaitUntil(() => !isProcessing && requestQueue.Count == 0);
         }
 
+        public Sequence RequestDiscardRightmostSequence()
+        {
+            var seq = DOTween.Sequence();
+            seq.AppendCallback(() => EnqueueRequest(new HandRequest(RequestType.Discard, true)));
+            seq.Append(WaitUntilTween(() => !isProcessing && requestQueue.Count == 0));
+            return seq;
+        }
+
         public IEnumerator RequestDiscardRandom()
         {
             EnqueueRequest(new HandRequest(RequestType.Discard, false));
             yield return new WaitUntil(() => !isProcessing && requestQueue.Count == 0);
         }
 
+        public Sequence RequestDiscardRandomSequence()
+        {
+            var seq = DOTween.Sequence();
+            seq.AppendCallback(() => EnqueueRequest(new HandRequest(RequestType.Discard, false)));
+            seq.Append(WaitUntilTween(() => !isProcessing && requestQueue.Count == 0));
+            return seq;
+        }
+
         public IEnumerator RequestDiscardMultiple(int count)
         {
             EnqueueRequest(new HandRequest(RequestType.DiscardMultiple, false, count));
             yield return new WaitUntil(() => !isProcessing && requestQueue.Count == 0);
+        }
+
+        public Sequence RequestDiscardMultipleSequence(int count)
+        {
+            var seq = DOTween.Sequence();
+            seq.AppendCallback(() => EnqueueRequest(new HandRequest(RequestType.DiscardMultiple, false, count)));
+            seq.Append(WaitUntilTween(() => !isProcessing && requestQueue.Count == 0));
+            return seq;
         }
 
         // --- 내부: 요청 큐 처리 ---
@@ -84,6 +124,14 @@ namespace MCRGame.UI
             HandleRequest(req)
                 .OnComplete(() => ProcessRequestQueue())
                 .Play();
+        }
+
+        private Tween WaitUntilTween(Func<bool> predicate)
+        {
+            float dummy = 0f;
+            Tween t = DOTween.To(() => dummy, x => dummy = x, 1f, float.MaxValue).SetUpdate(true);
+            t.OnUpdate(() => { if (predicate()) t.Complete(); });
+            return t;
         }
 
         // --- 요청별 처리: DOTween Sequence 반환 ---
