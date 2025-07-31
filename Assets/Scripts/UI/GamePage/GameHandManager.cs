@@ -400,60 +400,40 @@ namespace MCRGame.UI
             yield return AnimateInitHandSequence().WaitForCompletion();
         }
 
-        private Sequence AddInitFlowerTsumoSequence(GameTile tile)
-        {
-            float prevSlide = slideDuration;
-            var seq = DOTween.Sequence();
-            GameObject newTileObj = null;
-            seq.AppendCallback(() =>
-            {
-                IsAnimating = true;
-                ResetPositionAll();
-                gameHand.ApplyTsumo(tile);
-                newTileObj = AddTile(tile.ToCustomString());
-                tsumoTile = newTileObj;
-            });
-            seq.Append(AnimateTsumoDropSequence());
-            seq.AppendCallback(() =>
-            {
-                if (gameHand.HandSize == GameHand.FULL_HAND_SIZE)
-                    tsumoTile = newTileObj;
-                else
-                    tsumoTile = null;
-                SortTileList();
-                slideDuration = 0.1f;
-            });
-            seq.Append(AnimateRepositionSequence());
-            seq.OnComplete(() =>
-            {
-                slideDuration = prevSlide;
-                IsAnimating = false;
-            });
-            return seq;
-        }
-
         public IEnumerator AddInitFlowerTsumo(GameTile tile)
         {
-            yield return AddInitFlowerTsumoSequence(tile).WaitForCompletion();
-        }
+            IsAnimating = true;
+            ResetPositionAll();
+            gameHand.ApplyTsumo(tile);
 
-        private Sequence AddTsumoSequence(GameTile tile)
-        {
-            var seq = DOTween.Sequence();
-            seq.AppendCallback(() =>
-            {
-                gameHand.ApplyTsumo(tile);
-                string tileName = tile.ToCustomString();
-                var newTileObj = AddTile(tileName);
+            string tileName = tile.ToCustomString();
+            var newTileObj = AddTile(tileName);
+            tsumoTile = newTileObj;
+
+            yield return AnimateTsumoDropSequence().WaitForCompletion();
+
+            if (gameHand.HandSize == GameHand.FULL_HAND_SIZE)
                 tsumoTile = newTileObj;
-            });
-            seq.Append(AnimateTsumoDropSequence());
-            return seq;
+            else
+                tsumoTile = null;
+
+            SortTileList();
+            var prevSlide = slideDuration;
+            slideDuration = 0.1f;
+            yield return AnimateRepositionSequence().WaitForCompletion();
+            slideDuration = prevSlide;
+            IsAnimating = false;
         }
 
         public IEnumerator AddTsumo(GameTile tile)
         {
-            yield return AddTsumoSequence(tile).WaitForCompletion();
+            gameHand.ApplyTsumo(tile);
+
+            string tileName = tile.ToCustomString();
+            var newTileObj = AddTile(tileName);
+            tsumoTile = newTileObj;
+
+            yield return AnimateTsumoDropSequence().WaitForCompletion();
         }
 
         private Sequence AnimateTsumoDropSequence()
@@ -650,6 +630,7 @@ namespace MCRGame.UI
                     }
                 }
                 SortTileList();
+                ImmediateReplaceTiles();
             });
             seq.Append(AnimateRepositionSequence());
             seq.OnComplete(() =>
