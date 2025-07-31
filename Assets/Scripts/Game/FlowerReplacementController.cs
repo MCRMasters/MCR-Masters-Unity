@@ -135,10 +135,10 @@ namespace MCRGame.Game
                         gm.PlayFlowerCountAnimation(rel, prev, next, () => animDone = true);
 
                         yield return gm.GameHandManager
-                            .RunExclusive(gm.GameHandManager.ApplyFlower(appliedFlowers[i]));
+                            .RunExclusive(gm.GameHandManager.ApplyFlowerSequence(appliedFlowers[i]));
                         yield return new WaitUntil(() => animDone);
                         yield return gm.GameHandManager
-                            .RunExclusive(gm.GameHandManager.AddInitFlowerTsumo(newTiles[i]));
+                            .RunExclusive(gm.GameHandManager.AddInitFlowerTsumoSequence(newTiles[i]));
 
                         gm.SetFlowerCount(rel, gm.flowerCountMap[rel]);
                         gm.UpdateLeftTilesByDelta(-1);

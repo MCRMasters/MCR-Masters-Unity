@@ -105,7 +105,29 @@ namespace MCRGame.UI
 
         public IEnumerator RunExclusive(Sequence seq)
         {
-            yield return seq.WaitForCompletion();
+            // ❶ 이미 락을 보유 중이면 중첩 실행
+            if (isTileOpRunning)
+            {
+                yield return seq.WaitForCompletion();
+                yield break;
+            }
+
+            // ❷ 락이 비어 있으면 정상 절차
+            yield return WaitForTileOpDone();        // (사실상 필요 없지만 안전용)
+            isTileOpRunning = true;                  // 🔒
+            bool prevCanClick = GameManager.Instance.CanClick;
+            GameManager.Instance.CanClick = false;
+
+            try
+            {
+                yield return seq.WaitForCompletion();   // 본-작업
+            }
+            finally
+            {
+                if (GameManager.Instance.CanClick == false)
+                    GameManager.Instance.CanClick = prevCanClick;
+                isTileOpRunning = false;             // 🔓
+            }
         }
 
 
@@ -321,7 +343,7 @@ namespace MCRGame.UI
             }
 
             // ★ AnimateInitHand 을 큐에 등록하고 끝날 때까지 대기
-            yield return RunExclusive(AnimateInitHand());
+            yield return RunExclusive(AnimateInitHandSequence());
 
             yield return new WaitForSeconds(0.5f);
             if (receivedTsumoTile.HasValue)
@@ -331,7 +353,7 @@ namespace MCRGame.UI
 
                 // 화패 교환 시작 전 정렬 보장
                 SortTileList();
-                yield return RunExclusive(AnimateReposition());
+                yield return RunExclusive(AnimateRepositionSequence());
             }
 
             IsInitHandComplete = true;
@@ -436,7 +458,7 @@ namespace MCRGame.UI
             yield return AnimateTsumoDropSequence().WaitForCompletion();
         }
 
-        private Sequence AnimateTsumoDropSequence()
+        public Sequence AnimateTsumoDropSequence()
         {
             var seq = DOTween.Sequence();
             if (tsumoTile == null) return seq;
@@ -518,7 +540,7 @@ namespace MCRGame.UI
             }
         }
 
-        private Sequence ApplyFlowerSequence(GameTile tile)
+        public Sequence ApplyFlowerSequence(GameTile tile)
         {
             float prevSlide = slideDuration;
             var seq = DOTween.Sequence();
@@ -567,7 +589,7 @@ namespace MCRGame.UI
             // 2) UI에 CallBlock 추가
             callBlockField.AddCallBlock(cbData);
             // 3) 처리 코루틴을 큐로 등록
-            StartCoroutine(RunExclusive(ProcessCallUI(cbData)));
+            StartCoroutine(RunExclusive(ProcessCallUISequence(cbData)));
         }
 
 

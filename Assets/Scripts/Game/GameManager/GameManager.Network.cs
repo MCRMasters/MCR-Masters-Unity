@@ -310,7 +310,7 @@ namespace MCRGame.Game
             if (floweredRelativeSeat == RelativeSeat.SELF)
             {
                 bool animateDone = false;
-                yield return gameHandManager.RunExclusive(gameHandManager.ApplyFlower(tile: floweredTile));
+                yield return gameHandManager.RunExclusive(gameHandManager.ApplyFlowerSequence(tile: floweredTile));
                 int previousCount = flowerCountMap[floweredRelativeSeat];
                 int currentFlowerCount = previousCount + 1;
                 flowerCountMap[floweredRelativeSeat] = currentFlowerCount; // update early so next requests see the increment
@@ -686,7 +686,7 @@ namespace MCRGame.Game
             GameTile newTsumoTile = (GameTile)data["tile"].ToObject<int>();
             if (gameHandManager.GameHandPublic.HandSize < GameHand.FULL_HAND_SIZE)
             {
-                yield return gameHandManager.RunExclusive(gameHandManager.AddTsumo(newTsumoTile));
+                yield return gameHandManager.RunExclusive(gameHandManager.AddTsumoSequence(newTsumoTile));
             }
 
 
