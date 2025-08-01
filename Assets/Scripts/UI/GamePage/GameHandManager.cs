@@ -20,7 +20,7 @@ namespace MCRGame.UI
         public DiscardManager DiscardManager => discardManager;
 
         [Header("Hand Animation Settings")]
-        [SerializeField] private float slideDuration = 0.5f;
+        [SerializeField] private float slideDuration = 0.35f;
         [SerializeField] private float gap = 0.1f;
 
         [Header("Tsumo Drop Settings")]      // <-- 추가
