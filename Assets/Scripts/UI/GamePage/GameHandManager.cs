@@ -418,7 +418,11 @@ namespace MCRGame.UI
             }
 
             seq.AppendCallback(() => SortTileList());
-            seq.AppendCallback(() => AnimateRepositionSequence());
+            seq.AppendCallback(() =>
+            {
+                var repositionSeq = AnimateRepositionSequence();  // 이 시점엔 tileObjects와 RectTransform이 깨끗
+                seq.Append(repositionSeq);
+            });
             seq.OnComplete(() => { IsAnimating = false; });
             return seq;
         }
@@ -451,7 +455,11 @@ namespace MCRGame.UI
                 SortTileList();
                 slideDuration = 0.1f;
             });
-            seq.AppendCallback(() => AnimateRepositionSequence());
+            seq.AppendCallback(() =>
+            {
+                var repositionSeq = AnimateRepositionSequence();  // 이 시점엔 tileObjects와 RectTransform이 깨끗
+                seq.Append(repositionSeq);
+            });
             seq.OnComplete(() =>
             {
                 slideDuration = prevSlide;
@@ -623,7 +631,11 @@ namespace MCRGame.UI
                 SortTileList();
                 slideDuration = 0.1f;
             });
-            seq.AppendCallback(() => AnimateRepositionSequence());
+            seq.AppendCallback(() =>
+            {
+                var repositionSeq = AnimateRepositionSequence();  // 이 시점엔 tileObjects와 RectTransform이 깨끗
+                seq.Append(repositionSeq);
+            });
             seq.OnComplete(() =>
             {
                 slideDuration = prevSlide;
@@ -713,7 +725,11 @@ namespace MCRGame.UI
                 }
                 SortTileList();
             });
-            seq.AppendCallback(() => AnimateRepositionSequence());
+            seq.AppendCallback(() =>
+            {
+                var repositionSeq = AnimateRepositionSequence();  // 이 시점엔 tileObjects와 RectTransform이 깨끗
+                seq.Append(repositionSeq);
+            });
             seq.OnComplete(() =>
             {
                 Debug.Log($"[GameHandManager] ProcessCallUI 완료 → 최종 남은 타일 개수: {tileObjects.Count}");
@@ -843,7 +859,11 @@ namespace MCRGame.UI
                 SortTileList();
             });
 
-            seq.AppendCallback(() => AnimateRepositionSequence());
+            seq.AppendCallback(() =>
+            {
+                var repositionSeq = AnimateRepositionSequence();  // 이 시점엔 tileObjects와 RectTransform이 깨끗
+                seq.Append(repositionSeq);
+            });
             seq.OnComplete(() => { if (!nested) IsAnimating = false; });
             return seq;
         }
