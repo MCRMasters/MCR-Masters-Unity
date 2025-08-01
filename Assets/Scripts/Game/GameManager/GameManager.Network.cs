@@ -325,14 +325,18 @@ namespace MCRGame.Game
 
             if (floweredRelativeSeat == RelativeSeat.SELF)
             {
-                bool animateDone = false;
+                // bool animateDone = false;
                 yield return gameHandManager.RunExclusive(gameHandManager.ApplyFlowerSequence(tile: floweredTile));
                 int previousCount = flowerCountMap[floweredRelativeSeat];
                 int currentFlowerCount = previousCount + 1;
                 flowerCountMap[floweredRelativeSeat] = currentFlowerCount; // update early so next requests see the increment
 
-                PlayFlowerCountAnimation(floweredRelativeSeat, previousCount, currentFlowerCount, () => { animateDone = true; });
-                yield return new WaitUntil(() => animateDone);
+                yield return PlayFlowerCountAnimationSequence(
+                    floweredRelativeSeat,
+                    previousCount,
+                    currentFlowerCount,
+                    null
+                ).WaitForCompletion();
                 SetFlowerCount(floweredRelativeSeat, flowerCountMap[floweredRelativeSeat]);
             }
             else
@@ -343,13 +347,16 @@ namespace MCRGame.Game
                 int currentFlowerCount = previousCount + 1;
                 flowerCountMap[floweredRelativeSeat] = currentFlowerCount;
 
-                bool animateDone = false;
-
                 // 동시에 꽃 카운트 애니메이션 실행
-                PlayFlowerCountAnimation(floweredRelativeSeat, previousCount, currentFlowerCount, () => { animateDone = true; });
+                Sequence animSeq = PlayFlowerCountAnimationSequence(
+                    floweredRelativeSeat,
+                    previousCount,
+                    currentFlowerCount,
+                    null
+                );
                 // Hand3DField의 RequestDiscardRandom과 RequestInitFlowerTsumo를 순차 실행하는 코루틴
                 yield return handField.RequestDiscardRandomSequence().WaitForCompletion();
-                yield return new WaitUntil(() => animateDone);
+                yield return animSeq.WaitForCompletion();
 
                 SetFlowerCount(floweredRelativeSeat, flowerCountMap[floweredRelativeSeat]);
             }
