@@ -420,7 +420,7 @@ namespace MCRGame.UI
             seq.AppendCallback(() => SortTileList());
             seq.AppendCallback(() =>
             {
-                var repositionSeq = AnimateRepositionSequence();  // 이 시점엔 tileObjects와 RectTransform이 깨끗
+                var repositionSeq = AnimateRepositionSequence();
                 seq.Append(repositionSeq);
             });
             seq.OnComplete(() => { IsAnimating = false; });
@@ -457,7 +457,7 @@ namespace MCRGame.UI
             });
             seq.AppendCallback(() =>
             {
-                var repositionSeq = AnimateRepositionSequence();  // 이 시점엔 tileObjects와 RectTransform이 깨끗
+                var repositionSeq = AnimateRepositionSequence();
                 seq.Append(repositionSeq);
             });
             seq.OnComplete(() =>
@@ -633,7 +633,7 @@ namespace MCRGame.UI
             });
             seq.AppendCallback(() =>
             {
-                var repositionSeq = AnimateRepositionSequence();  // 이 시점엔 tileObjects와 RectTransform이 깨끗
+                var repositionSeq = AnimateRepositionSequence();
                 seq.Append(repositionSeq);
             });
             seq.OnComplete(() =>
@@ -727,7 +727,7 @@ namespace MCRGame.UI
             });
             seq.AppendCallback(() =>
             {
-                var repositionSeq = AnimateRepositionSequence();  // 이 시점엔 tileObjects와 RectTransform이 깨끗
+                var repositionSeq = AnimateRepositionSequence();
                 seq.Append(repositionSeq);
             });
             seq.OnComplete(() =>
@@ -861,7 +861,7 @@ namespace MCRGame.UI
 
             seq.AppendCallback(() =>
             {
-                var repositionSeq = AnimateRepositionSequence();  // 이 시점엔 tileObjects와 RectTransform이 깨끗
+                var repositionSeq = AnimateRepositionSequence();
                 seq.Append(repositionSeq);
             });
             seq.OnComplete(() => { if (!nested) IsAnimating = false; });
