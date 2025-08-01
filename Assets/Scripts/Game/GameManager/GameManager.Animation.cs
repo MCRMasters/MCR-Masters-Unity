@@ -97,6 +97,51 @@ namespace MCRGame.Game
             return StartCoroutine(PlayFlowerCountAnimationRoutine(rel, toValue, onComplete));
         }
 
+        public Sequence PlayFlowerCountAnimationSequence(RelativeSeat rel, int fromValue, int toValue, System.Action onComplete = null)
+        {
+            int idx = (int)rel;
+            if (flowerCountTexts == null || idx >= flowerCountTexts.Length) return DOTween.Sequence();
+
+            TextMeshProUGUI flowerTxt = flowerCountTexts[idx];
+            if (flowerTxt == null) return DOTween.Sequence();
+            Transform container = flowerTxt.transform.parent;
+            Vector3 baseScale = flowerCountBaseScales[idx];
+
+            setRelativeSeatFlowerUIActive(true, rel);
+
+            if (flowerCountTweens[idx] != null)
+            {
+                flowerCountTweens[idx].Kill();
+                flowerCountTweens[idx] = null;
+                container.localScale = baseScale;
+                flowerTxt.text = $"X{flowerCountMap[rel]}";
+            }
+
+            float popScale = 1.3f;
+            flowerTxt.text = "X" + toValue;
+            if (flowerImages != null && idx < flowerImages.Length)
+            {
+                var img = flowerImages[idx];
+                if (img != null)
+                {
+                    img.sprite = GetFlowerIconByCount(toValue);
+                }
+            }
+            container.localScale = baseScale;
+
+            Sequence seq = DOTween.Sequence();
+            seq.Append(container.DOScale(baseScale * popScale, FlowerAnimDuration * 0.5f).SetEase(Ease.OutBack));
+            seq.Append(container.DOScale(baseScale, FlowerAnimDuration * 0.5f).SetEase(Ease.InBack));
+            seq.OnComplete(() =>
+            {
+                flowerCountTweens[idx] = null;
+                onComplete?.Invoke();
+            });
+
+            flowerCountTweens[idx] = seq;
+            return seq;
+        }
+
         private IEnumerator PlayFlowerCountAnimationRoutine(RelativeSeat rel, int toValue, System.Action onComplete)
         {
             int idx = (int)rel;

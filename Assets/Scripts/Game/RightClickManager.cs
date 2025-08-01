@@ -35,23 +35,29 @@ namespace MCRGame.Game
 
         private void OnRightClickPerformed(InputAction.CallbackContext ctx)
         {
-            if (GameManager.Instance == null){
+            if (GameManager.Instance == null)
+            {
                 return;
             }
-            if (GameManager.Instance.IsRightClickTsumogiri == false){
+            if (GameManager.Instance.IsRightClickTsumogiri == false)
+            {
                 return;
             }
-            if (GameManager.Instance.isActionUIActive){
+            if (GameManager.Instance.isActionUIActive)
+            {
                 if (GameManager.Instance.isAfterTsumoAction)
                     GameManager.Instance.OnSkipButtonClickedAfterTsumo();
                 else
                     GameManager.Instance.OnSkipButtonClicked();
             }
-            else{
-                if (GameManager.Instance.isAfterTsumoAction && GameManager.Instance.CanClick){
+            else
+            {
+                if (GameManager.Instance.isAfterTsumoAction && GameManager.Instance.CanClick)
+                {
                     GameManager.Instance.isAfterTsumoAction = false;
                     GameManager.Instance.CanClick = false;
-                    StartCoroutine(GameManager.Instance.GameHandManager.RunExclusive(GameManager.Instance.GameHandManager.RequestDiscardRightmostTile()));
+                    StartCoroutine(GameManager.Instance.GameHandManager.RunExclusive(
+                        GameManager.Instance.GameHandManager.RequestDiscardRightmostTileSequence()));
                 }
             }
         }
