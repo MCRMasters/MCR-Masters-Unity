@@ -467,39 +467,26 @@ namespace MCRGame.UI
 
         public Sequence AddTsumoSequence(GameTile tile)
         {
-            Debug.Log($"[AddTsumoSequence] 시작 — tile: {tile}");
             var seq = DOTween.Sequence();
 
             // 1) tsumoTile 할당
             seq.AppendCallback(() =>
             {
-                Debug.Log("[AddTsumoSequence] Callback#1 — ApplyTsumo & tsumoTile 할당 전");
                 gameHand.ApplyTsumo(tile);
 
                 string tileName = tile.ToCustomString();
-                Debug.Log($"[AddTsumoSequence] Callback#1 — tileName: {tileName}");
 
                 var newTileObj = AddTile(tileName);
                 tsumoTile = newTileObj;
-                Debug.Log($"[AddTsumoSequence] Callback#1 — tsumoTile 할당: {tsumoTile?.name}");
             });
 
             // 2) AnimateTsumoDropSequence 생성 & 추가 (tsumoTile 보장된 이후)
             seq.AppendCallback(() =>
             {
-                Debug.Log($"[AddTsumoSequence] Callback#2 — AnimateTsumoDropSequence 호출 직전 tsumoTile: {tsumoTile?.name}");
-                // 이제 tsumoTile != null
                 var dropSeq = AnimateTsumoDropSequence();
                 seq.Append(dropSeq);
             });
 
-            // 3) 전체 완료 후
-            seq.AppendCallback(() =>
-            {
-                Debug.Log("[AddTsumoSequence] Callback#3 — AnimateTsumoDropSequence 완료");
-            });
-
-            Debug.Log("[AddTsumoSequence] 시퀀스 반환");
             return seq;
         }
 
@@ -510,19 +497,15 @@ namespace MCRGame.UI
 
         private Sequence AnimateTsumoDropSequence()
         {
-            Debug.Log("[AnimateTsumoDrop] 시작");
             var seq = DOTween.Sequence();
             if (tsumoTile == null)
             {
-                Debug.LogWarning("[AnimateTsumoDrop] tsumoTile이 null입니다. sequence 비어 반환");
                 return seq;
             }
-            Debug.Log($"[AnimateTsumoDrop] tileObjects.Count={tileObjects.Count}, tsumoTile={tsumoTile.name}");
 
             // 기준 타일 너비 계산
             var firstRt = tileObjects[0].GetComponent<RectTransform>();
             float tileWidth = firstRt != null ? firstRt.rect.width : 1f;
-            Debug.Log($"[AnimateTsumoDrop] tileWidth={tileWidth}, gap={gap}");
 
             // 다른 타일들 즉시 배치
             int idx = 0;
@@ -534,7 +517,6 @@ namespace MCRGame.UI
                 {
                     Vector2 pos = new Vector2(idx * (tileWidth + gap), 0f);
                     rt.anchoredPosition = pos;
-                    Debug.Log($"[AnimateTsumoDrop] 배치: {go.name} → {pos}");
                 }
                 idx++;
             }
@@ -544,7 +526,6 @@ namespace MCRGame.UI
                 idx * (tileWidth + gap) + tileWidth * 0.2f,
                 0f
             );
-            Debug.Log($"[AnimateTsumoDrop] tsumoTarget 계산: {tsumoTarget}");
 
             var tsumoRt = tsumoTile.GetComponent<RectTransform>();
             var imgField = tsumoTile.transform.Find("ImageField");
@@ -552,13 +533,11 @@ namespace MCRGame.UI
             Color origColor = img != null
                 ? new Color(img.color.r, img.color.g, img.color.b, 1f)
                 : Color.white;
-            Debug.Log($"[AnimateTsumoDrop] origColor={origColor}");
 
             if (tsumoRt != null)
             {
                 Vector2 startPos = tsumoTarget + Vector2.up * tsumoDropHeight;
                 tsumoRt.anchoredPosition = startPos;
-                Debug.Log($"[AnimateTsumoDrop] 드롭 시작: {startPos} → {tsumoTarget} over {tsumoDropDuration}s");
 
                 // 위치 애니메이션
                 seq.Append(
@@ -571,16 +550,10 @@ namespace MCRGame.UI
                 if (img != null)
                 {
                     img.color = new Color(origColor.r, origColor.g, origColor.b, 0f);
-                    Debug.Log($"[AnimateTsumoDrop] 페이드 시작: 0 → {origColor.a} over {tsumoFadeDuration}s");
                     seq.Join(img.DOFade(origColor.a, tsumoFadeDuration));
                 }
             }
-            else
-            {
-                Debug.LogWarning("[AnimateTsumoDrop] tsumoRt(RectTransform)가 없습니다.");
-            }
 
-            Debug.Log("[AnimateTsumoDrop] sequence 반환");
             return seq;
         }
 
