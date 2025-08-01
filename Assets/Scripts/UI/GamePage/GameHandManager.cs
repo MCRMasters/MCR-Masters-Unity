@@ -368,6 +368,7 @@ namespace MCRGame.UI
 
         private Sequence AnimateInitHandSequence()
         {
+            bool nested = IsAnimating;
             IsAnimating = true;
             ResetPositionAll();
 
@@ -416,14 +417,15 @@ namespace MCRGame.UI
                 }
                 seq.AppendInterval(0.1f);
             }
-
-            seq.AppendCallback(() => SortTileList());
+            Sequence subSeq = DOTween.Sequence().Pause();
             seq.AppendCallback(() =>
             {
-                var repositionSeq = AnimateRepositionSequence();
-                seq.Append(repositionSeq);
+                SortTileList();
+                subSeq.Append(AnimateRepositionSequence());
+                subSeq.Restart();
             });
-            seq.OnComplete(() => { IsAnimating = false; });
+            seq.Append(subSeq);
+            seq.OnComplete(() => { if (!nested) IsAnimating = false; });
             return seq;
         }
 
@@ -435,17 +437,20 @@ namespace MCRGame.UI
         public Sequence AddInitFlowerTsumoSequence(GameTile tile)
         {
             float prevSlide = slideDuration;
-            var seq = DOTween.Sequence();
+
             GameObject newTileObj = null;
-            seq.AppendCallback(() =>
-            {
-                IsAnimating = true;
-                ResetPositionAll();
-                gameHand.ApplyTsumo(tile);
-                newTileObj = AddTile(tile.ToCustomString());
-                tsumoTile = newTileObj;
-            });
-            seq.AppendCallback(() => AnimateTsumoDropSequence());
+            bool nested = IsAnimating;
+            IsAnimating = true;
+            ResetPositionAll();
+            gameHand.ApplyTsumo(tile);
+            newTileObj = AddTile(tile.ToCustomString());
+            tsumoTile = newTileObj;
+
+            var seq = DOTween.Sequence();
+
+            seq.Append(AnimateTsumoDropSequence());
+
+            var subSeq = DOTween.Sequence().Pause();
             seq.AppendCallback(() =>
             {
                 if (gameHand.HandSize == GameHand.FULL_HAND_SIZE)
@@ -454,16 +459,15 @@ namespace MCRGame.UI
                     tsumoTile = null;
                 SortTileList();
                 slideDuration = 0.1f;
+                subSeq.Append(AnimateRepositionSequence());
+                subSeq.Restart();
             });
-            seq.AppendCallback(() =>
-            {
-                var repositionSeq = AnimateRepositionSequence();
-                seq.Append(repositionSeq);
-            });
+            seq.Append(subSeq);
+
             seq.OnComplete(() =>
             {
                 slideDuration = prevSlide;
-                IsAnimating = false;
+                if (!nested) IsAnimating = false;
             });
             return seq;
         }
@@ -488,13 +492,14 @@ namespace MCRGame.UI
                 tsumoTile = newTileObj;
             });
 
-            // 2) AnimateTsumoDropSequence 생성 & 추가 (tsumoTile 보장된 이후)
+            var dropSeq = DOTween.Sequence().Pause();
+
             seq.AppendCallback(() =>
             {
-                var dropSeq = AnimateTsumoDropSequence();
-                seq.Append(dropSeq);
+                dropSeq.Append(AnimateTsumoDropSequence());
+                dropSeq.Restart();
             });
-
+            seq.Append(dropSeq);
             return seq;
         }
 
@@ -612,34 +617,37 @@ namespace MCRGame.UI
         {
             float prevSlide = slideDuration;
             var seq = DOTween.Sequence();
+            bool nested = IsAnimating;
+            IsAnimating = true;
+
+            ResetPositionAll();
+            string tileName = tile.ToCustomString();
+            int idx = tileObjects.FindIndex(go => go != null && go.name == tileName);
+            if (idx < 0)
+            {
+                Debug.LogWarning($"[GameHandManager] '{tileName}' 타일을 찾을 수 없습니다.");
+                if (!nested) IsAnimating = false;
+                return seq;
+            }
+            GameObject tileObj = tileObjects[idx];
+            gameHand.ApplyDiscard(tile);
+            tileObjects.RemoveAt(idx);
+            Destroy(tileObj);
+            tsumoTile = null;
+            SortTileList();
+            slideDuration = 0.1f;
+
+            Sequence subSeq = DOTween.Sequence().Pause();
             seq.AppendCallback(() =>
             {
-                IsAnimating = true;
-                ResetPositionAll();
-                string tileName = tile.ToCustomString();
-                int idx = tileObjects.FindIndex(go => go != null && go.name == tileName);
-                if (idx < 0)
-                {
-                    Debug.LogWarning($"[GameHandManager] '{tileName}' 타일을 찾을 수 없습니다.");
-                    return;
-                }
-                GameObject tileObj = tileObjects[idx];
-                gameHand.ApplyDiscard(tile);
-                tileObjects.RemoveAt(idx);
-                Destroy(tileObj);
-                tsumoTile = null;
-                SortTileList();
-                slideDuration = 0.1f;
+                subSeq.Append(AnimateRepositionSequence());
+                subSeq.Restart();
             });
-            seq.AppendCallback(() =>
-            {
-                var repositionSeq = AnimateRepositionSequence();
-                seq.Append(repositionSeq);
-            });
+            seq.Append(subSeq);
             seq.OnComplete(() =>
             {
                 slideDuration = prevSlide;
-                IsAnimating = false;
+                if (!nested) IsAnimating = false;
             });
             return seq;
         }
@@ -708,28 +716,28 @@ namespace MCRGame.UI
                 tsumoTile = null;
             }
 
-            seq.AppendCallback(() =>
+            foreach (var gt in removeTiles)
             {
-                foreach (var gt in removeTiles)
+                string name = gt.ToCustomString();
+                int idx = tileObjects.FindIndex(go => go.name == name);
+                if (idx >= 0)
                 {
-                    string name = gt.ToCustomString();
-                    int idx = tileObjects.FindIndex(go => go.name == name);
-                    if (idx >= 0)
-                    {
-                        GameObject go = tileObjects[idx];
-                        if (go == tsumoTile)
-                            tsumoTile = null;
-                        tileObjects.RemoveAt(idx);
-                        Destroy(go);
-                    }
+                    GameObject go = tileObjects[idx];
+                    if (go == tsumoTile)
+                        tsumoTile = null;
+                    tileObjects.RemoveAt(idx);
+                    Destroy(go);
                 }
-                SortTileList();
-            });
+            }
+            SortTileList();
+
+            Sequence subSeq = DOTween.Sequence().Pause();
             seq.AppendCallback(() =>
             {
-                var repositionSeq = AnimateRepositionSequence();
-                seq.Append(repositionSeq);
+                subSeq.Append(AnimateRepositionSequence());
+                subSeq.Restart();
             });
+            seq.Append(subSeq);
             seq.OnComplete(() =>
             {
                 Debug.Log($"[GameHandManager] ProcessCallUI 완료 → 최종 남은 타일 개수: {tileObjects.Count}");
@@ -843,27 +851,26 @@ namespace MCRGame.UI
             bool nested = IsAnimating;
             IsAnimating = true;
 
+            ResetPositionAll();
+
+            if (request.index >= 0 && request.index < tileObjects.Count)
+            {
+                var discarded = tileObjects[request.index];
+                tileObjects.RemoveAt(request.index);
+                if (discarded != null) Destroy(discarded);
+                tsumoTile = null;
+            }
+            tileObjects.RemoveAll(go => go == null);
+            tileObjects.RemoveAll(go => go == null);
+            SortTileList();
+
+            Sequence subSeq = DOTween.Sequence().Pause();
             seq.AppendCallback(() =>
             {
-                ResetPositionAll();
-
-                if (request.index >= 0 && request.index < tileObjects.Count)
-                {
-                    var discarded = tileObjects[request.index];
-                    tileObjects.RemoveAt(request.index);
-                    if (discarded != null) Destroy(discarded);
-                    tsumoTile = null;
-                }
-                tileObjects.RemoveAll(go => go == null);
-                tileObjects.RemoveAll(go => go == null);
-                SortTileList();
+                subSeq.Append(AnimateRepositionSequence());
+                subSeq.Restart();
             });
-
-            seq.AppendCallback(() =>
-            {
-                var repositionSeq = AnimateRepositionSequence();
-                seq.Append(repositionSeq);
-            });
+            seq.Append(subSeq);
             seq.OnComplete(() => { if (!nested) IsAnimating = false; });
             return seq;
         }
