@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using DG.Tweening;
 
 using MCRGame.Common;
 using MCRGame.UI;
@@ -130,15 +131,12 @@ namespace MCRGame.Game
                         int prev = gm.flowerCountMap[rel];
                         int next = prev + 1;
                         gm.flowerCountMap[rel] = next; // update map immediately so later iterations see correct value
-                        bool animDone = false;
-
-                        gm.PlayFlowerCountAnimation(rel, prev, next, () => animDone = true);
-
+                        Sequence animSeq = gm.PlayFlowerCountAnimationSequence(rel, prev, next, null);
                         yield return gm.GameHandManager
-                            .RunExclusive(gm.GameHandManager.ApplyFlower(appliedFlowers[i]));
-                        yield return new WaitUntil(() => animDone);
+                            .RunExclusive(gm.GameHandManager.ApplyFlowerSequence(appliedFlowers[i]));
+                        yield return animSeq.WaitForCompletion();
                         yield return gm.GameHandManager
-                            .RunExclusive(gm.GameHandManager.AddInitFlowerTsumo(newTiles[i]));
+                            .RunExclusive(gm.GameHandManager.AddInitFlowerTsumoSequence(newTiles[i]));
 
                         gm.SetFlowerCount(rel, gm.flowerCountMap[rel]);
                         gm.UpdateLeftTilesByDelta(-1);
@@ -150,7 +148,7 @@ namespace MCRGame.Game
                         int next = prev + 1;
                         gm.flowerCountMap[rel] = next;
 
-                        yield return gm.PlayFlowerCountAnimation(rel, prev, next, null);
+                        yield return gm.PlayFlowerCountAnimationSequence(rel, prev, next, null).WaitForCompletion();
                         yield return StartCoroutine(ProcessOpponentFlowerOperation(
                             gm.playersHand3DFields[(int)rel], null));
 

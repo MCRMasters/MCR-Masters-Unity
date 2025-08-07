@@ -226,25 +226,35 @@ namespace MCRGame.Game
                     if (callBlockData.Type == CallBlockType.CHII || callBlockData.Type == CallBlockType.PUNG)
                     {
                         Debug.Log("ConfirmCallBlock: Starting RequestDiscardMultiple(count: 2)");
-                        StartCoroutine(playersHand3DFields[(int)relativeSeat].RequestDiscardMultiple(count: 2));
+                        playersHand3DFields[(int)relativeSeat]
+                            .RequestDiscardMultipleSequence(count: 2)
+                            .Play();
                     }
                     else if (callBlockData.Type == CallBlockType.DAIMIN_KONG)
                     {
                         Debug.Log("ConfirmCallBlock: Starting RequestDiscardMultiple(count: 3)");
-                        StartCoroutine(playersHand3DFields[(int)relativeSeat].RequestDiscardMultiple(count: 3));
+                        playersHand3DFields[(int)relativeSeat]
+                            .RequestDiscardMultipleSequence(count: 3)
+                            .Play();
                     }
                     else if (callBlockData.Type == CallBlockType.AN_KONG)
                     {
                         if (has_tsumo_tile)
                         {
                             Debug.Log("ConfirmCallBlock: AN_KONG with tsumo tile, starting RequestDiscardRightmost and RequestDiscardMultiple(count: 3)");
-                            StartCoroutine(playersHand3DFields[(int)relativeSeat].RequestDiscardRightmost());
-                            StartCoroutine(playersHand3DFields[(int)relativeSeat].RequestDiscardMultiple(count: 3));
+                            playersHand3DFields[(int)relativeSeat]
+                                .RequestDiscardRightmostSequence()
+                                .Play();
+                            playersHand3DFields[(int)relativeSeat]
+                                .RequestDiscardMultipleSequence(count: 3)
+                                .Play();
                         }
                         else
                         {
                             Debug.Log("ConfirmCallBlock: AN_KONG without tsumo tile, starting RequestDiscardMultiple(count: 4)");
-                            StartCoroutine(playersHand3DFields[(int)relativeSeat].RequestDiscardMultiple(count: 4));
+                            playersHand3DFields[(int)relativeSeat]
+                                .RequestDiscardMultipleSequence(count: 4)
+                                .Play();
                         }
                     }
                     else if (callBlockData.Type == CallBlockType.SHOMIN_KONG)
@@ -252,12 +262,16 @@ namespace MCRGame.Game
                         if (has_tsumo_tile)
                         {
                             Debug.Log("ConfirmCallBlock: SHOMIN_KONG with tsumo tile, starting RequestDiscardRightmost");
-                            StartCoroutine(playersHand3DFields[(int)relativeSeat].RequestDiscardRightmost());
+                            playersHand3DFields[(int)relativeSeat]
+                                .RequestDiscardRightmostSequence()
+                                .Play();
                         }
                         else
                         {
                             Debug.Log("ConfirmCallBlock: SHOMIN_KONG without tsumo tile, starting RequestDiscardMultiple(count: 1)");
-                            StartCoroutine(playersHand3DFields[(int)relativeSeat].RequestDiscardMultiple(count: 1));
+                            playersHand3DFields[(int)relativeSeat]
+                                .RequestDiscardMultipleSequence(count: 1)
+                                .Play();
                         }
                     }
                 }
@@ -296,7 +310,9 @@ namespace MCRGame.Game
             {
                 return;
             }
-            StartCoroutine(playersHand3DFields[(int)relativeTsumoSeat].RequestTsumo());
+            playersHand3DFields[(int)relativeTsumoSeat]
+                .RequestTsumoSequence()
+                .Play();
         }
         public IEnumerator ConfirmFlower(JObject data)
         {
@@ -309,14 +325,18 @@ namespace MCRGame.Game
 
             if (floweredRelativeSeat == RelativeSeat.SELF)
             {
-                bool animateDone = false;
-                yield return gameHandManager.RunExclusive(gameHandManager.ApplyFlower(tile: floweredTile));
+                // bool animateDone = false;
+                yield return gameHandManager.RunExclusive(gameHandManager.ApplyFlowerSequence(tile: floweredTile));
                 int previousCount = flowerCountMap[floweredRelativeSeat];
                 int currentFlowerCount = previousCount + 1;
                 flowerCountMap[floweredRelativeSeat] = currentFlowerCount; // update early so next requests see the increment
 
-                PlayFlowerCountAnimation(floweredRelativeSeat, previousCount, currentFlowerCount, () => { animateDone = true; });
-                yield return new WaitUntil(() => animateDone);
+                yield return PlayFlowerCountAnimationSequence(
+                    floweredRelativeSeat,
+                    previousCount,
+                    currentFlowerCount,
+                    null
+                ).WaitForCompletion();
                 SetFlowerCount(floweredRelativeSeat, flowerCountMap[floweredRelativeSeat]);
             }
             else
@@ -327,13 +347,16 @@ namespace MCRGame.Game
                 int currentFlowerCount = previousCount + 1;
                 flowerCountMap[floweredRelativeSeat] = currentFlowerCount;
 
-                bool animateDone = false;
-
                 // 동시에 꽃 카운트 애니메이션 실행
-                PlayFlowerCountAnimation(floweredRelativeSeat, previousCount, currentFlowerCount, () => { animateDone = true; });
+                Sequence animSeq = PlayFlowerCountAnimationSequence(
+                    floweredRelativeSeat,
+                    previousCount,
+                    currentFlowerCount,
+                    null
+                );
                 // Hand3DField의 RequestDiscardRandom과 RequestInitFlowerTsumo를 순차 실행하는 코루틴
-                yield return StartCoroutine(handField.RequestDiscardRandom());
-                yield return new WaitUntil(() => animateDone);
+                yield return handField.RequestDiscardRandomSequence().WaitForCompletion();
+                yield return animSeq.WaitForCompletion();
 
                 SetFlowerCount(floweredRelativeSeat, flowerCountMap[floweredRelativeSeat]);
             }
@@ -374,11 +397,15 @@ namespace MCRGame.Game
                 RelativeSeat enemyDiscardSeat = RelativeSeatExtensions.CreateFromAbsoluteSeats(currentSeat: MySeat, targetSeat: discardedSeat);
                 if (is_tsumogiri)
                 {
-                    StartCoroutine(playersHand3DFields[(int)enemyDiscardSeat].RequestDiscardRightmost());
+                    playersHand3DFields[(int)enemyDiscardSeat]
+                        .RequestDiscardRightmostSequence()
+                        .Play();
                 }
                 else
                 {
-                    StartCoroutine(playersHand3DFields[(int)enemyDiscardSeat].RequestDiscardRandom());
+                    playersHand3DFields[(int)enemyDiscardSeat]
+                        .RequestDiscardRandomSequence()
+                        .Play();
                 }
                 discardManager.DiscardTile(seat: enemyDiscardSeat, tile: discardTile);
             }
@@ -686,9 +713,8 @@ namespace MCRGame.Game
             GameTile newTsumoTile = (GameTile)data["tile"].ToObject<int>();
             if (gameHandManager.GameHandPublic.HandSize < GameHand.FULL_HAND_SIZE)
             {
-                yield return gameHandManager.RunExclusive(gameHandManager.AddTsumo(newTsumoTile));
+                yield return gameHandManager.RunExclusive(gameHandManager.AddTsumoSequence(newTsumoTile));
             }
-
 
             var list = data["actions"].ToObject<List<GameAction>>();
             list.Sort();
