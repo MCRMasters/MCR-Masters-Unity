@@ -38,6 +38,7 @@ namespace MCRGame.UI
         {
             RoomService.Instance.OnRoomListReceived -= PopulateRoomList;
             createRoomButton.onClick.RemoveListener(OnCreateRoom);
+            RefreshRoomListButton.onClick.RemoveListener(OnRefresh);
 
             // 자동 갱신 중지
             StopAutoRefresh();
