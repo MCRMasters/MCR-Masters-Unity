@@ -15,6 +15,9 @@ EditorBuildSettings:
     path: Assets/Scenes/RoomListScene.unity
     guid: 8b8f90414f25549c8bb03c5b5228a97a
   - enabled: 1
+    path: Assets/Scenes/SpectateListScene.unity
+    guid: f12ba99afedf4a148576e9d7a132d7e5
+  - enabled: 1
     path: Assets/Scenes/RoomScene.unity
     guid: 9afc5b3865d147343a5c4d22f804a40a
   - enabled: 1
