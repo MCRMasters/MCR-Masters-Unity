@@ -2,15 +2,12 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.SceneManagement;
 using MCRGame.Net;
 
 namespace MCRGame.UI
 {
     public class SpectateListUIController : MonoBehaviour
     {
-        [SerializeField] private Button createRoomButton;
-
         [SerializeField] private Button RefreshRoomListButton;
         [SerializeField] private Transform contentParent;
         [SerializeField] private GameObject roomItemPrefab;
@@ -20,7 +17,6 @@ namespace MCRGame.UI
         private void OnEnable()
         {
             RoomService.Instance.OnRoomListReceived += PopulateRoomList;
-            createRoomButton.onClick.AddListener(OnCreateRoom);
             RefreshRoomListButton.onClick.AddListener(OnRefresh);
 
             // 즉시 한 번 호출
@@ -37,7 +33,6 @@ namespace MCRGame.UI
         private void OnDisable()
         {
             RoomService.Instance.OnRoomListReceived -= PopulateRoomList;
-            createRoomButton.onClick.RemoveListener(OnCreateRoom);
             RefreshRoomListButton.onClick.RemoveListener(OnRefresh);
 
             // 자동 갱신 중지
@@ -55,12 +50,6 @@ namespace MCRGame.UI
                 var item = go.GetComponent<RoomItemUI>();
                 item.Setup(r);
             }
-        }
-
-        private void OnCreateRoom()
-        {
-            RoomService.Instance.CreateRoom();
-            SceneManager.LoadScene("RoomScene", LoadSceneMode.Single);
         }
 
         private void StartAutoRefresh()
