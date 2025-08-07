@@ -115,7 +115,7 @@ namespace MCRGame.Game
             {
                 if (txt == null) continue;
 
-                AbsoluteSeat abs = rel.ToAbsoluteSeat(gm.MySeat);
+                AbsoluteSeat abs = rel.ToAbsoluteSeat(gm.ReferenceSeat);
                 if (!gm.seatToPlayerIndex.TryGetValue(abs, out int idx)
                     || idx < 0 || idx >= gm.Players.Count)
                 {
