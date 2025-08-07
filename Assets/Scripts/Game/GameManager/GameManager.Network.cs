@@ -185,7 +185,7 @@ namespace MCRGame.Game
                 }
 
                 Debug.Log("ConfirmCallBlock: Step 6 - Determining relative seat");
-                RelativeSeat relativeSeat = RelativeSeatExtensions.CreateFromAbsoluteSeats(currentSeat: MySeat, targetSeat: seat);
+                RelativeSeat relativeSeat = RelativeSeatExtensions.CreateFromAbsoluteSeats(currentSeat: ReferenceSeat, targetSeat: seat);
                 Debug.Log("ConfirmCallBlock: relativeSeat = " + relativeSeat);
 
 
@@ -197,7 +197,7 @@ namespace MCRGame.Game
                 }
                 AbsoluteSeat sourceAbsoluteSeat = CallBlockSourceSeat.ToAbsoluteSeat(mySeat: seat);
                 Debug.Log("ConfirmCallBlock: sourceAbsoluteSeat = " + sourceAbsoluteSeat);
-                RelativeSeat sourceRelativeSeat = RelativeSeatExtensions.CreateFromAbsoluteSeats(currentSeat: MySeat, targetSeat: sourceAbsoluteSeat);
+                RelativeSeat sourceRelativeSeat = RelativeSeatExtensions.CreateFromAbsoluteSeats(currentSeat: ReferenceSeat, targetSeat: sourceAbsoluteSeat);
                 Debug.Log("ConfirmCallBlock: sourceRelativeSeat = " + sourceRelativeSeat);
 
 
@@ -297,12 +297,12 @@ namespace MCRGame.Game
             ClearActionUI();
             AbsoluteSeat TsumoSeat = (AbsoluteSeat)data["seat"].ToObject<int>();
             UpdateLeftTilesByDelta(-1);
-            if (TsumoSeat == MySeat)
+            if (!IsSpectator && TsumoSeat == MySeat)
             {
                 return;
             }
 
-            RelativeSeat relativeTsumoSeat = RelativeSeatExtensions.CreateFromAbsoluteSeats(currentSeat: MySeat, targetSeat: TsumoSeat);
+            RelativeSeat relativeTsumoSeat = RelativeSeatExtensions.CreateFromAbsoluteSeats(currentSeat: ReferenceSeat, targetSeat: TsumoSeat);
 
             moveTurn(seat: relativeTsumoSeat);
 
@@ -319,7 +319,7 @@ namespace MCRGame.Game
             ClearActionUI();
             GameTile floweredTile = (GameTile)data["tile"].ToObject<int>();
             AbsoluteSeat floweredSeat = (AbsoluteSeat)data["seat"].ToObject<int>();
-            RelativeSeat floweredRelativeSeat = RelativeSeatExtensions.CreateFromAbsoluteSeats(currentSeat: MySeat, targetSeat: floweredSeat);
+            RelativeSeat floweredRelativeSeat = RelativeSeatExtensions.CreateFromAbsoluteSeats(currentSeat: ReferenceSeat, targetSeat: floweredSeat);
 
             ActionAudioManager.Instance?.EnqueueFlowerSound();
 
@@ -376,7 +376,7 @@ namespace MCRGame.Game
 
             AbsoluteSeat discardedSeat = (AbsoluteSeat)data["seat"].ToObject<int>();
             bool is_tsumogiri = data["is_tsumogiri"].ToObject<bool>();
-            if (discardedSeat == MySeat)
+            if (discardedSeat == ReferenceSeat)
             {
                 if (tenpaiAssistDict != null
                 && tenpaiAssistDict.TryGetValue(discardTile, out var list)
@@ -394,7 +394,7 @@ namespace MCRGame.Game
             }
             else
             {
-                RelativeSeat enemyDiscardSeat = RelativeSeatExtensions.CreateFromAbsoluteSeats(currentSeat: MySeat, targetSeat: discardedSeat);
+                RelativeSeat enemyDiscardSeat = RelativeSeatExtensions.CreateFromAbsoluteSeats(currentSeat: ReferenceSeat, targetSeat: discardedSeat);
                 if (is_tsumogiri)
                 {
                     playersHand3DFields[(int)enemyDiscardSeat]
@@ -548,7 +548,7 @@ namespace MCRGame.Game
             List<GameTile> RawHand = data["hand"]
                 .Select(t => (GameTile)t.Value<int>())
                 .ToList();
-            List<CallBlockData> RawCallBockList = CallBlocksList[(int)MySeat];
+            List<CallBlockData> RawCallBockList = CallBlocksList[(int)ReferenceSeat];
 
 
             var tsumoToken = data["tsumo_tile"];
@@ -567,7 +567,7 @@ namespace MCRGame.Game
             for (int seat = 0; seat < MAX_PLAYERS; ++seat)
             {
                 if ((RelativeSeat)seat == RelativeSeat.SELF) continue;
-                AbsoluteSeat absoluteSeat = RelativeSeatExtensions.ToAbsoluteSeat(rel: (RelativeSeat)seat, mySeat: MySeat);
+                AbsoluteSeat absoluteSeat = RelativeSeatExtensions.ToAbsoluteSeat(rel: (RelativeSeat)seat, mySeat: ReferenceSeat);
                 callBlockFields[seat].ReloadCallBlockListImmediate(CallBlocksList[(int)absoluteSeat]);
                 playersHand3DFields[seat].ReloadInitHand(handCount: HandsCount[(int)absoluteSeat], includeTsumo: TsumoTilesCount[(int)absoluteSeat] == 1);
             }
@@ -577,7 +577,7 @@ namespace MCRGame.Game
             InitializeFlowerUI();
             for (int seat = 0; seat < MAX_PLAYERS; ++seat)
             {
-                AbsoluteSeat absoluteSeat = RelativeSeatExtensions.ToAbsoluteSeat(rel: (RelativeSeat)seat, mySeat: MySeat);
+                AbsoluteSeat absoluteSeat = RelativeSeatExtensions.ToAbsoluteSeat(rel: (RelativeSeat)seat, mySeat: ReferenceSeat);
                 SetFlowerCount(rel: (RelativeSeat)seat, FlowersCount[(int)absoluteSeat]);
             }
 
@@ -592,13 +592,13 @@ namespace MCRGame.Game
 
             if (CurrentTurnSeat == RelativeSeat.SELF)
             {
-                ReloadTsumoActions(ActionList[(int)MySeat]);
+                ReloadTsumoActions(ActionList[(int)ReferenceSeat]);
             }
             else
             {
-                if (ActionList[(int)MySeat].Count > 0)
+                if (ActionList[(int)ReferenceSeat].Count > 0)
                 {
-                    ReloadDiscardActions(ActionList[(int)MySeat]);
+                    ReloadDiscardActions(ActionList[(int)ReferenceSeat]);
                 }
             }
             Debug.Log($"[GameManager] ReloadData 완료 - 남은 시간: {remainingTime:F2}s");
@@ -884,7 +884,7 @@ namespace MCRGame.Game
 
             // 3D 핸드 필드 새로 생성: 승리한 플레이어의 핸드 필드를 클리어하고 실제 타일로 재구성
             // (tsumoTile과 동일한 타일 한 개는 표시하지 않고, 마지막에 tsumoTile을 추가하여 extra gap이 적용되도록)
-            Hand3DField targetHandField = playersHand3DFields[(int)RelativeSeatExtensions.CreateFromAbsoluteSeats(currentSeat: MySeat, targetSeat: winPlayerSeat)];
+            Hand3DField targetHandField = playersHand3DFields[(int)RelativeSeatExtensions.CreateFromAbsoluteSeats(currentSeat: ReferenceSeat, targetSeat: winPlayerSeat)];
             targetHandField.clear();
             GameObject winningTileGo = targetHandField.MakeRealHand(winningTile, handTiles, tsumoTile.HasValue);
             if (winningTileGo == null)

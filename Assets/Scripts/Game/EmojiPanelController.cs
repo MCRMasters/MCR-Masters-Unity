@@ -132,7 +132,7 @@ namespace MCRGame.Game
 
             // 2) 절대좌석 → 내 기준 상대좌석으로 변환
             var relative = RelativeSeatExtensions.CreateFromAbsoluteSeats(
-                currentSeat: GameManager.Instance.MySeat,
+                currentSeat: GameManager.Instance.ReferenceSeat,
                 targetSeat: seat
             );
 

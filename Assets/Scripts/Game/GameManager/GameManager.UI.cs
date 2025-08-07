@@ -179,7 +179,7 @@ namespace MCRGame.Game
             for (int i=0;i<4;i++)
             {
                 RelativeSeat rel = (RelativeSeat)i;
-                AbsoluteSeat abs = rel.ToAbsoluteSeat(MySeat);
+                AbsoluteSeat abs = rel.ToAbsoluteSeat(ReferenceSeat);
 
                 if (!seatToPlayerIndex.TryGetValue(abs,out int pIdx) || pIdx<0 || pIdx>=Players.Count) continue;
                 var player = Players[pIdx];
@@ -228,7 +228,7 @@ namespace MCRGame.Game
             foreach (var (rel,txt) in map)
             {
                 if (!txt) continue;
-                var abs = rel.ToAbsoluteSeat(MySeat);
+                var abs = rel.ToAbsoluteSeat(ReferenceSeat);
                 if (!seatToPlayerIndex.TryGetValue(abs,out int idx) || idx<0 || idx>=Players.Count) continue;
 
                 int s = Players[idx].Score;
@@ -248,7 +248,7 @@ namespace MCRGame.Game
                 {RelativeSeat.KAMI,windText_Kami}
             };
 
-            AbsoluteSeat seat = MySeat;
+            AbsoluteSeat seat = ReferenceSeat;
             for (RelativeSeat rel = RelativeSeat.SELF;; rel = rel.NextSeat())
             {
                 if (map.TryGetValue(rel,out var t) && t)

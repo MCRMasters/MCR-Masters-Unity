@@ -117,8 +117,11 @@ namespace MCRGame.Game
             GetSeatMappings((int)CurrentRound, out seatToPlayerIndex, out playerIndexToSeat);
 
             /* 내 절대좌석 & 현재 턴 좌석 계산 */
-            MySeat = playerIndexToSeat[playerUidToIndex[PlayerDataManager.Instance.Uid]];
-            CurrentTurnSeat = RelativeSeatExtensions.CreateFromAbsoluteSeats(MySeat, AbsoluteSeat.EAST);
+            if (!IsSpectator)
+            {
+                MySeat = playerIndexToSeat[playerUidToIndex[PlayerDataManager.Instance.Uid]];
+            }
+            CurrentTurnSeat = RelativeSeatExtensions.CreateFromAbsoluteSeats(ReferenceSeat, AbsoluteSeat.EAST);
         }
 
         #endregion
