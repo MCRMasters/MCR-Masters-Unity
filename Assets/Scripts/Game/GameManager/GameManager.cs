@@ -68,6 +68,7 @@ namespace MCRGame.Game
         public bool isActionUIActive = false;
         public bool isAfterTsumoAction = false;
         public bool CanClick = false;
+        public bool IsSpectator = false;
 
         private bool autoHuFlag;
         public bool AutoHuFlag
@@ -500,6 +501,7 @@ namespace MCRGame.Game
             isActionUIActive = false;
             isAfterTsumoAction = false;
             CanClick = false;
+            IsSpectator = false;
 
             // (3) 게임 상태 관련 컬렉션 및 값들 초기화
             Players = new List<Player>();
