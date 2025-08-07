@@ -37,6 +37,8 @@ namespace MCRGame.Game
         public List<Player> Players { get; private set; }
         public List<RoomUserInfo> PlayerInfo { get; set; }
         public AbsoluteSeat MySeat { get; private set; }
+        public AbsoluteSeat ViewSeat { get; set; } = AbsoluteSeat.EAST;
+        public AbsoluteSeat ReferenceSeat => IsSpectator ? ViewSeat : MySeat;
         public RelativeSeat CurrentTurnSeat { get; private set; }
         public Round CurrentRound { get; private set; }
 
@@ -507,6 +509,7 @@ namespace MCRGame.Game
             Players = new List<Player>();
             PlayerInfo = new List<RoomUserInfo>();
             MySeat = default;
+            ViewSeat = AbsoluteSeat.EAST;
             CurrentTurnSeat = default;
             CurrentRound = Round.E1;
             NowHoverTile = null;
@@ -564,6 +567,46 @@ namespace MCRGame.Game
             CurrentTurnSeat = seat;
             UpdateCurrentTurnEffect();
             Debug.Log($"Current turn: {CurrentTurnSeat}");
+        }
+
+        /// <summary>
+        /// ViewSeat 변경 시 상대 좌표 기반 데이터를 새 ViewSeat 기준으로 재구성합니다.
+        /// </summary>
+        public void ChangeViewSeat(AbsoluteSeat newViewSeat)
+        {
+            if (ViewSeat == newViewSeat) return;
+
+            // 기존 기준 좌석과 새 기준 좌석 확보
+            AbsoluteSeat oldRef = ReferenceSeat;
+            ViewSeat = newViewSeat;
+            AbsoluteSeat newRef = ReferenceSeat;
+
+            // 현재 턴 좌석 재계산
+            AbsoluteSeat absTurn = CurrentTurnSeat.ToAbsoluteSeat(oldRef);
+            CurrentTurnSeat = RelativeSeatExtensions.CreateFromAbsoluteSeats(newRef, absTurn);
+            if (IsSpectator)
+            {
+                IsMyTurn = false;
+                CanClick = false;
+            }
+
+            // 화패 카운트 재배열
+            var rotatedFlowerMap = new Dictionary<RelativeSeat, int>();
+            foreach (var kv in flowerCountMap)
+            {
+                AbsoluteSeat abs = kv.Key.ToAbsoluteSeat(oldRef);
+                RelativeSeat rel = RelativeSeatExtensions.CreateFromAbsoluteSeats(newRef, abs);
+                rotatedFlowerMap[rel] = kv.Value;
+            }
+            flowerCountMap = rotatedFlowerMap;
+
+            // UI 갱신
+            InitializeProfileUI();
+            UpdateSeatLabels();
+            UpdateScoreText();
+            UpdateFlowerCountText();
+            ResetAllBlinkTurnEffects();
+            UpdateCurrentTurnEffect();
         }
 
         private Dictionary<GameTile, List<TenpaiAssistEntry>> BuildTenpaiAssistDict(JObject outer)

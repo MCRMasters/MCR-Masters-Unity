@@ -72,7 +72,7 @@ namespace MCRGame.Game
                 if (i == (int)RelativeSeat.SELF) continue;
 
                 RelativeSeat rel = (RelativeSeat)i;
-                AbsoluteSeat abs = rel.ToAbsoluteSeat(MySeat);
+                AbsoluteSeat abs = rel.ToAbsoluteSeat(ReferenceSeat);
 
                 bool includeTsumo = (abs == AbsoluteSeat.EAST);
                 hand3D.InitHand(includeTsumo);

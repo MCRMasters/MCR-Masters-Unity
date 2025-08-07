@@ -119,7 +119,7 @@ namespace MCRGame.Game
                 }
 
                 Debug.Log($"[FR]   Seat {abs} → {cnt} flower(s)");
-                RelativeSeat rel = RelativeSeatExtensions.CreateFromAbsoluteSeats(gm.MySeat, abs);
+                RelativeSeat rel = RelativeSeatExtensions.CreateFromAbsoluteSeats(gm.ReferenceSeat, abs);
 
                 for (int i = 0; i < cnt; ++i)
                 {
