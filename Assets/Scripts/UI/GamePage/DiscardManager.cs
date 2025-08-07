@@ -145,7 +145,7 @@ namespace MCRGame.UI
                 int seatIdx = (int)seat;
                 if (seatIdx < 0 || seatIdx >= allTilesBySeat.Count)
                     continue;
- 
+    
                 var tiles = allTilesBySeat[(int)RelativeSeatExtensions.ToAbsoluteSeat(rel: seat, mySeat: GameManager.Instance.ReferenceSeat)];
                 Transform origin = GetDiscardPosition(seat);
                 if (origin == null)
